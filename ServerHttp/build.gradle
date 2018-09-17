@@ -1,0 +1,86 @@
+buildscript {
+    ext {
+        vertxVersion = '3.5.2'
+        kotlin_version = '1.2.50'
+    }
+
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven { url = "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.50"
+    }
+}
+
+//plugins {
+//    id 'com.github.johnrengelman.shadow' version '2.0.4'
+//}
+apply plugin: 'kotlin'
+apply plugin: 'maven'
+apply plugin: 'application'
+
+
+mainClassName = 'io.raspberrywallet.MainKt'
+version = '1.0.0'
+sourceCompatibility = '1.8'
+//shadowJar {
+//    baseName = 'server'
+//    manifest {
+//        attributes 'Main-Verticle': mainClassName
+//    }
+//
+//    classifier = 'fat'
+//    mergeServiceFiles {
+//        include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+//    }
+//}
+run {
+    args = ['run', mainClassName,
+            "--launcher-class=io.vertx.core.Launcher",
+            "--redeploy=src/**/*.*",
+            "--on-redeploy=./gradlew classes"]
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+}
+dependencies {
+    implementation "io.vertx:vertx-core:$vertxVersion"
+    implementation "io.vertx:vertx-web:$vertxVersion"
+    implementation "io.vertx:vertx-web-client:$vertxVersion"
+    implementation "io.vertx:vertx-unit:$vertxVersion"
+    implementation "io.vertx:vertx-jdbc-client:$vertxVersion"
+    implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
+    implementation "io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion"
+    implementation 'com.github.stasbar:easy-logger:1.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.50"
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
+    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.2.0'
+}
+
+
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+kotlin {
+    experimental {
+        coroutines 'enable'
+    }
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}

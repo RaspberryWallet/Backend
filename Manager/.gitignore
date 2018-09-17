@@ -1,0 +1,9 @@
+.idea
+*.iml
+<<<<<<< HEAD
+/target/
+/.project
+/.classpath
+=======
+target
+>>>>>>> branch 'master' of ssh://git@github.com/RaspberryWallet/Manager.git

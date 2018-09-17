@@ -1,0 +1,3 @@
+Data for encryption.
+
+Some secret bytes: 2.Fh(0Rf0v1@#$vs13#
