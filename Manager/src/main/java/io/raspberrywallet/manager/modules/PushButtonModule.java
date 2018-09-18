@@ -8,7 +8,12 @@ public class PushButtonModule extends Module {
 
 	final GpioController gpio = GpioFactory.getInstance();
 	final GpioPinDigitalInput pushButton = gpio.provisionDigitalInputPin(RaspiPin.GPIO_23);
-	
+
+	@Override
+	public String getDescription() {
+		return "Module for pushing physical button on the hardware wallet.";
+	}
+
 	@Override
 	public boolean check() {
 		if(pushButton.isHigh()) return true;
