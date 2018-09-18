@@ -10,8 +10,12 @@ public abstract class Module {
         return "{\"id\":\"" + getId() + "\", \"status\":\"" + getStatusString() + "\"}";
     }
 
+    private String getDescription() {
+        return "";
+    }
+
     public io.raspberrywallet.module.Module asServerModule() {
-        return new io.raspberrywallet.module.Module(getId()) {
+        return new io.raspberrywallet.module.Module(getId(), getDescription()) {
         };
     }
 
