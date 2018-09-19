@@ -1,67 +1,66 @@
 package io.raspberrywallet.manager;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import io.raspberrywallet.Response;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.module.ModuleState;
 
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static java.util.stream.Collectors.toList;
+
 public class Manager implements io.raspberrywallet.Manager {
 
-	private HashMap<String, Module> modules = new HashMap<String, Module>();
-	
-	public List<io.raspberrywallet.module.Module> getModules() {
-		ArrayList<io.raspberrywallet.module.Module> list = new ArrayList<io.raspberrywallet.module.Module>();
-		for(Module m:modules.values())
-			list.add(m.asServerModule());
-		return list;
-	}
-	
-	protected void addModule(Module module) {
-		modules.put(module.getId(), module);
-	}
-	
-	protected Module getModule(String id) {
-		if(modules.containsKey(id))
-			return modules.get(id);
-		return null;
-	}
+    /**
+     * Module id -> Module instance
+     */
+    private ConcurrentHashMap<String, Module> modules = new ConcurrentHashMap<>();
 
-	@Override
-	public byte[] getAddress() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public List<io.raspberrywallet.module.Module> getModules() {
+        return modules.values().stream()
+                .map(Module::asServerModule)
+                .collect(toList());
+    }
 
-	@Override
-	public ModuleState getModuleState(String id) {
-		ModuleState state = ModuleState.FAILED;
-		state.setMessage("Unknown module!");
-		if(modules.containsKey(id)) {
-			state = ModuleState.WAITING;
-			state.setMessage(modules.get(id).getStatusString());
-		}
-		return state;
-	}
+    void addModule(Module module) {
+        modules.put(module.getId(), module);
+    }
 
-	@Override
-	public Response nextStep(String arg0, byte[] arg1) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    protected Module getModule(String id) {
+        return modules.getOrDefault(id, null);
+    }
 
-	@Override
-	public String ping() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public byte[] getAddress() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public void restoreFromBackupPhrase(List<String> arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-	
+    @Override
+    public ModuleState getModuleState(String id) {
+        ModuleState state = ModuleState.FAILED;
+        state.setMessage("Unknown module!");
+        if (modules.containsKey(id)) {
+            state = ModuleState.WAITING;
+            state.setMessage(modules.get(id).getStatusString());
+        }
+        return state;
+    }
+
+    @Override
+    public Response nextStep(String arg0, byte[] arg1) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String ping() {
+        return "pong";
+    }
+
+    @Override
+    public void restoreFromBackupPhrase(List<String> arg0) {
+        // TODO Auto-generated method stub
+    }
+
 }

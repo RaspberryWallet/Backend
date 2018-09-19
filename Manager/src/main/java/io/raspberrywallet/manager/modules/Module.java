@@ -72,7 +72,9 @@ public abstract class Module {
         this.statusString = statusS;
     }
 
-    public String getId() { return this.getClass().getName(); }
+    public String getId() {
+        return this.getClass().getName();
+    }
 
     public static final int STATUS_OK = 200;
 

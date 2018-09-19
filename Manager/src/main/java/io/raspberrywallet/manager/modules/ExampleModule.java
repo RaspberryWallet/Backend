@@ -37,9 +37,7 @@ public class ExampleModule extends Module {
     */
     @Override
     public boolean check() {
-        if (System.currentTimeMillis() - lastTime > 5000)
-            return true;
-        return false;
+        return System.currentTimeMillis() - lastTime > 5000;
     }
 
     /*

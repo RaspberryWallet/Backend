@@ -26,7 +26,6 @@ class ManagerMockup : Manager {
         println(phrase)
     }
 
-
     override fun getModules(): List<Module> = modulesList
 
     override fun getModuleState(moduleId: String): ModuleState {
