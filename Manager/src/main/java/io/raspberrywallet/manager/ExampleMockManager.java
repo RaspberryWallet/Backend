@@ -1,15 +1,15 @@
 package io.raspberrywallet.manager;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.database.MockDatabaseFactory;
 import io.raspberrywallet.manager.modules.ExampleModule;
 import io.raspberrywallet.manager.modules.Module;
-import org.bitcoinj.kits.WalletAppKit;
 
 public class ExampleMockManager extends Manager {
 
-    public ExampleMockManager(WalletAppKit bitcoinKit) {
-        super(bitcoinKit);
+    public ExampleMockManager(Bitcoin bitcoin) {
+        super(bitcoin);
 		Module mod = new ExampleModule();
 		addModule(mod);
 		

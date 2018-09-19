@@ -10,7 +10,7 @@ public class Main {
         Bitcoin bitcoin = new Bitcoin();
         WalletAppKit kit = bitcoin.startBlockchainAsync();
 
-        Manager manager = new ExampleMockManager(kit);
+        Manager manager = new ExampleMockManager(bitcoin);
 
         Server server = new Server(manager);
         server.start();

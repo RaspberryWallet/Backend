@@ -12,7 +12,6 @@ class BitcoinTest {
 
         assert bitcoin.kit.params() == TestNet3Params.get();
         assert bitcoin.kit.directory() == bitcoin.rootDirectory;
-        bitcoin.cleanup();
     }
 
 
@@ -27,6 +26,6 @@ class BitcoinTest {
         assert kit.directory() == bitcoin.rootDirectory;
         assert bitcoin.fileWallet.exists();
         assert bitcoin.fileSpvBlockchain.exists();
-        bitcoin.cleanup();
+        bitcoin.fileSpvBlockchain.delete();
     }
 }
