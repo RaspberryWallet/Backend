@@ -2,3 +2,8 @@
 .idea
 *.iml
 lib/
+*.spvchain
+*.wallet
+.vertx/
+Manager/target/
+out/
