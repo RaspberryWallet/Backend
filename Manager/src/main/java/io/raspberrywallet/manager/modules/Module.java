@@ -145,8 +145,10 @@ public abstract class Module {
             startTime = System.currentTimeMillis();
             while (run) {
 
-                if (check())
+                if (check()) {
                     process();
+                    run = false;
+                }
 
                 if(System.currentTimeMillis() - startTime > timeout && status == STATUS_WAITING) {
                     run = false;
