@@ -55,7 +55,7 @@ public class ShamirSharedSecret {
      * @return parameters of polynomial
      * @throw ShamirException
      */
-    public static BigInteger[] generateParameters(int t, int numBits, byte[] SecretBytes) throws ShamirException {
+    public static BigInteger[] generateParams(int t, int numBits, byte[] SecretBytes) throws ShamirException {
         BigInteger secret = new BigInteger(SecretBytes);
 
         if (secret.bitLength() >= numBits)
@@ -106,14 +106,14 @@ public class ShamirSharedSecret {
      * @param n       number of shares
      * @param t       number of shares for solve Shamir scheme
      * @param numBits number of bits of shares
-     * @param s       parameters of polynomial
+     * @param polynomialParams       parameters of polynomial
      * @return array of Shamir's shares
      * @throw ShamirException
      * @throw ShamirException
      */
-    public static ShamirKey[] generateKeys(int n, int t, int numBits, BigInteger[] s) throws ShamirException {
+    public static ShamirKey[] generateKeys(int n, int t, int numBits, BigInteger[] polynomialParams) throws ShamirException {
         ShamirKey[] keys = new ShamirKey[n];
-        if (s[0].bitLength() >= numBits)
+        if (polynomialParams[0].bitLength() >= numBits)
             throw new ShamirException("numBits is too small");
         if (t > n)
             throw new ShamirException("number of need shares greater than number of shares");
@@ -125,7 +125,7 @@ public class ShamirSharedSecret {
             do {
                 x = new BigInteger(numBits, new Random());
             } while (isRepeat(x, keys));
-            fx = calculatePolynomial(s, x, prime);
+            fx = calculatePolynomial(polynomialParams, x, prime);
             keys[i - 1] = new ShamirKey();
             keys[i - 1].setP(prime);
             keys[i - 1].setX(x);
