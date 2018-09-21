@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Test;
 import java.math.BigInteger;
 
 class BlakleySharedSecretTest {
-    private final static int totalShares = 3; //number of generate keys
-    private final static int requiredShares = 2; //number of keys for solve the secret (requiredShares <= totalShares)
-    private final static int bits = 512; //number of bits of keys
+    private final int totalShares = 3; //number of generate keys
+    private final int requiredShares = 2; //number of keys for solve the secret (requiredShares <= totalShares)
+    private final int bits = 512; //number of bits of keys
 
     @Test
     void testBlakley() {
