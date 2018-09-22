@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Database {
@@ -67,12 +68,22 @@ public class Database {
 		cleanUp();
 		byte[] data = Files.readAllBytes(file.toPath());
 		data = decrypt(data);
+
+		wallets.addAll(deserialize(data));
+	}
+
+	/**
+	 * Deserializacja z JSONa
+	 * @param data - rozszyfrowane dane z JSONa
+	 * @return - lista portfeli
+	 */
+	public List<WalletEntity> deserialize(byte[] data) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		//TODO jak tego sie uzywa xdd
 		List<WalletEntity> wallets = mapper.readValue(data, List.class);
-		wallets.addAll(wallets);
+		return wallets;
 	}
-	
+
 	/**
 	 * Zapisujemy zaszyfrowaną bazę danych do pliku
 	 * @param file - plik z bazą
