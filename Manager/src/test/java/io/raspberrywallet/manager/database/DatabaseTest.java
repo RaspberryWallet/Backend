@@ -28,18 +28,22 @@ class DatabaseTest {
     public static final String KEYPART_1_2_MODULE = "io.raspberrywallet.manager.modules.PushButtonModule";
     public static final String KEYPART_2_1_MODULE = "io.raspberrywallet.manager.modules.ExampleModule";
 
-    public static WalletEntity walletEntity1 = new WalletEntity();
-    public static WalletEntity walletEntity2 = new WalletEntity();
+    public static WalletEntity walletEntity1 = null;
+    public static WalletEntity walletEntity2 = null;
     public static KeyPartEntity keyPartEntity1_1 = new KeyPartEntity();
     public static KeyPartEntity keyPartEntity1_2 = new KeyPartEntity();
     public static KeyPartEntity keyPartEntity2_1 = new KeyPartEntity();
 
     public static byte[] serializedData = null;
+    public static byte[] encrypted = null;
 
     @BeforeEach
     void setUp() {
         try {
             db = new Database(true);
+            walletEntity1 = new WalletEntity();
+            walletEntity2 = new WalletEntity();
+
             walletEntity1.address = ADDRESS_1;
             walletEntity1.balance = BALANCE_1;
             walletEntity2.address = ADDRESS_2;
@@ -56,6 +60,12 @@ class DatabaseTest {
             keyPartEntity2_1.order = 1;
             keyPartEntity2_1.payload = KEYPART_2_1;
             keyPartEntity2_1.module = KEYPART_2_1_MODULE;
+
+            walletEntity1.parts.add(keyPartEntity1_1);
+            walletEntity1.parts.add(keyPartEntity1_2);
+            walletEntity2.parts.add(keyPartEntity2_1);
+
+            db.addWallets(Arrays.asList(walletEntity1, walletEntity2));
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -68,11 +78,7 @@ class DatabaseTest {
     @Test
     void serialize() {
 
-        walletEntity1.parts.add(keyPartEntity1_1);
-        walletEntity1.parts.add(keyPartEntity1_2);
-        walletEntity2.parts.add(keyPartEntity2_1);
-
-        db.addWallets(Arrays.asList(walletEntity1, walletEntity2));
+        serializedData = null;
 
         try {
             serializedData = db.getSerialized();
@@ -85,6 +91,8 @@ class DatabaseTest {
 
     @Test
     void deserialize() {
+        serialize();
+
         List<WalletEntity> newWallets = null;
         assertNotNull(serializedData);
         try {
@@ -103,5 +111,35 @@ class DatabaseTest {
         * This condition checks if `List`s are equal using overridden `Object::equal`.
         * */
         assertTrue(oldWallets.containsAll(newWallets) && newWallets.containsAll(oldWallets));
+    }
+
+    @Test
+    void encrypt() {
+
+        db.addWallets(Arrays.asList(walletEntity1, walletEntity2));
+
+        try {
+            encrypted = db.encrypt(db.getSerialized());
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            assertNotNull(encrypted);
+        }
+    }
+
+    @Test
+    void decrypt() {
+        encrypt();
+
+        assertNotNull(encrypted);
+
+        byte[] decrypted = null;
+        try {
+            decrypted = db.decrypt(encrypted);
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            assertNotNull(decrypted);
+        }
     }
 }

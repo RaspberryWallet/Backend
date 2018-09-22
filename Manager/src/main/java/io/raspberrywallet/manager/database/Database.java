@@ -95,12 +95,12 @@ public class Database {
 		Files.write(file.toPath(), data);
 	}
 	
-	private byte[] encrypt(byte[] data) {
+	public byte[] encrypt(byte[] data) {
 		//TODO enkrypcja
 		return data;
 	}
 	
-	private byte[] decrypt(byte[] data) {
+	public byte[] decrypt(byte[] data) {
 		//TODO dekrypcja
 		return data;
 	}
