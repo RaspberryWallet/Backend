@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -80,7 +81,7 @@ public class Database {
 	public List<WalletEntity> deserialize(byte[] data) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		//TODO jak tego sie uzywa xdd
-		List<WalletEntity> wallets = mapper.readValue(data, List.class);
+		List<WalletEntity> wallets = mapper.readValue(data, new TypeReference<List<WalletEntity>>(){});
 		return wallets;
 	}
 
