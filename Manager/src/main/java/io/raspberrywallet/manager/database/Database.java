@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Database {
@@ -39,7 +38,7 @@ public class Database {
 	}
 	
 	/**
-	 * "zerujemy" wszystko co niebezpieczne
+	 * zerofill everything in RAM
 	 */
 	private synchronized void cleanUp() {
 		for(WalletEntity we:wallets) {
@@ -51,7 +50,7 @@ public class Database {
 	}
 	
 	/**
-	 * Zwróć wszystkie wallety zserializowane jako JSON
+	 * Return all wallets serialized as JSON
 	 * @return - JSON
 	 */
 	public byte[] getSerialized() throws JsonProcessingException {
@@ -61,9 +60,9 @@ public class Database {
 	}
 	
 	/**
-	 * Wczytujemy bazę danych z zaszyfrowanego pliku
-	 * @param file - zaszyfrowany JSON
-	 * @throws IOException - problem plików
+	 * Loading database from encrypted file
+	 * @param file - encrypted JSON file
+	 * @throws IOException - filesystem problem
 	 */
 	private void loadDatabase(File file) throws IOException {
 		cleanUp();
@@ -74,9 +73,9 @@ public class Database {
 	}
 
 	/**
-	 * Deserializacja z JSONa
-	 * @param data - rozszyfrowane dane z JSONa
-	 * @return - lista portfeli
+	 * JSON deserialization
+	 * @param data - decrypted JSON data
+	 * @return - wallet list
 	 */
 	public List<WalletEntity> deserialize(byte[] data) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
@@ -86,9 +85,9 @@ public class Database {
 	}
 
 	/**
-	 * Zapisujemy zaszyfrowaną bazę danych do pliku
-	 * @param file - plik z bazą
-	 * @throws IOException - problem plików
+	 * Save encrypted database to file
+	 * @param file - destination file
+	 * @throws IOException - filesystem problem
 	 */
 	private void saveDatabase(File file) throws IOException {
 		byte[] data=encrypt(getSerialized());
@@ -96,12 +95,12 @@ public class Database {
 	}
 	
 	public byte[] encrypt(byte[] data) {
-		//TODO enkrypcja
+		//TODO encryption
 		return data;
 	}
 	
 	public byte[] decrypt(byte[] data) {
-		//TODO dekrypcja
+		//TODO decryption
 		return data;
 	}
 	
