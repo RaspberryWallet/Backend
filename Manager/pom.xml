@@ -4,9 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.raspberrywallet.manager</groupId>
+
     <artifactId>Manager</artifactId>
-    <version>1.0-SNAPSHOT</version>
+
+    <parent>
+        <groupId>io.raspberrywallet</groupId>
+        <artifactId>Backend</artifactId>
+        <version>1.0</version>
+    </parent>
+
 
     <repositories>
         <repository>
@@ -16,13 +22,10 @@
     </repositories>
 
     <properties>
-        <kotlin.version>1.2.50</kotlin.version>
         <main.class>io.raspberrywallet.manager.Main</main.class>
         <src.dir.java>${project.basedir}/src/main/java</src.dir.java>
-        <src.dir.kotlin>${project.basedir}/src/main/kotlin</src.dir.kotlin>
         <src.dir.resources>${project.basedir}/src/main/resources</src.dir.resources>
         <src.dir.test.java>${project.basedir}/src/test/java</src.dir.test.java>
-        <src.dir.test.kotlin>${project.basedir}/src/test/kotlin</src.dir.test.kotlin>
         <src.dir.test.resources>${project.basedir}/src/test/resources</src.dir.test.resources>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>8</maven.compiler.source>
@@ -39,11 +42,11 @@
 
         <!--Server-->
         <dependency>
-            <groupId>com.github.RaspberryWallet</groupId>
-            <artifactId>Server</artifactId>
-            <version>0.1.0-alpha</version>
-        </dependency>
+            <groupId>io.raspberrywallet</groupId>
+            <artifactId>ServerHttp</artifactId>
+            <version>1.0</version>
 
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine -->
         <dependency>
@@ -62,13 +65,6 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>2.18.3</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test</artifactId>
-            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
 

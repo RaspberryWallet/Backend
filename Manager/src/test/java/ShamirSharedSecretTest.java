@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import java.math.BigInteger;
 
 class ShamirSharedSecretTest {
-    private final static int totalShares = 3; //number of generate shares
-    private final static int requiredShares = 2; //number of shares for solve the secret (requiredShares <= totalShares)
+    private final int totalShares = 3; //number of generate shares
+    private final int requiredShares = 2; //number of shares for solve the secret (requiredShares <= totalShares)
 
     @Test
     void testShamir() throws ShamirException {

@@ -44,21 +44,21 @@ internal class MainVerticle(private val manager: Manager) : CoroutineVerticle() 
         }
         router.get("/api/modules").coroutineHandler {
             Logger.d("/modules")
-            it.response().end(json {
-                array(
-                    manager.modules
-                ).encodePrettily()
-
-            })
+            val jsonResponse = json {
+                array(manager.modules).encodePrettily()
+            }
+            it.response().end(jsonResponse)
         }
         router.get("/api/moduleState/:id").coroutineHandler {
-            it.response().end(json {
-                Logger.d("/moduleState/${it.pathParam("id")}")
-                val moduleState = manager.getModuleState(it.pathParam("id"))
+            Logger.d("/moduleState/${it.pathParam("id")}")
+            val moduleState = manager.getModuleState(it.pathParam("id"))
+            val jsonResponse = json {
                 obj(
-                    "state" to moduleState.name, "message" to moduleState.message
+                    "state" to moduleState.name,
+                    "message" to moduleState.message
                 ).encodePrettily()
-            })
+            }
+            it.response().end(jsonResponse)
         }
         router.route("/*").handler(StaticHandler.create("assets"))
 
