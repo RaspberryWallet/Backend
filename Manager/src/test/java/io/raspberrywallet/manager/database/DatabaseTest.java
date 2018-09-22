@@ -116,8 +116,6 @@ class DatabaseTest {
     @Test
     void encrypt() {
 
-        db.addWallets(Arrays.asList(walletEntity1, walletEntity2));
-
         try {
             encrypted = db.encrypt(db.getSerialized());
         } catch(Exception e) {
@@ -141,5 +139,19 @@ class DatabaseTest {
         } finally {
             assertNotNull(decrypted);
         }
+
+        List<WalletEntity> newWallets = null;
+        try {
+            newWallets = db.deserialize(decrypted);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            assertNotNull(newWallets);
+        }
+
+        List<WalletEntity> oldWallets = Arrays.asList(walletEntity1, walletEntity2);
+        assertEquals(oldWallets.size(), newWallets.size());
+
+        assertTrue(oldWallets.containsAll(newWallets) && newWallets.containsAll(oldWallets));
     }
 }
