@@ -1,5 +1,7 @@
 package io.raspberrywallet.manager.modules;
 
+import java.util.HashMap;
+
 public abstract class Module {
 
     /**
@@ -82,8 +84,10 @@ public abstract class Module {
     private int status;
     private String statusString;
     private byte[] decryptedValue;
+    private HashMap<String, String> input = new HashMap<String, String>();
 
     public void newSession() {
+        input.clear();
         register();
     }
 
@@ -213,6 +217,33 @@ public abstract class Module {
             this.status = de.getCode();
             this.statusString = "Error: " + de.getMessage();
         }
+    }
+
+    /**
+     * Sets input for this Module from user
+     * @param key - key of the parameter
+     * @param value - value of the parameter
+     */
+    public void setInput(String key, String value) {
+        input.put(key, value);
+    }
+
+    /**
+     * Checks if user has submitted any input
+     * @param key - key of the parameter
+     * @return - if key exists
+     */
+    protected boolean hasInput(String key) {
+        return input.containsKey(key);
+    }
+
+    /**
+     * Gets the value which user has submitted
+     * @param key - parameter key
+     * @return - value of the parameter
+     */
+    protected String getInput(String key) {
+        return input.get(key);
     }
 
 }
