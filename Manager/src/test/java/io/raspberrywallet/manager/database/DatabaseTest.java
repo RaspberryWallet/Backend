@@ -1,15 +1,10 @@
 package io.raspberrywallet.manager.database;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.mchange.v1.util.ArrayUtils;
-import org.bitcoinj.wallet.Wallet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -93,7 +88,7 @@ class DatabaseTest {
         * `List::containsAll` uses `Object::equals` to determine whether a collection contains another.
         * This condition checks if `List`s are equal using overridden `Object::equal`.
         * */
-        assertTrue(newWallet.equals(walletEntity1));
+        assertEquals(newWallet, walletEntity1);
     }
 
     @Test
