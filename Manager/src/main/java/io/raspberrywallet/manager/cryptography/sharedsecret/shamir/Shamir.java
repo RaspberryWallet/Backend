@@ -6,7 +6,7 @@ import java.util.Random;
  * <p> Calculate Shamir scheme. You need t shares of n for resolve the secret </p>
  */
 
-public class ShamirSharedSecret {
+public class Shamir {
 
     /**
      * Create a share using Shamir's scheme

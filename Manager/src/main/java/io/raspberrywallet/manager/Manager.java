@@ -4,7 +4,6 @@ import io.raspberrywallet.Response;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.module.ModuleState;
-import org.bitcoinj.wallet.DeterministicSeed;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -24,24 +23,28 @@ public class Manager implements io.raspberrywallet.Manager {
         this.bitcoin = bitcoin;
     }
 
+    @Override
+    public String ping() {
+        return "pong";
+    }
+
+    @Override
+    public Response nextStep(@NotNull String moduleId, byte[] input) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Modules
+     */
+
+    @Override
     public List<io.raspberrywallet.module.Module> getModules() {
         return modules.values().stream()
                 .map(Module::asServerModule)
                 .collect(toList());
     }
 
-    void addModule(Module module) {
-        modules.put(module.getId(), module);
-    }
-
-    protected Module getModule(String id) {
-        return modules.getOrDefault(id, null);
-    }
-
-    @Override
-    public byte[] getAddress() {
-        return bitcoin.kit.wallet().currentReceiveAddress().getHash160();
-    }
 
     @Override
     public ModuleState getModuleState(String id) {
@@ -54,21 +57,42 @@ public class Manager implements io.raspberrywallet.Manager {
         return state;
     }
 
-    @Override
-    public Response nextStep(String arg0, byte[] arg1) {
-        // TODO Auto-generated method stub
-        return null;
+    void addModule(Module module) {
+        modules.put(module.getId(), module);
     }
 
-    @Override
-    public String ping() {
-        return "pong";
+    protected Module getModule(String id) {
+        return modules.getOrDefault(id, null);
     }
+
+
+    /**
+     * Bitcoin Domain
+     */
 
     @Override
     public void restoreFromBackupPhrase(@NotNull List<String> mnemonicCode) {
-        DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 0L);
-        bitcoin.kit.restoreWalletFromSeed(seed);
+        bitcoin.restoreFromBackupPhrase(mnemonicCode);
+    }
+
+    @Override
+    public String getCurrentReceiveAddress() {
+        return bitcoin.getCurrentReceiveAddress();
+    }
+
+    @Override
+    public String getFreshReceiveAddress() {
+        return bitcoin.getFreshReceiveAddress();
+    }
+
+    @Override
+    public String getEstimatedBalance() {
+        return bitcoin.getEstimatedBalance();
+    }
+
+    @Override
+    public String getAvailableBalance() {
+        return bitcoin.getAvailableBalance();
     }
 
 }

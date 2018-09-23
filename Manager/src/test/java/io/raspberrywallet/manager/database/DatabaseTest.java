@@ -6,25 +6,24 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class DatabaseTest {
 
-    public Database db = null;
+    private Database db = null;
 
-    public static final String ADDRESS_1 = "11113333399999AAAAABBBBB";
-    public static final double BALANCE_1 = 0.12391;
-    public static final byte[] KEYPART_1_1 = new byte[] {11, 22, 33, 44};
-    public static final byte[] KEYPART_1_2 = "#$#$^$^!#".getBytes();
-    public static final String KEYPART_1_1_MODULE = "io.raspberrywallet.manager.modules.ExampleModule";
-    public static final String KEYPART_1_2_MODULE = "io.raspberrywallet.manager.modules.PushButtonModule";
+    private static final byte[] KEYPART_1_1 = new byte[]{11, 22, 33, 44};
+    private static final byte[] KEYPART_1_2 = "#$#$^$^!#".getBytes();
+    private static final String KEYPART_1_1_MODULE = "io.raspberrywallet.manager.modules.ExampleModule";
+    private static final String KEYPART_1_2_MODULE = "io.raspberrywallet.manager.modules.PushButtonModule";
 
-    public static WalletEntity walletEntity1 = null;
-    public static KeyPartEntity keyPartEntity1_1 = new KeyPartEntity();
-    public static KeyPartEntity keyPartEntity1_2 = new KeyPartEntity();
+    private static WalletEntity walletEntity1 = null;
+    private static KeyPartEntity keyPartEntity1_1 = new KeyPartEntity();
+    private static KeyPartEntity keyPartEntity1_2 = new KeyPartEntity();
 
-    public static byte[] serializedData = null;
-    public static byte[] encrypted = null;
+    private static byte[] serializedData = null;
+    private static byte[] encrypted = null;
 
     @BeforeEach
     void setUp() {
@@ -32,10 +31,7 @@ class DatabaseTest {
             db = new Database(true);
             walletEntity1 = new WalletEntity();
 
-            walletEntity1.address = ADDRESS_1;
-            walletEntity1.balance = BALANCE_1;
-
-            keyPartEntity1_1.order=1;
+            keyPartEntity1_1.order = 1;
             keyPartEntity1_1.payload = KEYPART_1_1;
             keyPartEntity1_1.module = KEYPART_1_1_MODULE;
 
@@ -53,7 +49,6 @@ class DatabaseTest {
             assertNotNull(db);
         }
     }
-
 
 
     @Test
@@ -85,18 +80,17 @@ class DatabaseTest {
         }
 
         /*
-        * `List::containsAll` uses `Object::equals` to determine whether a collection contains another.
-        * This condition checks if `List`s are equal using overridden `Object::equal`.
-        * */
+         * `List::containsAll` uses `Object::equals` to determine whether a collection contains another.
+         * This condition checks if `List`s are equal using overridden `Object::equal`.
+         * */
         assertEquals(newWallet, walletEntity1);
     }
 
     @Test
     void encrypt() {
-
         try {
             encrypted = db.encrypt(db.getSerialized());
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             assertNotNull(encrypted);
@@ -112,7 +106,7 @@ class DatabaseTest {
         byte[] decrypted = null;
         try {
             decrypted = db.decrypt(encrypted);
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             assertNotNull(decrypted);
@@ -127,6 +121,6 @@ class DatabaseTest {
             assertNotNull(newWallet);
         }
 
-        assertTrue(newWallet.equals(walletEntity1));
+        assertEquals(newWallet, walletEntity1);
     }
 }
