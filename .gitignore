@@ -2,6 +2,7 @@
 .idea
 *.iml
 lib/
+*.ipr
 *.spvchain
 *.wallet
 .vertx/
