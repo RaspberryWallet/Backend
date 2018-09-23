@@ -13,7 +13,7 @@ public class MockDatabaseFactory {
     }
 
     private Database database;
-    private ArrayList<WalletEntity> wallets = new ArrayList<WalletEntity>();
+    WalletEntity wallet = null;
     private WalletEntity walletEntity;
 
     public MockDatabaseFactory() {
@@ -46,15 +46,13 @@ public class MockDatabaseFactory {
     }
 
     public MockDatabaseFactory pushWallet() {
-        wallets.add(walletEntity);
+        wallet = walletEntity;
         walletEntity = null;
         return this;
     }
 
     public Database getDatabase() {
-        System.out.println("Wallets: " + wallets.size());
-        database.addWallets(wallets);
-        wallets.clear();
+        database.setWallet(wallet);
         return database;
     }
 

@@ -3,23 +3,25 @@ package io.raspberrywallet.manager.database;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 
 public class Database {
-	
-	private List<WalletEntity> wallets = new ArrayList<WalletEntity>();
+
+	@Getter
+	@JsonProperty("wallet")
+	public WalletEntity wallet = null;
 	
 	public Database() throws IOException {
 		this(false);
 	}
 	
-	public void addWallets(List<WalletEntity> wallets) {
-		this.wallets.addAll(wallets);
+	public void setWallet(WalletEntity wallets) {
+		this.wallet = wallet;
 	}
 	
 	public Database(boolean mock) throws IOException {
@@ -41,12 +43,10 @@ public class Database {
 	 * zerofill everything in RAM
 	 */
 	private synchronized void cleanUp() {
-		for(WalletEntity we:wallets) {
-			for(KeyPartEntity kpe: we.parts)
+			for(KeyPartEntity kpe: wallet.parts)
 				kpe.clean();
-			we.parts.clear();
-		}
-		wallets.clear();
+			wallet.parts.clear();
+		wallet = null;
 	}
 	
 	/**
@@ -55,7 +55,8 @@ public class Database {
 	 */
 	public byte[] getSerialized() throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
-		byte[] data = mapper.writeValueAsBytes(wallets);
+		byte[] data = mapper.writeValueAsBytes(wallet);
+		System.out.println(new String(data));
 		return data;
 	}
 	
@@ -69,7 +70,7 @@ public class Database {
 		byte[] data = Files.readAllBytes(file.toPath());
 		data = decrypt(data);
 
-		wallets.addAll(deserialize(data));
+		setWallet(deserialize(data));
 	}
 
 	/**
@@ -77,11 +78,11 @@ public class Database {
 	 * @param data - decrypted JSON data
 	 * @return - wallet list
 	 */
-	public List<WalletEntity> deserialize(byte[] data) throws IOException {
+	public WalletEntity deserialize(byte[] data) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		//TODO jak tego sie uzywa xdd
-		List<WalletEntity> wallets = mapper.readValue(data, new TypeReference<List<WalletEntity>>(){});
-		return wallets;
+		WalletEntity wallet = mapper.readValue(data, new TypeReference<WalletEntity>(){});
+		return wallet;
 	}
 
 	/**

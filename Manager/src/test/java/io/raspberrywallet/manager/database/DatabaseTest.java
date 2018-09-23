@@ -18,21 +18,15 @@ class DatabaseTest {
     public Database db = null;
 
     public static final String ADDRESS_1 = "11113333399999AAAAABBBBB";
-    public static final String ADDRESS_2 = "5+CVB12312D35143AFE$FAF==";
     public static final double BALANCE_1 = 0.12391;
-    public static final double BALANCE_2 = 8219312.4342;
     public static final byte[] KEYPART_1_1 = new byte[] {11, 22, 33, 44};
     public static final byte[] KEYPART_1_2 = "#$#$^$^!#".getBytes();
-    public static final byte[] KEYPART_2_1 = new byte[] {0, 0, 0, 0};
     public static final String KEYPART_1_1_MODULE = "io.raspberrywallet.manager.modules.ExampleModule";
     public static final String KEYPART_1_2_MODULE = "io.raspberrywallet.manager.modules.PushButtonModule";
-    public static final String KEYPART_2_1_MODULE = "io.raspberrywallet.manager.modules.ExampleModule";
 
     public static WalletEntity walletEntity1 = null;
-    public static WalletEntity walletEntity2 = null;
     public static KeyPartEntity keyPartEntity1_1 = new KeyPartEntity();
     public static KeyPartEntity keyPartEntity1_2 = new KeyPartEntity();
-    public static KeyPartEntity keyPartEntity2_1 = new KeyPartEntity();
 
     public static byte[] serializedData = null;
     public static byte[] encrypted = null;
@@ -42,12 +36,9 @@ class DatabaseTest {
         try {
             db = new Database(true);
             walletEntity1 = new WalletEntity();
-            walletEntity2 = new WalletEntity();
 
             walletEntity1.address = ADDRESS_1;
             walletEntity1.balance = BALANCE_1;
-            walletEntity2.address = ADDRESS_2;
-            walletEntity2.balance = BALANCE_2;
 
             keyPartEntity1_1.order=1;
             keyPartEntity1_1.payload = KEYPART_1_1;
@@ -57,15 +48,10 @@ class DatabaseTest {
             keyPartEntity1_2.payload = KEYPART_1_2;
             keyPartEntity1_2.module = KEYPART_1_2_MODULE;
 
-            keyPartEntity2_1.order = 1;
-            keyPartEntity2_1.payload = KEYPART_2_1;
-            keyPartEntity2_1.module = KEYPART_2_1_MODULE;
-
             walletEntity1.parts.add(keyPartEntity1_1);
             walletEntity1.parts.add(keyPartEntity1_2);
-            walletEntity2.parts.add(keyPartEntity2_1);
 
-            db.addWallets(Arrays.asList(walletEntity1, walletEntity2));
+            db.setWallet(walletEntity1);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -93,24 +79,21 @@ class DatabaseTest {
     void deserialize() {
         serialize();
 
-        List<WalletEntity> newWallets = null;
+        WalletEntity newWallet = null;
         assertNotNull(serializedData);
         try {
-            newWallets = db.deserialize(serializedData);
+            newWallet = db.deserialize(serializedData);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            assertNotNull(newWallets);
+            assertNotNull(newWallet);
         }
-
-        List<WalletEntity> oldWallets = Arrays.asList(walletEntity1, walletEntity2);
-        assertEquals(oldWallets.size(), newWallets.size());
 
         /*
         * `List::containsAll` uses `Object::equals` to determine whether a collection contains another.
         * This condition checks if `List`s are equal using overridden `Object::equal`.
         * */
-        assertTrue(oldWallets.containsAll(newWallets) && newWallets.containsAll(oldWallets));
+        assertTrue(newWallet.equals(walletEntity1));
     }
 
     @Test
@@ -140,18 +123,15 @@ class DatabaseTest {
             assertNotNull(decrypted);
         }
 
-        List<WalletEntity> newWallets = null;
+        WalletEntity newWallet = null;
         try {
-            newWallets = db.deserialize(decrypted);
+            newWallet = db.deserialize(decrypted);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            assertNotNull(newWallets);
+            assertNotNull(newWallet);
         }
 
-        List<WalletEntity> oldWallets = Arrays.asList(walletEntity1, walletEntity2);
-        assertEquals(oldWallets.size(), newWallets.size());
-
-        assertTrue(oldWallets.containsAll(newWallets) && newWallets.containsAll(oldWallets));
+        assertTrue(newWallet.equals(walletEntity1));
     }
 }
