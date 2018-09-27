@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class ShamirTest {
     private final int totalShares = 3; //number of generate shares
     private final int requiredShares = 2; //number of shares for solve the secret (requiredShares <= totalShares)
@@ -22,15 +24,15 @@ class ShamirTest {
         //Act
         String secretRestored = restoreSecretWith(allKeys[0], allKeys[1]);
         System.out.println("1st and 2nd keys used for restoring  Secret = " + secretRestored);
-        assert secretRestored.equals(secret);
+        secretRestored.equals(secret);
 
         secretRestored = restoreSecretWith(allKeys[0], allKeys[2]);
         System.out.println("1st and 3rd keys used for restoring  Secret = " + secretRestored);
-        assert secretRestored.equals(secret);
+        assertEquals(secretRestored, secret);
 
         secretRestored = restoreSecretWith(allKeys[1], allKeys[2]);
         System.out.println("2nd and 3rd keys used for restoring  Secret = " + secretRestored);
-        assert secretRestored.equals(secret);
+        assertEquals(secretRestored, secret);
     }
 
     private String restoreSecretWith(ShamirKey... keys) {

@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static io.raspberrywallet.manager.Utils.println;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BitcoinTest {
     static private Bitcoin bitcoin;
@@ -29,8 +29,8 @@ public class BitcoinTest {
     void should_setup_test_net() {
         Bitcoin bitcoin = new Bitcoin(TestNet3Params.get());
 
-        assert bitcoin.kit.params() == TestNet3Params.get();
-        assert bitcoin.kit.directory() == bitcoin.rootDirectory;
+        assertEquals(bitcoin.kit.params(), TestNet3Params.get());
+        assertEquals(bitcoin.kit.directory(), bitcoin.rootDirectory);
     }
 
 
@@ -38,10 +38,11 @@ public class BitcoinTest {
     void should_sync_test_net() {
         syncBlockchainService.awaitRunning();
 
-        assert bitcoin.params() == TestNet3Params.get();
-        assert bitcoin.kit.directory() == bitcoin.rootDirectory;
-        assert bitcoin.fileWallet.exists();
-        assert bitcoin.fileSpvBlockchain.exists();
+        assertEquals(bitcoin.params(), TestNet3Params.get());
+        assertEquals(bitcoin.kit.directory(), bitcoin.rootDirectory);
+        assertTrue(bitcoin.fileWallet.exists());
+        assertTrue(bitcoin.fileSpvBlockchain.exists());
+
         bitcoin.fileSpvBlockchain.delete();
     }
 
@@ -69,10 +70,11 @@ public class BitcoinTest {
     @Test
     void getCurrentReceiveAddress() {
         syncBlockchainService.awaitRunning();
-
         String currentAddress = bitcoin.getCurrentReceiveAddress();
-        assert currentAddress != null;
-        assert currentAddress.length() == 34;
+
+        assertNotNull(currentAddress);
+        assertEquals(currentAddress.length(), 34);
+
         println(currentAddress);
     }
 
@@ -81,8 +83,8 @@ public class BitcoinTest {
         syncBlockchainService.awaitRunning();
 
         String freshAddress = bitcoin.getFreshReceiveAddress();
-        assert freshAddress != null;
-        assert freshAddress.length() == 34;
+        assertNotNull(freshAddress);
+        assertEquals(freshAddress.length(), 34);
         println(freshAddress);
     }
 
