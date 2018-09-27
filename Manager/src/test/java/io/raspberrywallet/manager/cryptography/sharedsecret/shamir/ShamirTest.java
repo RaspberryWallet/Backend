@@ -1,11 +1,13 @@
-import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirException;
-import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirKey;
-import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirSharedSecret;
+package io.raspberrywallet.manager.cryptography.sharedsecret.shamir;
+
+
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
-class ShamirSharedSecretTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class ShamirTest {
     private final int totalShares = 3; //number of generate shares
     private final int requiredShares = 2; //number of shares for solve the secret (requiredShares <= totalShares)
 
@@ -16,25 +18,25 @@ class ShamirSharedSecretTest {
         int numBits = secret.length() * 8; //We need bits not bytes
 
         //Create key
-        BigInteger[] polynomialParams = ShamirSharedSecret.generateParams(requiredShares, numBits, secret.getBytes());
-        ShamirKey[] allKeys = ShamirSharedSecret.generateKeys(totalShares, requiredShares, numBits, polynomialParams);
+        BigInteger[] polynomialParams = Shamir.generateParams(requiredShares, numBits, secret.getBytes());
+        ShamirKey[] allKeys = Shamir.generateKeys(totalShares, requiredShares, numBits, polynomialParams);
 
         //Act
         String secretRestored = restoreSecretWith(allKeys[0], allKeys[1]);
         System.out.println("1st and 2nd keys used for restoring  Secret = " + secretRestored);
-        assert secretRestored.equals(secret);
+        secretRestored.equals(secret);
 
         secretRestored = restoreSecretWith(allKeys[0], allKeys[2]);
         System.out.println("1st and 3rd keys used for restoring  Secret = " + secretRestored);
-        assert secretRestored.equals(secret);
+        assertEquals(secretRestored, secret);
 
         secretRestored = restoreSecretWith(allKeys[1], allKeys[2]);
         System.out.println("2nd and 3rd keys used for restoring  Secret = " + secretRestored);
-        assert secretRestored.equals(secret);
+        assertEquals(secretRestored, secret);
     }
 
     private String restoreSecretWith(ShamirKey... keys) {
-        byte[] des = ShamirSharedSecret.calculateLagrange(keys);
+        byte[] des = Shamir.calculateLagrange(keys);
         return new String(des);
     }
 
@@ -45,8 +47,8 @@ class ShamirSharedSecretTest {
         int numBits = secret.length() * 8; //We need bits not bytes
 
         //Create key
-        BigInteger[] polynomialParams = ShamirSharedSecret.generateParams(requiredShares, numBits, secret.getBytes());
-        ShamirKey[] allKeys = ShamirSharedSecret.generateKeys(totalShares, requiredShares, numBits, polynomialParams);
+        BigInteger[] polynomialParams = Shamir.generateParams(requiredShares, numBits, secret.getBytes());
+        ShamirKey[] allKeys = Shamir.generateKeys(totalShares, requiredShares, numBits, polynomialParams);
         long start = System.currentTimeMillis();
         for (int i = 0; i < 100_000; i++) {
             restoreSecretWith(allKeys[0], allKeys[1]);
