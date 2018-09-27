@@ -1,9 +1,5 @@
 package io.raspberrywallet.manager.cryptography.crypto;
 
-import io.raspberrywallet.manager.cryptography.crypto.ciphers.AESCipherFactory;
-import io.raspberrywallet.manager.cryptography.crypto.ciphers.AESFactory;
-import io.raspberrywallet.manager.cryptography.crypto.ciphers.RSACipherFactory;
-import io.raspberrywallet.manager.cryptography.crypto.ciphers.RSAFactory;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.wrappers.AESEncryptedObject;
@@ -33,7 +29,7 @@ public class CryptoObject {
      *                             EncryptionException, with original or custom error message.
      */
     public <E extends Serializable> AESEncryptedObject<E> encrypt(E object, Password password) throws EncryptionException {
-        AESFactory aesFactory = new AESFactory();
+        AlgorithmFactory aesFactory = new AESFactory();
         AESCipherFactory aesCipherFactory = new AESCipherFactory(aesFactory);
         
         try {

@@ -1,10 +1,11 @@
-import io.raspberrywallet.manager.cryptography.crypto.ciphers.RSACipherFactory;
-import io.raspberrywallet.manager.cryptography.crypto.ciphers.RSAFactory;
-import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
+package io.raspberrywallet.manager.cryptography.crypto;
+
+import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.wrappers.RSAEncryptedObject;
 import org.apache.commons.lang.SerializationUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +47,7 @@ public class RSAObjectsTests {
              assertNotEquals(encryptedObject.getCipherFactory(), serializedData);
              
              ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, defaultKeyPair.getPrivate());
-             assertEquals(decryptedObject, data);
+             Assertions.assertEquals(decryptedObject, data);
              
         } catch (EncryptionException e) {
             fail("Encryption failed with exception: " + e.getMessage());
@@ -66,7 +67,7 @@ public class RSAObjectsTests {
                 assertNotEquals(encryptedObject.getCipherFactory(), serializedData);
             
                 ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, defaultKeyPair.getPrivate());
-                assertEquals(decryptedObject, data);
+                Assertions.assertEquals(decryptedObject, data);
             
             } catch (EncryptionException e) {
                 fail("Encryption failed with exception: " + e.getMessage());

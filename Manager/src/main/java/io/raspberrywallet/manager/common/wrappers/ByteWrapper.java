@@ -1,3 +1,5 @@
+package io.raspberrywallet.manager.common.wrappers;
+
 import java.io.Serializable;
 import java.util.Arrays;
 

@@ -2,7 +2,7 @@ package io.raspberrywallet.manager.cryptography.crypto.wrappers;
 
 
 
-import io.raspberrywallet.manager.cryptography.crypto.ciphers.CipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.CipherFactory;
 import org.apache.commons.lang.SerializationUtils;
 
 import java.io.Serializable;

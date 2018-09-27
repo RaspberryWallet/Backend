@@ -1,4 +1,4 @@
-package io.raspberrywallet.manager.cryptography.crypto.ciphers;
+package io.raspberrywallet.manager.cryptography.crypto;
 
 
 import io.raspberrywallet.manager.cryptography.common.Password;
@@ -17,7 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 
-public class AESCipherFactory extends CipherFactory implements Serializable {
+class AESCipherFactory extends CipherFactory implements Serializable {
     
     private String hashAlgorithmName;
     private byte[] ivBytes;
@@ -25,7 +25,7 @@ public class AESCipherFactory extends CipherFactory implements Serializable {
     
     private int iterationsAmount;
     
-    public AESCipherFactory(AlgorithmFactory algorithmFactory) {
+    AESCipherFactory(AlgorithmFactory algorithmFactory) {
         AESFactory aesAlgorithmData = (AESFactory)algorithmFactory;
         
         SecureRandom random = new SecureRandom();
@@ -42,7 +42,7 @@ public class AESCipherFactory extends CipherFactory implements Serializable {
         iterationsAmount = aesAlgorithmData.getKeyHashIterationsAmount();
     }
     
-    public Cipher getCipher(Password password, int cipherMode) throws NoSuchPaddingException, NoSuchAlgorithmException,
+    Cipher getCipher(Password password, int cipherMode) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidKeySpecException, InvalidAlgorithmParameterException, InvalidKeyException {
         
         Cipher cipher = Cipher.getInstance(algorithmFullName);
@@ -57,15 +57,15 @@ public class AESCipherFactory extends CipherFactory implements Serializable {
         return cipher;
     }
     
-    public String getHashAlgorithmName() {
+    String getHashAlgorithmName() {
         return hashAlgorithmName;
     }
     
-    public byte[] getIvBytes() {
+    byte[] getIvBytes() {
         return ivBytes;
     }
     
-    public byte[] getKeySalt() {
+    byte[] getKeySalt() {
         return keySalt;
     }
     

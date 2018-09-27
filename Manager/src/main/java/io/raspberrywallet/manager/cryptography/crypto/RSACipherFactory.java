@@ -1,13 +1,13 @@
-package io.raspberrywallet.manager.cryptography.crypto.ciphers;
+package io.raspberrywallet.manager.cryptography.crypto;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import java.io.Serializable;
 import java.security.*;
 
-public class RSACipherFactory extends CipherFactory implements Serializable {
+class RSACipherFactory extends CipherFactory implements Serializable {
     
-    public RSACipherFactory(AlgorithmFactory algorithmFactory) {
+    RSACipherFactory(AlgorithmFactory algorithmFactory) {
         RSAFactory rsaAlgorithmData = (RSAFactory)algorithmFactory;
         
         algorithmName = rsaAlgorithmData.getAlgorithmName();
@@ -32,13 +32,13 @@ public class RSACipherFactory extends CipherFactory implements Serializable {
         }
     }
     
-    public Cipher getEncryptCipher(PublicKey publicKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+    Cipher getEncryptCipher(PublicKey publicKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
         Cipher cipher = Cipher.getInstance(algorithmFullName);
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         return cipher;
     }
     
-    public Cipher getDecryptCipher(PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+    Cipher getDecryptCipher(PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
         Cipher cipher = Cipher.getInstance(algorithmFullName);
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
         return cipher;

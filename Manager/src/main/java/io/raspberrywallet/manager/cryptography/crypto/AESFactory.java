@@ -1,6 +1,6 @@
-package io.raspberrywallet.manager.cryptography.crypto.ciphers;
+package io.raspberrywallet.manager.cryptography.crypto;
 
-public class AESFactory extends AlgorithmFactory {
+class AESFactory extends AlgorithmFactory {
     
     private final static String HASH_ALGORITHM_NAME = "PBKDF2WithHmacSHA1";
     
@@ -12,19 +12,19 @@ public class AESFactory extends AlgorithmFactory {
         keySize = 256;
     }
 
-    public String getHashAlgorithmName() {
+    String getHashAlgorithmName() {
         return HASH_ALGORITHM_NAME;
     }
 
-    public int getKeyHashIterationsAmount() {
+    int getKeyHashIterationsAmount() {
         return KEY_HASH_ITERATIONS_AMOUNT;
     }
     
-    public int getKeySaltSize() {
+    int getKeySaltSize() {
         return 16;
     }
     
-    public int getIvSaltSize() {
+    int getIvSaltSize() {
         return 16;
     }
     
