@@ -1,14 +1,12 @@
 package io.raspberrywallet.manager.cryptography.crypto;
 
-import io.raspberrywallet.manager.cryptography.ciphers.AESCipherFactory;
-import io.raspberrywallet.manager.cryptography.ciphers.AESFactory;
-import io.raspberrywallet.manager.cryptography.ciphers.RSACipherFactory;
-import io.raspberrywallet.manager.cryptography.ciphers.RSAFactory;
-import io.raspberrywallet.manager.cryptography.crypto.decryption.DecryptionStream;
-import io.raspberrywallet.manager.cryptography.crypto.encryption.EncryptionStream;
-import io.raspberrywallet.manager.cryptography.exceptions.DecryptionException;
-import io.raspberrywallet.manager.cryptography.exceptions.EncryptionException;
-import io.raspberrywallet.manager.cryptography.wrappers.data.Password;
+import io.raspberrywallet.manager.cryptography.crypto.ciphers.AESCipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.ciphers.AESFactory;
+import io.raspberrywallet.manager.cryptography.crypto.ciphers.RSACipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.ciphers.RSAFactory;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
+import io.raspberrywallet.manager.cryptography.common.Password;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
@@ -23,7 +21,7 @@ import java.security.spec.InvalidKeySpecException;
  * Class that is used for Stream encryption and decryption.
  * It keeps instances of streams to encrypt or decrypt.
  */
-public class CryptoStream implements EncryptionStream, DecryptionStream {
+public class CryptoStream {
     
     final private InputStream inputStream;
     final private OutputStream outputStream;
@@ -49,19 +47,19 @@ public class CryptoStream implements EncryptionStream, DecryptionStream {
     // encryption
     
     /**
-     * This method is going to encrypt given input stream with given password and transfer it
-     * to output stream.
+     * This method is using AES algorithm to encrypt given input stream and write it to given output stream.
+     * Output stream contain serialized header with metadata, that can be used for decryption.
      * @param password Password that will be used with PBEKeySpec for AES encryption.
-     * @throws EncryptionException This exception will be thrown, if there is IO problem or given password is wrong.
+     * @throws EncryptionException If there is any error with encryption, then it's caught and thrown as
+     *                             EncryptionException, with original or custom error message.
      */
-    @Override
-    public void encryptStream(Password password) throws EncryptionException {
+    public void encrypt(Password password) throws EncryptionException {
         try {
             AESFactory aesAlgorithmData = new AESFactory();
             AESCipherFactory aesCipherFactory = new AESCipherFactory(aesAlgorithmData);
             Cipher cipher = aesCipherFactory.getCipher(password, Cipher.ENCRYPT_MODE);
     
-            encryptStream(cipher);
+            encrypt(cipher);
         }
         catch (IOException | InvalidKeyException e) {
             throw new EncryptionException(e);
@@ -73,18 +71,16 @@ public class CryptoStream implements EncryptionStream, DecryptionStream {
     }
     
     /**
-     * This method is going to encrypt given input stream with given RSA public key and transfer it
-     * to output stream.
+     * This method is using AES algorithm to encrypt given input stream and write it to given output stream.
+     * Output stream contains serialized header with metadata, that can be used for decryption.
      * @param publicKey Public key used for encryption.
-     * @throws EncryptionException
      */
-    @Override
-    public void encryptStream(PublicKey publicKey) throws EncryptionException {
+    public void encrypt(PublicKey publicKey) throws EncryptionException {
         RSACipherFactory cipherFactory = new RSACipherFactory(new RSAFactory());
         try {
             Cipher cipher = cipherFactory.getEncryptCipher(publicKey);
             
-            encryptStream(cipher);
+            encrypt(cipher);
         }
         catch (IOException | InvalidKeyException exception) {
             throw new EncryptionException(exception);
@@ -95,7 +91,7 @@ public class CryptoStream implements EncryptionStream, DecryptionStream {
         }
     }
     
-    private void encryptStream(Cipher cipher) throws IOException {
+    private void encrypt(Cipher cipher) throws IOException {
         try (CipherOutputStream cipherOutputStream = new CipherOutputStream(outputStream, cipher)) {
             transferTo(inputStream, cipherOutputStream);
         }
@@ -103,30 +99,42 @@ public class CryptoStream implements EncryptionStream, DecryptionStream {
     
     // decryption
     
-    @Override
-    public void decryptStream(Password password) throws DecryptionException {
+    /**
+     * This method is used for decryption of encrypted data in given input stream. The encryption algorithm must be AES.
+     * The input stream must contain AESFactory serialized header, which was used to encryption.
+     * @param password Password that will be used for creating PBBKeySpec for AES decryption.
+     * @throws DecryptionException If there is any error in decryption, then it is caught and thrown as
+     *                             DecryptionException, with it's original or custom message.
+     */
+    public void decrypt(Password password) throws DecryptionException {
         try {
             AESCipherFactory aesCipherFactory = CipherHeaderManager.readCipherData(inputStream);
             Cipher cipher = aesCipherFactory.getCipher(password, Cipher.DECRYPT_MODE);
-            decryptStream(cipher);
+            decrypt(cipher);
         } catch (IOException | NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeySpecException exception) {
             throw new DecryptionException(exception);
         }
     }
     
-    @Override
-    public void decryptStream(PrivateKey privateKey) throws DecryptionException {
+    /**
+     * This method is used for decryption of encrypted data in given input stream. The encryption algorithm must be RSA.
+     * The input stream must contain RSAFactory serialized header, which was used to encryption.
+     * @param privateKey Private RSA key needed for decryption.
+     * @throws DecryptionException If there is any error in decryption, then it is caught and thrown as
+     *                             DecryptionException, with it's original or custom message.
+     */
+    public void decrypt(PrivateKey privateKey) throws DecryptionException {
         try {
             RSACipherFactory rsaCipherFactory = CipherHeaderManager.readCipherData(inputStream);
             Cipher cipher = rsaCipherFactory.getDecryptCipher(privateKey);
             
-            decryptStream(cipher);
+            decrypt(cipher);
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | IOException exception) {
             throw new DecryptionException(exception);
         }
     }
     
-    private void decryptStream(Cipher cipher) throws IOException {
+    private void decrypt(Cipher cipher) throws IOException {
         try (CipherOutputStream cipherOutputStream = new CipherOutputStream(outputStream, cipher)) {
              transferTo(inputStream, cipherOutputStream);
         }

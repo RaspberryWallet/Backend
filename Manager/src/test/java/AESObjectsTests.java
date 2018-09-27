@@ -1,8 +1,8 @@
 import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
-import io.raspberrywallet.manager.cryptography.exceptions.DecryptionException;
-import io.raspberrywallet.manager.cryptography.exceptions.EncryptionException;
-import io.raspberrywallet.manager.cryptography.wrappers.crypto.AESEncryptedObject;
-import io.raspberrywallet.manager.cryptography.wrappers.data.Password;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
+import io.raspberrywallet.manager.cryptography.crypto.wrappers.AESEncryptedObject;
+import io.raspberrywallet.manager.cryptography.common.Password;
 import org.apache.commons.lang.SerializationUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -44,10 +44,10 @@ public class AESObjectsTests {
         ByteWrapper wrappedData = new ByteWrapper(getRandomData());
         Password randomPassword = getRandomPassword();
         try {
-            AESEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encryptObject(wrappedData, defaultPassword);
+            AESEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(wrappedData, defaultPassword);
     
             assertThrows(DecryptionException.class, () ->{
-                ByteWrapper decryptedObject = cryptoObject.decryptObject(encryptedObject, randomPassword);
+                ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, randomPassword);
             });
             
         } catch (EncryptionException e) {
@@ -59,8 +59,8 @@ public class AESObjectsTests {
     void WhenEncrypting_DataDecryptedWithDifferentPasswordDoesNotEquals() {
         ByteWrapper wrappedData = new ByteWrapper(getRandomData());
         try {
-            AESEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encryptObject(wrappedData, defaultPassword);
-            ByteWrapper decryptedObject = cryptoObject.decryptObject(encryptedObject, defaultPassword);
+            AESEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(wrappedData, defaultPassword);
+            ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, defaultPassword);
             
             assertNotEquals(decryptedObject, wrappedData);
             
@@ -75,8 +75,8 @@ public class AESObjectsTests {
     void ObjectDoesNotChange_WhenEncryptedAndDecrypted() {
         ByteWrapper wrappedData = new ByteWrapper(getRandomData());
         try {
-            AESEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encryptObject(wrappedData, defaultPassword);
-            ByteWrapper decryptedObject = cryptoObject.decryptObject(encryptedObject, defaultPassword);
+            AESEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(wrappedData, defaultPassword);
+            ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, defaultPassword);
             assertEquals(wrappedData, decryptedObject);
 
         } catch (EncryptionException | DecryptionException e) {
@@ -91,10 +91,10 @@ public class AESObjectsTests {
             byte[] serializedWrappedData = SerializationUtils.serialize(data);
     
             try {
-                AESEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encryptObject(data, defaultPassword);
+                AESEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(data, defaultPassword);
                 assertEquals(serializedWrappedData, encryptedObject.getSerializedObject());
     
-                ByteWrapper decryptObject = cryptoObject.decryptObject(encryptedObject, defaultPassword);
+                ByteWrapper decryptObject = cryptoObject.decrypt(encryptedObject, defaultPassword);
                 assertNotEquals(decryptObject, data);
                 
             } catch (EncryptionException e) {
@@ -114,10 +114,10 @@ public class AESObjectsTests {
             byte[] serializedData = SerializationUtils.serialize(data);
             
             try {
-                AESEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encryptObject(data, arrayOfRandomPasswords[i]);
+                AESEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(data, arrayOfRandomPasswords[i]);
                 assertEquals(encryptedObject.getSerializedObject(), serializedData);
                 
-                ByteWrapper decryptObject = cryptoObject.decryptObject(encryptedObject, arrayOfRandomPasswords[i]);
+                ByteWrapper decryptObject = cryptoObject.decrypt(encryptedObject, arrayOfRandomPasswords[i]);
                 assertNotEquals(decryptObject, data);
                 
             } catch (EncryptionException e) {

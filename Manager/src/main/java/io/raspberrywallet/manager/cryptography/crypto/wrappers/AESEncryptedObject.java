@@ -1,7 +1,7 @@
-package io.raspberrywallet.manager.cryptography.wrappers.crypto;
+package io.raspberrywallet.manager.cryptography.crypto.wrappers;
 
 
-import io.raspberrywallet.manager.cryptography.ciphers.AESCipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.ciphers.AESCipherFactory;
 
 import java.io.Serializable;
 

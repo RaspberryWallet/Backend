@@ -1,7 +1,7 @@
-package io.raspberrywallet.manager.cryptography.ciphers;
+package io.raspberrywallet.manager.cryptography.crypto.ciphers;
 
 
-import io.raspberrywallet.manager.cryptography.wrappers.data.Password;
+import io.raspberrywallet.manager.cryptography.common.Password;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;

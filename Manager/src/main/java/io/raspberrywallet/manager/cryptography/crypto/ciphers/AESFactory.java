@@ -1,4 +1,4 @@
-package io.raspberrywallet.manager.cryptography.ciphers;
+package io.raspberrywallet.manager.cryptography.crypto.ciphers;
 
 public class AESFactory extends AlgorithmFactory {
     

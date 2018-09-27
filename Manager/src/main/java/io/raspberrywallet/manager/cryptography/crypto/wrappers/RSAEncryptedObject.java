@@ -1,14 +1,14 @@
-package io.raspberrywallet.manager.cryptography.wrappers.crypto;
+package io.raspberrywallet.manager.cryptography.crypto.wrappers;
 
 
-import io.raspberrywallet.manager.cryptography.ciphers.RSACipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.ciphers.RSACipherFactory;
 
 import javax.crypto.IllegalBlockSizeException;
 import java.io.Serializable;
 
 public class RSAEncryptedObject<E extends Serializable> extends EncryptedObject<E> implements Serializable {
     
-    public RSAEncryptedObject(byte[] serializedObject, RSACipherFactory cipherFactory) throws IllegalBlockSizeException {
+    public RSAEncryptedObject(byte[] serializedObject, RSACipherFactory cipherFactory) {
         super(serializedObject, cipherFactory, true);
     }
     

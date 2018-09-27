@@ -1,8 +1,8 @@
 package io.raspberrywallet.manager.session;
 
 
-import io.raspberrywallet.manager.cryptography.ciphers.RSACipherFactory;
-import io.raspberrywallet.manager.cryptography.ciphers.RSAFactory;
+import io.raspberrywallet.manager.cryptography.crypto.ciphers.RSACipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.ciphers.RSAFactory;
 
 import java.io.Serializable;
 import java.security.KeyPair;

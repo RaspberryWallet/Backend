@@ -1,4 +1,4 @@
-package io.raspberrywallet.manager.cryptography.ciphers;
+package io.raspberrywallet.manager.cryptography.crypto.ciphers;
 
 import java.io.Serializable;
 
