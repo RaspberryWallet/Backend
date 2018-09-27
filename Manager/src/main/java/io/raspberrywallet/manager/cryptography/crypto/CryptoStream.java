@@ -1,5 +1,7 @@
 package io.raspberrywallet.manager.cryptography.crypto;
 
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.AESCipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherFactory;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.cryptography.common.Password;
@@ -51,8 +53,7 @@ public class CryptoStream {
      */
     public void encrypt(Password password) throws EncryptionException {
         try {
-            AESFactory aesAlgorithmData = new AESFactory();
-            AESCipherFactory aesCipherFactory = new AESCipherFactory(aesAlgorithmData);
+            AESCipherFactory aesCipherFactory = new AESCipherFactory();
             Cipher cipher = aesCipherFactory.getCipher(password, Cipher.ENCRYPT_MODE);
     
             encrypt(cipher);
@@ -72,7 +73,7 @@ public class CryptoStream {
      * @param publicKey Public key used for encryption.
      */
     public void encrypt(PublicKey publicKey) throws EncryptionException {
-        RSACipherFactory cipherFactory = new RSACipherFactory(new RSAFactory());
+        RSACipherFactory cipherFactory = new RSACipherFactory();
         try {
             Cipher cipher = cipherFactory.getEncryptCipher(publicKey);
             

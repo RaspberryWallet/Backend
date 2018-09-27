@@ -1,18 +1,20 @@
-package io.raspberrywallet.manager.cryptography.crypto;
+package io.raspberrywallet.manager.cryptography.crypto.algorithms;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import java.io.Serializable;
 import java.security.*;
 
-class RSACipherFactory extends CipherFactory implements Serializable {
+public class RSACipherFactory extends CipherFactory implements Serializable {
     
-    RSACipherFactory(AlgorithmFactory algorithmFactory) {
-        RSAFactory rsaAlgorithmData = (RSAFactory)algorithmFactory;
-        
-        algorithmName = rsaAlgorithmData.getAlgorithmName();
-        algorithmFullName = rsaAlgorithmData.getFullAlgorithmName();
-        keySize = rsaAlgorithmData.getKeySize();
+    public RSACipherFactory() {
+        this(new RSAParameters());
+    }
+    
+    RSACipherFactory(RSAParameters algorithmFactory) {
+        algorithmName = algorithmFactory.getAlgorithmName();
+        algorithmFullName = algorithmFactory.getFullAlgorithmName();
+        keySize = algorithmFactory.getKeySize();
     }
     
     public KeyPair getKeyPair() throws NoSuchAlgorithmException {
@@ -22,7 +24,7 @@ class RSACipherFactory extends CipherFactory implements Serializable {
     }
     
     public KeyPair getKeyPairDefault() {
-        RSAFactory rsaFactory = new RSAFactory();
+        RSAParameters rsaFactory = new RSAParameters();
         try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance(rsaFactory.getAlgorithmName());
             generator.initialize(rsaFactory.getKeySize());
@@ -32,13 +34,13 @@ class RSACipherFactory extends CipherFactory implements Serializable {
         }
     }
     
-    Cipher getEncryptCipher(PublicKey publicKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+    public Cipher getEncryptCipher(PublicKey publicKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
         Cipher cipher = Cipher.getInstance(algorithmFullName);
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         return cipher;
     }
     
-    Cipher getDecryptCipher(PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+    public Cipher getDecryptCipher(PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
         Cipher cipher = Cipher.getInstance(algorithmFullName);
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
         return cipher;

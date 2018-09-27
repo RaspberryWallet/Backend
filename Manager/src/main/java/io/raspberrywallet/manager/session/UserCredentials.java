@@ -1,8 +1,8 @@
 package io.raspberrywallet.manager.session;
 
 
-import io.raspberrywallet.manager.cryptography.crypto.RSACipherFactory;
-import io.raspberrywallet.manager.cryptography.crypto.ciphers.RSAFactory;
+
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherFactory;
 
 import java.io.Serializable;
 import java.security.KeyPair;
@@ -18,7 +18,7 @@ public class UserCredentials implements Serializable {
     
     public UserCredentials(String username) {
         this.username = username;
-        RSACipherFactory cipherFactory = new RSACipherFactory(new RSAFactory());
+        RSACipherFactory cipherFactory = new RSACipherFactory();
         KeyPair keyPair = cipherFactory.getKeyPairDefault();
         this.publicKey = keyPair.getPublic();
         this.privateKey = keyPair.getPrivate();

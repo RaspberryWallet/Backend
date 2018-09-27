@@ -1,4 +1,4 @@
-package io.raspberrywallet.manager.cryptography.crypto;
+package io.raspberrywallet.manager.cryptography.crypto.algorithms;
 
 
 import io.raspberrywallet.manager.cryptography.common.Password;
@@ -17,7 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 
-class AESCipherFactory extends CipherFactory implements Serializable {
+public class AESCipherFactory extends CipherFactory implements Serializable {
     
     private String hashAlgorithmName;
     private byte[] ivBytes;
@@ -25,24 +25,26 @@ class AESCipherFactory extends CipherFactory implements Serializable {
     
     private int iterationsAmount;
     
-    AESCipherFactory(AlgorithmFactory algorithmFactory) {
-        AESFactory aesAlgorithmData = (AESFactory)algorithmFactory;
-        
+    public AESCipherFactory() {
+        this(new AESParameters());
+    }
+    
+    AESCipherFactory(AESParameters algorithmFactory) {
         SecureRandom random = new SecureRandom();
         byte keySalt[] = new byte[16];
         ivBytes = new byte[16];
         random.nextBytes(keySalt);
         random.nextBytes(ivBytes);
         
-        algorithmName = aesAlgorithmData.getAlgorithmName();
-        algorithmFullName = aesAlgorithmData.getFullAlgorithmName();
-        hashAlgorithmName = aesAlgorithmData.getHashAlgorithmName();
+        algorithmName = algorithmFactory.getAlgorithmName();
+        algorithmFullName = algorithmFactory.getFullAlgorithmName();
+        hashAlgorithmName = algorithmFactory.getHashAlgorithmName();
         this.keySalt = keySalt;
-        keySize = aesAlgorithmData.getKeySize();
-        iterationsAmount = aesAlgorithmData.getKeyHashIterationsAmount();
+        keySize = algorithmFactory.getKeySize();
+        iterationsAmount = algorithmFactory.getKeyHashIterationsAmount();
     }
     
-    Cipher getCipher(Password password, int cipherMode) throws NoSuchPaddingException, NoSuchAlgorithmException,
+    public Cipher getCipher(Password password, int cipherMode) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidKeySpecException, InvalidAlgorithmParameterException, InvalidKeyException {
         
         Cipher cipher = Cipher.getInstance(algorithmFullName);
@@ -57,15 +59,15 @@ class AESCipherFactory extends CipherFactory implements Serializable {
         return cipher;
     }
     
-    String getHashAlgorithmName() {
+    public String getHashAlgorithmName() {
         return hashAlgorithmName;
     }
     
-    byte[] getIvBytes() {
+    public byte[] getIvBytes() {
         return ivBytes;
     }
     
-    byte[] getKeySalt() {
+    public byte[] getKeySalt() {
         return keySalt;
     }
     

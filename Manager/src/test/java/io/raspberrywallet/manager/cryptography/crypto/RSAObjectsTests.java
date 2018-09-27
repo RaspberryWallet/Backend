@@ -1,15 +1,16 @@
 package io.raspberrywallet.manager.cryptography.crypto;
 
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherFactory;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
-import io.raspberrywallet.manager.cryptography.crypto.wrappers.RSAEncryptedObject;
 import org.apache.commons.lang.SerializationUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;
+import java.util.Arrays;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,14 +19,14 @@ public class RSAObjectsTests {
     
     private static final int randomObjectsAmount = 256;
     
-    private static final RSACipherFactory rsaCipherFactory = new RSACipherFactory(new RSAFactory());
+    private static final RSACipherFactory rsaCipherFactory = new RSACipherFactory();
     private static final KeyPair defaultKeyPair = rsaCipherFactory.getKeyPairDefault();
     private static final CryptoObject cryptoObject = new CryptoObject();
     private static final Random random = new Random();
     private static byte[][] arrayOfRandomData;
     
     // in bytes
-    private static final int maxDataSize = 123;
+    private static final int maxDataSize = 80;
     
     @BeforeAll
     static void initializeData() {
@@ -44,10 +45,10 @@ public class RSAObjectsTests {
         
         try {
              RSAEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(data, defaultKeyPair.getPublic());
-             assertNotEquals(encryptedObject.getCipherFactory(), serializedData);
+             assertFalse(Arrays.equals(encryptedObject.getSerializedObject(), serializedData));
              
              ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, defaultKeyPair.getPrivate());
-             Assertions.assertEquals(decryptedObject, data);
+             assertEquals(decryptedObject, data);
              
         } catch (EncryptionException e) {
             fail("Encryption failed with exception: " + e.getMessage());
@@ -64,10 +65,10 @@ public class RSAObjectsTests {
         
             try {
                 RSAEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(data, defaultKeyPair.getPublic());
-                assertNotEquals(encryptedObject.getCipherFactory(), serializedData);
+                assertFalse(Arrays.equals(encryptedObject.getSerializedObject(), serializedData));
             
                 ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, defaultKeyPair.getPrivate());
-                Assertions.assertEquals(decryptedObject, data);
+                assertEquals(decryptedObject, data);
             
             } catch (EncryptionException e) {
                 fail("Encryption failed with exception: " + e.getMessage());
@@ -88,6 +89,7 @@ public class RSAObjectsTests {
             assertThrows(DecryptionException.class, () -> {
                 ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, newKeyPair.getPrivate());
             });
+            
         } catch (EncryptionException e) {
             fail("Encryption failed with exception: " + e.getMessage());
         }

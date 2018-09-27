@@ -1,8 +1,8 @@
-package io.raspberrywallet.manager.cryptography.crypto;
+package io.raspberrywallet.manager.cryptography.crypto.algorithms;
 
-class RSAFactory extends AlgorithmFactory {
+class RSAParameters extends AlgorithmFactory {
     
-    RSAFactory() {
+    RSAParameters() {
         algorithmName = "RSA";
         algorithmFullName = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
         keySize = 2048;

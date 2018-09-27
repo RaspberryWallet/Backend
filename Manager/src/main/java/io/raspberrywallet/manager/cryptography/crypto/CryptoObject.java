@@ -1,10 +1,9 @@
 package io.raspberrywallet.manager.cryptography.crypto;
 
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.AESCipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherFactory;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
-import io.raspberrywallet.manager.cryptography.crypto.wrappers.AESEncryptedObject;
-import io.raspberrywallet.manager.cryptography.crypto.wrappers.EncryptedObject;
-import io.raspberrywallet.manager.cryptography.crypto.wrappers.RSAEncryptedObject;
 import io.raspberrywallet.manager.cryptography.common.Password;
 import org.apache.commons.lang.SerializationUtils;
 
@@ -29,8 +28,7 @@ public class CryptoObject {
      *                             EncryptionException, with original or custom error message.
      */
     public <E extends Serializable> AESEncryptedObject<E> encrypt(E object, Password password) throws EncryptionException {
-        AlgorithmFactory aesFactory = new AESFactory();
-        AESCipherFactory aesCipherFactory = new AESCipherFactory(aesFactory);
+        AESCipherFactory aesCipherFactory = new AESCipherFactory();
         
         try {
             Cipher cipher = aesCipherFactory.getCipher(password, Cipher.ENCRYPT_MODE);
@@ -55,8 +53,7 @@ public class CryptoObject {
      *                             EncryptionException, with original or custom error message.
      */
     public <E extends Serializable> RSAEncryptedObject<E> encrypt(E object, PublicKey publicKey) throws EncryptionException {
-        RSAFactory rsaFactory = new RSAFactory();
-        RSACipherFactory rsaCipherFactory = new RSACipherFactory(rsaFactory);
+        RSACipherFactory rsaCipherFactory = new RSACipherFactory();
         try {
             Cipher cipher = rsaCipherFactory.getEncryptCipher(publicKey);
             

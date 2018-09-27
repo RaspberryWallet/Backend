@@ -1,14 +1,13 @@
-package io.raspberrywallet.manager.cryptography.crypto.wrappers;
+package io.raspberrywallet.manager.cryptography.crypto;
 
 
 
-import io.raspberrywallet.manager.cryptography.crypto.CipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.CipherFactory;
 import org.apache.commons.lang.SerializationUtils;
 
 import java.io.Serializable;
 
 public abstract class EncryptedObject<E extends Serializable> implements Serializable {
-    
     
     private byte[] serializedObject;
     CipherFactory cipherFactory;
