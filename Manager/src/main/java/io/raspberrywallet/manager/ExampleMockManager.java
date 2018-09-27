@@ -16,13 +16,9 @@ public class ExampleMockManager extends Manager {
 		try {
 			byte[] json = 
 			MockDatabaseFactory.getInstance()
-				.setAddress("ABC123")
-				.setBalance(12.34)
 				.placeKeyPart(new byte[]{1,2,3,4,5,6}, 0)
 				.placeKeyPart(new byte[]{100,101,102,103,-101,-102,-103}, 1)
 				.pushWallet()
-				.setAddress("DEF456")
-				.setBalance(33.55)
 				.placeKeyPart(new byte[]{9,10,11}, 0)
 				.placeKeyPart(new byte[]{11,10,9,8,7}, 1)
 				.pushWallet()
@@ -35,5 +31,5 @@ public class ExampleMockManager extends Manager {
 		
 		System.out.println(mod);
 	}
-	
+
 }

@@ -1,9 +1,13 @@
-import io.raspberrywallet.manager.cryptography.sharedsecret.blakley.Blakley;
+package io.raspberrywallet.manager.cryptography.sharedsecret.blakley;
+
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
-class BlakleySharedSecretTest {
+import static io.raspberrywallet.manager.Utils.println;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class BlakleyTest {
     private final int totalShares = 3; //number of generate keys
     private final int requiredShares = 2; //number of keys for solve the secret (requiredShares <= totalShares)
     private final int bits = 512; //number of bits of keys
@@ -27,16 +31,18 @@ class BlakleySharedSecretTest {
         }
 
         //Select 2 keys from 3
-        String text = restoreSecretWith(allKeys[0], allKeys[1]);
-        System.out.println("From first and second secret: " + text);
+        String secretRestored = restoreSecretWith(allKeys[0], allKeys[1]);
+        assertEquals(secretRestored, secret);
+        println("From first and second secret: " + secretRestored);
 
-
-        text = restoreSecretWith(allKeys[0], allKeys[2]);
-        System.out.println("From first and second third: " + text);
+        secretRestored = restoreSecretWith(allKeys[0], allKeys[2]);
+        assertEquals(secretRestored, secret);
+        println("From first and second third: " + secretRestored);
 
         //Convert to String
-        text = restoreSecretWith(allKeys[1], allKeys[2]);
-        System.out.println("From second and third secret: " + text);
+        secretRestored = restoreSecretWith(allKeys[1], allKeys[2]);
+        assertEquals(secretRestored, secret);
+        println("From second and third secret: " + secretRestored);
     }
 
     private String restoreSecretWith(BigInteger[]... keys) {
