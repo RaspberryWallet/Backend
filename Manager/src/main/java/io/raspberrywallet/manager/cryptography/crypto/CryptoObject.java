@@ -23,12 +23,14 @@ import java.security.spec.InvalidKeySpecException;
 
 public class CryptoObject implements EncryptionObject, DecryptionObject {
     
-    
-    public CryptoObject() {
-        
-    }
-    
-    // encryption
+    /**
+     *
+     * @param object Any object implementing Serializable interface.
+     * @param password Password that will be used with PBEKeySpec for AES encryption.
+     * @param <E>
+     * @return
+     * @throws EncryptionException
+     */
     
     @Override
     public <E extends Serializable> AESEncryptedObject<E> encryptObject(E object, Password password) throws EncryptionException {
