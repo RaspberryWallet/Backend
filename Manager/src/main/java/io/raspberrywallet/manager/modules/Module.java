@@ -1,6 +1,6 @@
 package io.raspberrywallet.manager.modules;
 
-import org.omg.CORBA.TIMEOUT;
+
 
 public abstract class Module {
 
