@@ -1,5 +1,7 @@
 package io.raspberrywallet.manager.modules;
 
+import org.omg.CORBA.TIMEOUT;
+
 public abstract class Module {
 
 	/*
@@ -84,6 +86,11 @@ public abstract class Module {
     private String statusString;
     private byte[] decryptedValue;
 
+    public void newSession() {
+        input.clear();
+        register();
+    }
+    
     public void setPayload(byte[] payload) {
         this.payload = payload.clone();
     }
