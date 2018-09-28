@@ -4,9 +4,10 @@ import org.omg.CORBA.TIMEOUT;
 
 public abstract class Module {
 
-    /**
-     * Wydaje mi się, że to zwróci server
-     */
+	/*
+	 * Module info formatted as JSON.
+	 * */
+	
     @Override
     public String toString() {
         return "{\"id\":\"" + getId() + "\", \"status\":\"" + getStatusString() + "\"}";
@@ -20,26 +21,25 @@ public abstract class Module {
     }
 
     /**
-     * Sprawdzamy tym, czy wszystko o co został
-     * człowiek poproszony zostało wykonane
-     *
-     * @return true, jeśli jesteśmy gotowi do deszyfrowania
+     * Check if needed interaction (User-Module) has been completed
+     * 
+     * @return true, if we are ready to decrypt
      */
     public abstract boolean check();
 
     /**
-     * tutaj deszyfrujemy partię klucza
+     * used for decryption, should include `this.decrypt(Decrypter)`
      */
     public abstract void process();
 
     /**
-     * tutaj przygotowujemy moduł do działania
+     * this function should prepare module before consecutive use.
+     * Manager should call this.
      */
     public abstract void register();
 
     /**
-     * Uruchamiamy tym moduł do oczekiwania na bodźce
-     * z zewnątrz
+     * Manager uses this to start the Module after register()
      */
     public void start() {
         checkThread = new Thread(checkRunnable.enable().setSleepTime(100));
@@ -47,28 +47,27 @@ public abstract class Module {
     }
 
     /**
-     * Szyfrowanie partii klucza przy tworzeniu struktury portfela
+     * Encryption function when creating wallet
      *
-     * @param data   - niezaszyfrowana partia
-     * @param params - dodatkowe parametry
-     * @return zaszyfrowany payload do zapisania w bazie
+     * @param data   - unencrypted key part
+     * @param params - additional params
+     * @return encrypted payload
      */
     public abstract byte[] encryptInput(byte[] data, Object... params);
 
     /**
-     * Pobieranie teraźniejszego statusu, wiadomości dla użytkownika
+     * Returns status of the module to show to the user
      *
-     * @return wiadomość informacyjna
+     * @return message
      */
     public String getStatusString() {
         return statusString == null ? "null" : statusString;
     }
 
     /**
-     * W implementacji, ustawiamy tu wiadomość, błąd lub instrukcję
-     * dla usera
+     * Setting the status message for the user
      *
-     * @param statusS - nowa wiadomość
+     * @param statusS - new status
      */
     protected void setStatusString(String statusS) {
         this.statusString = statusS;
@@ -86,10 +85,6 @@ public abstract class Module {
     private int status = STATUS_WAITING;
     private String statusString;
     private byte[] decryptedValue;
-
-    public void newSession() {
-        register();
-    }
 
     public void setPayload(byte[] payload) {
         this.payload = payload.clone();
@@ -166,18 +161,22 @@ public abstract class Module {
 
     CheckRunnable checkRunnable = new CheckRunnable();
 
-    //Co ma się stać po wykonaniu wszystkiego, czyli odblokowaniu klucza lub anuluj
+    /* 
+     * Used when everything has been completed, both in "cancel" and "done" cases.
+     * Override this to be sure everything else is cleaned.
+     * Manager should call this.
+     * */
     public void destroy() {
 
-        //Kończymy oczekiwanie
+        //Stopping the wait thread
         checkRunnable.stop();
         try {
-            //Join bo tak ładnie
+            //Joining
             checkThread.join(checkRunnable.sleepTime * 2);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            //Zerujemy pamięć
+            //Clearing the RAM
             synchronized (this) {
                 zeroFill();
             }
@@ -185,7 +184,9 @@ public abstract class Module {
     }
 
 
-    // Wypełnia wszystko "zerami" w pamięci
+    /*
+     * Fill everything with "zeroes"
+     */
     public synchronized void zeroFill() {
         if (decryptedValue != null) {
             for (int i = 0; i < decryptedValue.length; ++i)
