@@ -32,9 +32,9 @@ class Server(private val manager: Manager) {
         val vertx = Vertx.vertx()
         vertx.deployVerticle(MainVerticle(manager)) {
             if (it.succeeded())
-                println("Server started at port $PORT")
+                Logger.info("Server started at port $PORT")
             else {
-                println("Could not start server")
+                Logger.err("Could not start server")
                 it.cause().printStackTrace()
             }
         }
