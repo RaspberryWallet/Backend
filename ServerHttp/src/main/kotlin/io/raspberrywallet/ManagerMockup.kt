@@ -15,10 +15,10 @@ class ManagerMockup : Manager {
         SampleModule("Google Authenticator", "Module that require to enter google auth code"))
 
     private val rand = Random()
-
-    override fun getAddress(): ByteArray {
-        return "133asfafs6fd6xvz67zvx55sad6f5f".toByteArray()
-    }
+    private val currentReceiveAddress = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
+    private val freshReceiveAddress = "3E53XjqK4Cxt71BGeP2VhpcotM8LZ853C8"
+    private val estimatedBalance = "0.0"
+    private val currentBalance = "0.0"
 
     override fun restoreFromBackupPhrase(mnemonicWords: MutableList<String>) {
         val phrase = mnemonicWords.reduce { acc, s -> acc + s }
@@ -27,6 +27,22 @@ class ManagerMockup : Manager {
     }
 
     override fun getModules(): List<Module> = modulesList
+
+    override fun getCurrentReceiveAddress(): String {
+        return currentReceiveAddress
+    }
+
+    override fun getFreshReceiveAddress(): String {
+        return freshReceiveAddress
+    }
+
+    override fun getEstimatedBalance(): String {
+        return estimatedBalance
+    }
+
+    override fun getAvailableBalance(): String {
+        return currentBalance
+    }
 
     override fun getModuleState(moduleId: String): ModuleState {
         val randomIndex = rand.nextInt(ModuleState.values().size)
