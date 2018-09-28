@@ -1,48 +1,32 @@
-package io.raspberrywallet
+package io.raspberrywallet.mock
 
+import io.raspberrywallet.Manager
+import io.raspberrywallet.Response
 import io.raspberrywallet.module.Module
 import io.raspberrywallet.module.ModuleState
 import io.raspberrywallet.step.SimpleStep
-import java.util.*
+import java.security.SecureRandom
 
-class ManagerMockup : Manager {
+class ManagerMock : Manager {
+    private val rand = SecureRandom.getInstanceStrong()
+
+    override fun ping() = "pong"
 
     class SampleModule(name: String, description: String) : Module(name, description)
 
-    private val modulesList = listOf(SampleModule("PIN", "Module that require enter 4 digits code"),
+    override fun getModules() = listOf(
+        SampleModule("PIN", "Module that require enter 4 digits code"),
         SampleModule("Button", "Module that require to push the button"),
         SampleModule("Server", "Module that require to authenticate with external server"),
         SampleModule("Google Authenticator", "Module that require to enter google auth code"))
 
-    private val rand = Random()
-    private val currentReceiveAddress = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
-    private val freshReceiveAddress = "3E53XjqK4Cxt71BGeP2VhpcotM8LZ853C8"
-    private val estimatedBalance = "0.0"
-    private val currentBalance = "0.0"
+    override fun getCurrentReceiveAddress() = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
 
-    override fun restoreFromBackupPhrase(mnemonicWords: MutableList<String>) {
-        val phrase = mnemonicWords.reduce { acc, s -> acc + s }
-        //TODO restore privatekey from backup phrase and store it safely
-        println(phrase)
-    }
+    override fun getFreshReceiveAddress() = Base58.encode(rand.generateSeed(20))
 
-    override fun getModules(): List<Module> = modulesList
+    override fun getEstimatedBalance() = "0.0"
 
-    override fun getCurrentReceiveAddress(): String {
-        return currentReceiveAddress
-    }
-
-    override fun getFreshReceiveAddress(): String {
-        return freshReceiveAddress
-    }
-
-    override fun getEstimatedBalance(): String {
-        return estimatedBalance
-    }
-
-    override fun getAvailableBalance(): String {
-        return currentBalance
-    }
+    override fun getAvailableBalance() = "0.0"
 
     override fun getModuleState(moduleId: String): ModuleState {
         val randomIndex = rand.nextInt(ModuleState.values().size)
@@ -62,5 +46,10 @@ class ManagerMockup : Manager {
         else
             Response(null, Response.Status.FAILED)
 
-    override fun ping() = "pong"
+    override fun restoreFromBackupPhrase(mnemonicWords: MutableList<String>) {
+        val phrase = mnemonicWords.reduce { acc, s -> acc + s }
+        println(phrase)
+    }
+
+
 }
