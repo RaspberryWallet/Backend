@@ -1,11 +1,10 @@
 package io.raspberrywallet.manager.cryptography.crypto;
 
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
-import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherParams;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import org.apache.commons.lang.SerializationUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -19,8 +18,8 @@ public class RSAObjectsTests {
     
     private static final int randomObjectsAmount = 256;
     
-    private static final RSACipherFactory rsaCipherFactory = new RSACipherFactory();
-    private static final KeyPair defaultKeyPair = rsaCipherFactory.getKeyPairDefault();
+    private static final RSACipherParams RSA_CIPHER_PARAMS = new RSACipherParams();
+    private static final KeyPair defaultKeyPair = RSA_CIPHER_PARAMS.getKeyPairDefault();
     private static final CryptoObject cryptoObject = new CryptoObject();
     private static final Random random = new Random();
     private static byte[][] arrayOfRandomData;
@@ -81,7 +80,7 @@ public class RSAObjectsTests {
     @Test
     void WhenDecryptingDataWithWrongKey_ExceptionIsThrown() {
         ByteWrapper data = new ByteWrapper(getRandomData());
-        KeyPair newKeyPair = rsaCipherFactory.getKeyPairDefault();
+        KeyPair newKeyPair = RSA_CIPHER_PARAMS.getKeyPairDefault();
         
         try {
             RSAEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(data, defaultKeyPair.getPublic());

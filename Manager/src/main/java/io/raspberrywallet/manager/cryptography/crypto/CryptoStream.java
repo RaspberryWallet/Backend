@@ -1,7 +1,7 @@
 package io.raspberrywallet.manager.cryptography.crypto;
 
-import io.raspberrywallet.manager.cryptography.crypto.algorithms.AESCipherFactory;
-import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.AESCipherParams;
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherParams;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.cryptography.common.Password;
@@ -53,8 +53,8 @@ public class CryptoStream {
      */
     public void encrypt(Password password) throws EncryptionException {
         try {
-            AESCipherFactory aesCipherFactory = new AESCipherFactory();
-            Cipher cipher = aesCipherFactory.getCipher(password, Cipher.ENCRYPT_MODE);
+            AESCipherParams aesCipherParams = new AESCipherParams();
+            Cipher cipher = aesCipherParams.getCipher(password, Cipher.ENCRYPT_MODE);
     
             encrypt(cipher);
         }
@@ -73,7 +73,7 @@ public class CryptoStream {
      * @param publicKey Public key used for encryption.
      */
     public void encrypt(PublicKey publicKey) throws EncryptionException {
-        RSACipherFactory cipherFactory = new RSACipherFactory();
+        RSACipherParams cipherFactory = new RSACipherParams();
         try {
             Cipher cipher = cipherFactory.getEncryptCipher(publicKey);
             
@@ -105,8 +105,8 @@ public class CryptoStream {
      */
     public void decrypt(Password password) throws DecryptionException {
         try {
-            AESCipherFactory aesCipherFactory = CipherHeaderManager.readCipherData(inputStream);
-            Cipher cipher = aesCipherFactory.getCipher(password, Cipher.DECRYPT_MODE);
+            AESCipherParams aesCipherParams = CipherHeaderManager.readCipherData(inputStream);
+            Cipher cipher = aesCipherParams.getCipher(password, Cipher.DECRYPT_MODE);
             decrypt(cipher);
         } catch (IOException | NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeySpecException exception) {
             throw new DecryptionException(exception);
@@ -122,8 +122,8 @@ public class CryptoStream {
      */
     public void decrypt(PrivateKey privateKey) throws DecryptionException {
         try {
-            RSACipherFactory rsaCipherFactory = CipherHeaderManager.readCipherData(inputStream);
-            Cipher cipher = rsaCipherFactory.getDecryptCipher(privateKey);
+            RSACipherParams rsaCipherParams = CipherHeaderManager.readCipherData(inputStream);
+            Cipher cipher = rsaCipherParams.getDecryptCipher(privateKey);
             
             decrypt(cipher);
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | IOException exception) {

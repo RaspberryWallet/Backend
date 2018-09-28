@@ -5,13 +5,13 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.Serializable;
 import java.security.*;
 
-public class RSACipherFactory extends CipherFactory implements Serializable {
+public class RSACipherParams extends CipherParams implements Serializable {
     
-    public RSACipherFactory() {
-        this(new RSAParameters());
+    public RSACipherParams() {
+        this(new RSAParams());
     }
     
-    RSACipherFactory(RSAParameters algorithmFactory) {
+    RSACipherParams(RSAParams algorithmFactory) {
         algorithmName = algorithmFactory.getAlgorithmName();
         algorithmFullName = algorithmFactory.getFullAlgorithmName();
         keySize = algorithmFactory.getKeySize();
@@ -24,7 +24,7 @@ public class RSACipherFactory extends CipherFactory implements Serializable {
     }
     
     public KeyPair getKeyPairDefault() {
-        RSAParameters rsaFactory = new RSAParameters();
+        RSAParams rsaFactory = new RSAParams();
         try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance(rsaFactory.getAlgorithmName());
             generator.initialize(rsaFactory.getKeySize());

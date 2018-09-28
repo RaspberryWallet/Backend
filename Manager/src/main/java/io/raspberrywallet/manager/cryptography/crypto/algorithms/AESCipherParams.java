@@ -17,7 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 
-public class AESCipherFactory extends CipherFactory implements Serializable {
+public class AESCipherParams extends CipherParams implements Serializable {
     
     private String hashAlgorithmName;
     private byte[] ivBytes;
@@ -25,11 +25,11 @@ public class AESCipherFactory extends CipherFactory implements Serializable {
     
     private int iterationsAmount;
     
-    public AESCipherFactory() {
-        this(new AESParameters());
+    public AESCipherParams() {
+        this(new AESParams());
     }
     
-    AESCipherFactory(AESParameters algorithmFactory) {
+    AESCipherParams(AESParams algorithmFactory) {
         SecureRandom random = new SecureRandom();
         byte keySalt[] = new byte[16];
         ivBytes = new byte[16];

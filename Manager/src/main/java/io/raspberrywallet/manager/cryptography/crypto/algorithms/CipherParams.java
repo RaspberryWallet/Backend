@@ -2,18 +2,18 @@ package io.raspberrywallet.manager.cryptography.crypto.algorithms;
 
 import java.io.Serializable;
 
-public abstract class AlgorithmFactory implements Serializable {
+public abstract class CipherParams implements Serializable {
+    
+    int keySize;
     
     String algorithmName;
     String algorithmFullName;
-    
-    int keySize;
     
     public String getAlgorithmName() {
         return algorithmName;
     }
     
-    public String getFullAlgorithmName() {
+    public String getAlgorithmFullName() {
         return algorithmFullName;
     }
     

@@ -1,12 +1,12 @@
 package io.raspberrywallet.manager.cryptography.crypto.algorithms;
 
-class AESParameters extends AlgorithmFactory {
+class AESParams extends AlgorithmParams {
     
     private final static String HASH_ALGORITHM_NAME = "PBKDF2WithHmacSHA1";
     
     private final static int KEY_HASH_ITERATIONS_AMOUNT = 65536;
     
-    AESParameters() {
+    AESParams() {
         algorithmName = "AES";
         algorithmFullName = "AES/CBC/PKCS5Padding";
         keySize = 256;

@@ -1,7 +1,7 @@
 package io.raspberrywallet.manager.cryptography.crypto;
 
-import io.raspberrywallet.manager.cryptography.crypto.algorithms.AESCipherFactory;
-import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.AESCipherParams;
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherParams;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.cryptography.common.Password;
@@ -28,13 +28,13 @@ public class CryptoObject {
      *                             EncryptionException, with original or custom error message.
      */
     public <E extends Serializable> AESEncryptedObject<E> encrypt(E object, Password password) throws EncryptionException {
-        AESCipherFactory aesCipherFactory = new AESCipherFactory();
+        AESCipherParams aesCipherParams = new AESCipherParams();
         
         try {
-            Cipher cipher = aesCipherFactory.getCipher(password, Cipher.ENCRYPT_MODE);
+            Cipher cipher = aesCipherParams.getCipher(password, Cipher.ENCRYPT_MODE);
     
             byte[] encryptedObject = encrypt(object, cipher);
-            return new AESEncryptedObject<>(encryptedObject, aesCipherFactory);
+            return new AESEncryptedObject<>(encryptedObject, aesCipherParams);
         } catch (NoSuchAlgorithmException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException | InvalidKeySpecException exception) {
             throw new EncryptionException(exception);
         }
@@ -53,12 +53,12 @@ public class CryptoObject {
      *                             EncryptionException, with original or custom error message.
      */
     public <E extends Serializable> RSAEncryptedObject<E> encrypt(E object, PublicKey publicKey) throws EncryptionException {
-        RSACipherFactory rsaCipherFactory = new RSACipherFactory();
+        RSACipherParams rsaCipherParams = new RSACipherParams();
         try {
-            Cipher cipher = rsaCipherFactory.getEncryptCipher(publicKey);
+            Cipher cipher = rsaCipherParams.getEncryptCipher(publicKey);
             
             byte[] encryptedObject = encrypt(object, cipher);
-            return new RSAEncryptedObject<>(encryptedObject, rsaCipherFactory);
+            return new RSAEncryptedObject<>(encryptedObject, rsaCipherParams);
         } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException exception) {
             throw new EncryptionException(exception);
         }
@@ -85,7 +85,7 @@ public class CryptoObject {
         if (!object.isEncrypted())
             throw new DecryptionException("Given object is not encrypted.");
         
-        AESCipherFactory cipherFactory = object.getCipherFactory();
+        AESCipherParams cipherFactory = object.getCipherParams();
         try {
             Cipher cipher = cipherFactory.getCipher(password, Cipher.DECRYPT_MODE);
             
@@ -109,7 +109,7 @@ public class CryptoObject {
         if(!object.isEncrypted())
             throw new DecryptionException("Given object is not encrypted.");
         
-        RSACipherFactory cipherFactory = object.getCipherFactory();
+        RSACipherParams cipherFactory = object.getCipherParams();
         try {
             Cipher cipher = cipherFactory.getDecryptCipher(privateKey);
     
