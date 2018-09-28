@@ -1,18 +1,20 @@
-package io.raspberrywallet.manager.cryptography.ciphers;
+package io.raspberrywallet.manager.cryptography.crypto.algorithms;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import java.io.Serializable;
 import java.security.*;
 
-public class RSACipherFactory extends CipherFactory implements Serializable {
+public class RSACipherParams extends CipherParams implements Serializable {
     
-    public RSACipherFactory(AlgorithmFactory algorithmFactory) {
-        RSAFactory rsaAlgorithmData = (RSAFactory)algorithmFactory;
-        
-        algorithmName = rsaAlgorithmData.getAlgorithmName();
-        algorithmFullName = rsaAlgorithmData.getFullAlgorithmName();
-        keySize = rsaAlgorithmData.getKeySize();
+    public RSACipherParams() {
+        this(new RSAParams());
+    }
+    
+    RSACipherParams(RSAParams algorithmFactory) {
+        algorithmName = algorithmFactory.getAlgorithmName();
+        algorithmFullName = algorithmFactory.getFullAlgorithmName();
+        keySize = algorithmFactory.getKeySize();
     }
     
     public KeyPair getKeyPair() throws NoSuchAlgorithmException {
@@ -22,7 +24,7 @@ public class RSACipherFactory extends CipherFactory implements Serializable {
     }
     
     public KeyPair getKeyPairDefault() {
-        RSAFactory rsaFactory = new RSAFactory();
+        RSAParams rsaFactory = new RSAParams();
         try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance(rsaFactory.getAlgorithmName());
             generator.initialize(rsaFactory.getKeySize());

@@ -1,22 +1,21 @@
-package io.raspberrywallet.manager.cryptography.wrappers.crypto;
+package io.raspberrywallet.manager.cryptography.crypto;
 
 
 
-import io.raspberrywallet.manager.cryptography.ciphers.CipherFactory;
+import io.raspberrywallet.manager.cryptography.crypto.algorithms.CipherParams;
 import org.apache.commons.lang.SerializationUtils;
 
 import java.io.Serializable;
 
 public abstract class EncryptedObject<E extends Serializable> implements Serializable {
     
-    
     private byte[] serializedObject;
-    CipherFactory cipherFactory;
+    CipherParams cipherParams;
     private boolean isEncrypted;
     
-    public EncryptedObject(byte[] serializedObject, CipherFactory cipherFactory, boolean isEncrypted) {
+    public EncryptedObject(byte[] serializedObject, CipherParams cipherParams, boolean isEncrypted) {
         this.serializedObject = serializedObject;
-        this.cipherFactory = cipherFactory;
+        this.cipherParams = cipherParams;
         this.isEncrypted = isEncrypted;
     }
     
@@ -32,7 +31,7 @@ public abstract class EncryptedObject<E extends Serializable> implements Seriali
         return isEncrypted;
     }
     
-    public abstract CipherFactory getCipherFactory();
+    public abstract CipherParams getCipherParams();
     
     
 }

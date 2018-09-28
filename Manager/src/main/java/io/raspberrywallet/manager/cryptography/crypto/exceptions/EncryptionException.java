@@ -1,4 +1,4 @@
-package io.raspberrywallet.manager.cryptography.exceptions;
+package io.raspberrywallet.manager.cryptography.crypto.exceptions;
 
 public class EncryptionException extends Exception {
     

@@ -1,3 +1,5 @@
+package io.raspberrywallet.manager.cryptography.crypto;
+
 public class TestsHelper {
     
     

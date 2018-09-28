@@ -1,7 +1,7 @@
-package io.raspberrywallet.manager.cryptography.ciphers;
+package io.raspberrywallet.manager.cryptography.crypto.algorithms;
 
 
-import io.raspberrywallet.manager.cryptography.wrappers.data.Password;
+import io.raspberrywallet.manager.cryptography.common.Password;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -17,7 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 
-public class AESCipherFactory extends CipherFactory implements Serializable {
+public class AESCipherParams extends CipherParams implements Serializable {
     
     private String hashAlgorithmName;
     private byte[] ivBytes;
@@ -25,21 +25,23 @@ public class AESCipherFactory extends CipherFactory implements Serializable {
     
     private int iterationsAmount;
     
-    public AESCipherFactory(AlgorithmFactory algorithmFactory) {
-        AESFactory aesAlgorithmData = (AESFactory)algorithmFactory;
-        
+    public AESCipherParams() {
+        this(new AESParams());
+    }
+    
+    AESCipherParams(AESParams algorithmFactory) {
         SecureRandom random = new SecureRandom();
         byte keySalt[] = new byte[16];
         ivBytes = new byte[16];
         random.nextBytes(keySalt);
         random.nextBytes(ivBytes);
         
-        algorithmName = aesAlgorithmData.getAlgorithmName();
-        algorithmFullName = aesAlgorithmData.getFullAlgorithmName();
-        hashAlgorithmName = aesAlgorithmData.getHashAlgorithmName();
+        algorithmName = algorithmFactory.getAlgorithmName();
+        algorithmFullName = algorithmFactory.getFullAlgorithmName();
+        hashAlgorithmName = algorithmFactory.getHashAlgorithmName();
         this.keySalt = keySalt;
-        keySize = aesAlgorithmData.getKeySize();
-        iterationsAmount = aesAlgorithmData.getKeyHashIterationsAmount();
+        keySize = algorithmFactory.getKeySize();
+        iterationsAmount = algorithmFactory.getKeyHashIterationsAmount();
     }
     
     public Cipher getCipher(Password password, int cipherMode) throws NoSuchPaddingException, NoSuchAlgorithmException,

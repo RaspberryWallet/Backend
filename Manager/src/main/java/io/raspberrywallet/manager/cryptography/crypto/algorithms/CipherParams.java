@@ -1,8 +1,8 @@
-package io.raspberrywallet.manager.cryptography.ciphers;
+package io.raspberrywallet.manager.cryptography.crypto.algorithms;
 
 import java.io.Serializable;
 
-public abstract class CipherFactory implements Serializable {
+public abstract class CipherParams implements Serializable {
     
     int keySize;
     

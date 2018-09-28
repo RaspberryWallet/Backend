@@ -8,4 +8,5 @@ lib/
 *.wallet
 .vertx/
 Manager/target/
+ServerHttp/target/
 out/

@@ -1,4 +1,4 @@
-package io.raspberrywallet.manager.cryptography.abstracts.lifecycle;
+package io.raspberrywallet.manager.common;
 
 import java.util.Arrays;
 
