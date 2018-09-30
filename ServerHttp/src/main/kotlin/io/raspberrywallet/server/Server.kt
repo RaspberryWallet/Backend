@@ -31,9 +31,10 @@ class Server(private val manager: Manager) {
     fun start() {
         val vertx = Vertx.vertx()
         vertx.deployVerticle(MainVerticle(manager)) {
-            if (it.succeeded())
+            if (it.succeeded()) {
                 Logger.info("Server started at port $PORT")
-            else {
+                Logger.info("Webapp located at /index.html")
+            } else {
                 Logger.err("Could not start server")
                 it.cause().printStackTrace()
             }

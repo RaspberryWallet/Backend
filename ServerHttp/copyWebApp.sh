@@ -1,2 +1,3 @@
 #!/bin/sh
-rsync -a ../../JSProjects/raspberry-wallet-frontend/build/ src/main/resources/assets/
+/bin/rm -r ServerHttp/src/main/resources/assets \
+& rsync -a ../../JSProjects/raspberry-wallet-frontend/build/ ServerHttp/src/main/resources/assets/
