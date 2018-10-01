@@ -43,5 +43,4 @@ public class TemperatureMonitor extends Executable {
             return "undefined";
         }
     }
-    // test
 }
