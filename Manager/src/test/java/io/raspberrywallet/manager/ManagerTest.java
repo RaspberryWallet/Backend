@@ -1,6 +1,7 @@
 package io.raspberrywallet.manager;
 
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
+import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import org.bitcoinj.crypto.MnemonicException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,11 +15,13 @@ import static io.raspberrywallet.manager.Utils.println;
 class ManagerTest {
     private static Manager manager;
     static Bitcoin bitcoin;
+    static TemperatureMonitor temperatureMonitor;
 
     @BeforeAll
     static void setup() {
         bitcoin = Mockito.mock(Bitcoin.class);
-        manager = new Manager(bitcoin);
+        temperatureMonitor = Mockito.mock(TemperatureMonitor.class);
+        manager = new Manager(bitcoin, temperatureMonitor);
     }
 
     @Test
@@ -76,6 +79,16 @@ class ManagerTest {
         Mockito.verify(bitcoin).getAvailableBalance();
         Mockito.verifyNoMoreInteractions(bitcoin);
         assert availableBalance.equals(mockAvailableBalance);
+    }
+
+    @Test
+    void getCpuTemperature() {
+        final String mockCpuTemp = "75 °C";
+        Mockito.when(temperatureMonitor.call()).thenReturn(mockCpuTemp);
+        String cpuTemperature = manager.getCpuTemperature();
+        Mockito.verify(temperatureMonitor).call();
+        Mockito.verifyNoMoreInteractions(temperatureMonitor);
+        assert cpuTemperature.equals(mockCpuTemp);
     }
 
 }

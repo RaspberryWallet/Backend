@@ -1,17 +1,14 @@
 package io.raspberrywallet.manager.linux;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
-public abstract class Executable {
+/**
+ * Runs system application as user 'wallet'
+ */
+public abstract class Executable<T> implements Callable<T> {
 
     String id = UUID.randomUUID().toString();
-
-    /**
-     * Runs system application as user 'wallet'
-     *
-     * @return returns output of the application run
-     */
-    public abstract String run();
 
     public String getName() {
         return getClass().getName() + "-" + id;

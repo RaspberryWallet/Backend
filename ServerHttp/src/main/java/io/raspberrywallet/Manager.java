@@ -83,5 +83,16 @@ public interface Manager {
      */
     void restoreFromBackupPhrase(@NotNull List<String> mnemonicWords);
 
+    /*
+     * Utilities
+     */
+
+    /**
+     * Gets temperature of the CPU
+     *
+     * @return temperature as string in Celsius
+     */
+    @NonNls
+    String getCpuTemperature();
 
 }
