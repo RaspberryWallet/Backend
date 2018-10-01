@@ -2,6 +2,7 @@ package io.raspberrywallet.manager;
 
 import io.raspberrywallet.Response;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
+import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.module.ModuleState;
 import org.jetbrains.annotations.NotNull;
@@ -18,9 +19,12 @@ public class Manager implements io.raspberrywallet.Manager {
      */
     private final ConcurrentHashMap<String, Module> modules = new ConcurrentHashMap<>();
     private final Bitcoin bitcoin;
+    private final TemperatureMonitor tempMonitor;
 
-    public Manager(Bitcoin bitcoin) {
+
+    public Manager(Bitcoin bitcoin, TemperatureMonitor tempMonitor) {
         this.bitcoin = bitcoin;
+        this.tempMonitor = tempMonitor;
     }
 
     @Override
@@ -47,7 +51,7 @@ public class Manager implements io.raspberrywallet.Manager {
 
 
     @Override
-    public ModuleState getModuleState(String id) {
+    public ModuleState getModuleState(@NotNull String id) {
         ModuleState state = ModuleState.FAILED;
         state.setMessage("Unknown module!");
         if (modules.containsKey(id)) {
@@ -93,6 +97,21 @@ public class Manager implements io.raspberrywallet.Manager {
     @Override
     public String getAvailableBalance() {
         return bitcoin.getAvailableBalance();
+    }
+
+    /*
+     * System utilities (Linux)
+     */
+
+    /**
+     * Gets temperature of the CPU
+     * @return temperature as string in Celsius
+     */
+    public String getCpuTemperature() {
+        String val = tempMonitor.run();
+        float value = Float.parseFloat(val);
+        
+        return Float.isNaN(value) ? "undefined" : String.format("%.3f", value / 1000);
     }
 
 }
