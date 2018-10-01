@@ -39,18 +39,24 @@ fun Application.mainModule() {
             call.respond(mapOf("state" to moduleState.name, "message" to moduleState.message))
         }
         get("/api/currentAddress") {
-            call.respond(manager.currentReceiveAddress)
+            call.respond(mapOf("currentAddress" to manager.currentReceiveAddress))
         }
         get("/api/freshAddress") {
-            call.respond(manager.freshReceiveAddress)
+            call.respond(mapOf("freshAddress" to manager.freshReceiveAddress))
         }
         get("/api/estimatedBalance") {
-            call.respond(manager.estimatedBalance)
+            call.respond(mapOf("estimatedBalance" to manager.estimatedBalance))
         }
         get("/api/availableBalance") {
-            call.respond(manager.availableBalance)
+            call.respond(mapOf("availableBalance" to manager.availableBalance))
         }
-        static("/webapp") {
+        get("/api/availableBalance") {
+            call.respond(mapOf("availableBalance" to manager.availableBalance))
+        }
+        get("/api/cpuTemp") {
+            call.respond(mapOf("cpuTemp" to manager.cpuTemperature))
+        }
+        static("/") {
             resources("assets")
         }
     }

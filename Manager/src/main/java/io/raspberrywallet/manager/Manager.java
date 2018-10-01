@@ -38,7 +38,7 @@ public class Manager implements io.raspberrywallet.Manager {
         return null;
     }
 
-    /**
+    /*
      * Modules
      */
 
@@ -70,7 +70,7 @@ public class Manager implements io.raspberrywallet.Manager {
     }
 
 
-    /**
+    /*
      * Bitcoin Domain
      */
 
@@ -100,15 +100,12 @@ public class Manager implements io.raspberrywallet.Manager {
     }
 
     /*
-     * System utilities (Linux)
+     * Utilities
      */
 
-    /**
-     * Gets temperature of the CPU
-     * @return temperature as string in Celsius
-     */
+    @Override
     public String getCpuTemperature() {
-        String val = tempMonitor.run();
+        String val = tempMonitor.call();
         float value = Float.parseFloat(val);
         
         return Float.isNaN(value) ? "undefined" : String.format("%.3f", value / 1000);

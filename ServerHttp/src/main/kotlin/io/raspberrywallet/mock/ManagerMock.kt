@@ -51,5 +51,6 @@ class ManagerMock : Manager {
         println(phrase)
     }
 
+    override fun getCpuTemperature() = "75 °C"
 
 }
