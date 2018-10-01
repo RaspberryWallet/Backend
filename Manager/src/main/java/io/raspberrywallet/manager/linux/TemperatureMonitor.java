@@ -3,7 +3,6 @@ package io.raspberrywallet.manager.linux;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class TemperatureMonitor extends Executable {
@@ -14,36 +13,27 @@ public class TemperatureMonitor extends Executable {
 
     /**
      * Retrieves device temperature
+     *
      * @return should return device temperature in milicelsius or 'undefined'
      */
 
     @Override
     public String run() {
-        Process p = null;
         try {
-            p = Runtime.getRuntime().exec("cat /sys/class/thermal/thermal_zone0/temp");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
+            Process p = Runtime.getRuntime().exec("cat /sys/class/thermal/thermal_zone0/temp");
             p.waitFor();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        String line = "";
-        String output = "undefined";
-        Pattern pattern = Pattern.compile("^[0-9]+$");
-        try {
-            while ( (line = reader.readLine()) != null ) {
-                if(pattern.matcher(line).matches()) {
-                    output = line;
-                    break;
-                }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                Pattern pattern = Pattern.compile("^[0-9]+$");
+                String line;
+                while ((line = reader.readLine()) != null)
+                    if (pattern.matcher(line).matches())
+                        return line;
             }
-        }catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
+            return "error";
         }
-        return output;
+        return "undefined";
+
     }
 }

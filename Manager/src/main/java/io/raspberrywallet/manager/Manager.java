@@ -19,9 +19,12 @@ public class Manager implements io.raspberrywallet.Manager {
      */
     private final ConcurrentHashMap<String, Module> modules = new ConcurrentHashMap<>();
     private final Bitcoin bitcoin;
+    private final TemperatureMonitor tempMonitor;
 
-    public Manager(Bitcoin bitcoin) {
+
+    public Manager(Bitcoin bitcoin, TemperatureMonitor tempMonitor) {
         this.bitcoin = bitcoin;
+        this.tempMonitor = tempMonitor;
     }
 
     @Override
@@ -100,17 +103,17 @@ public class Manager implements io.raspberrywallet.Manager {
      * System utilities (Linux)
      */
 
-    /**
+    /*
      * Gets temperature of the CPU
      * @return temperature as string in Celsius
      */
-    public String getCPUTemperature() {
-        String val = new TemperatureMonitor().run();
+    public String getCpuTemperature() {
+        String val = tempMonitor.run();
         float value = Float.parseFloat(val);
-        if( Float.isNaN(value) )
+        if (Float.isNaN(value))
             return "undefined";
         else
-            return String.format("%.3f", value/1000);
+            return String.format("%.3f", value / 1000);
     }
 
 }

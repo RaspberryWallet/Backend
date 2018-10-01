@@ -1,6 +1,7 @@
 package io.raspberrywallet.manager;
 
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
+import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.server.Server;
 
 public class Main {
@@ -9,7 +10,9 @@ public class Main {
         Bitcoin bitcoin = new Bitcoin();
         bitcoin.startBlockchainAsync();
 
-        Manager manager = new ExampleMockManager(bitcoin);
+        TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
+
+        Manager manager = new ExampleMockManager(bitcoin, temperatureMonitor);
 
         Server server = new Server(manager);
         server.start();

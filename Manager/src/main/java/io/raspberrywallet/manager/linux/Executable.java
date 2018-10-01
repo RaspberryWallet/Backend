@@ -8,11 +8,12 @@ public abstract class Executable {
 
     /**
      * Runs system application as user 'wallet'
+     *
      * @return returns output of the application run
      */
     public abstract String run();
 
     public String getName() {
-        return getClass().getName()+"-"+id;
+        return getClass().getName() + "-" + id;
     }
 }
