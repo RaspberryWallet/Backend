@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public abstract class Executable {
 
-    protected String id = UUID.randomUUID().toString();
+    String id = UUID.randomUUID().toString();
 
     /**
      * Runs system application as user 'wallet'

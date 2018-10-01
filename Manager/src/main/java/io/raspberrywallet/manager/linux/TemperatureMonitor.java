@@ -20,20 +20,26 @@ public class TemperatureMonitor extends Executable {
     @Override
     public String run() {
         try {
-            Process p = Runtime.getRuntime().exec("cat /sys/class/thermal/thermal_zone0/temp");
-            p.waitFor();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                Pattern pattern = Pattern.compile("^[0-9]+$");
-                String line;
-                while ((line = reader.readLine()) != null)
-                    if (pattern.matcher(line).matches())
-                        return line;
-            }
+            Process process = Runtime.getRuntime().exec("cat /sys/class/thermal/thermal_zone0/temp");
+            process.waitFor();
+            
+            return getActualTemperature(process);
+            
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             return "error";
         }
-        return "undefined";
-
+    }
+    
+    private String getActualTemperature(Process process) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            Pattern pattern = Pattern.compile("^[0-9]+$");
+            String line;
+            while ((line = reader.readLine()) != null)
+                if (pattern.matcher(line).matches())
+                    return line;
+            
+            return "undefined";
+        }
     }
 }

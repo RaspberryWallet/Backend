@@ -51,7 +51,7 @@ public class Manager implements io.raspberrywallet.Manager {
 
 
     @Override
-    public ModuleState getModuleState(String id) {
+    public ModuleState getModuleState(@NotNull String id) {
         ModuleState state = ModuleState.FAILED;
         state.setMessage("Unknown module!");
         if (modules.containsKey(id)) {
@@ -99,21 +99,19 @@ public class Manager implements io.raspberrywallet.Manager {
         return bitcoin.getAvailableBalance();
     }
 
-    /**
+    /*
      * System utilities (Linux)
      */
 
-    /*
+    /**
      * Gets temperature of the CPU
      * @return temperature as string in Celsius
      */
     public String getCpuTemperature() {
         String val = tempMonitor.run();
         float value = Float.parseFloat(val);
-        if (Float.isNaN(value))
-            return "undefined";
-        else
-            return String.format("%.3f", value / 1000);
+        
+        return Float.isNaN(value) ? "undefined" : String.format("%.3f", value / 1000);
     }
 
 }
