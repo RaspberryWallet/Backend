@@ -105,10 +105,7 @@ public class Manager implements io.raspberrywallet.Manager {
 
     @Override
     public String getCpuTemperature() {
-        String val = tempMonitor.call();
-        float value = Float.parseFloat(val);
-        
-        return Float.isNaN(value) ? "undefined" : String.format("%.3f", value / 1000);
+        return tempMonitor.call();
     }
 
 }
