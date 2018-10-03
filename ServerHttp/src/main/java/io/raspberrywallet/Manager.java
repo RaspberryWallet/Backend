@@ -4,6 +4,7 @@ import io.raspberrywallet.module.Module;
 import io.raspberrywallet.module.ModuleState;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -23,6 +24,12 @@ public interface Manager {
      * @return state of specified module
      */
     ModuleState getModuleState(@NotNull String moduleId);
+
+    /**
+     * @return HTML UI form that require some input from user
+     */
+    @Nullable
+    String getModuleUi(@NotNull String moduleId);
 
     /**
      * Validate input for specified module, and receive next Step or Failure

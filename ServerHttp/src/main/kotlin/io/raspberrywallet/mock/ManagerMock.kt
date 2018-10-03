@@ -8,6 +8,17 @@ import io.raspberrywallet.step.SimpleStep
 import java.security.SecureRandom
 
 class ManagerMock : Manager {
+    override fun getModuleUi(moduleId: String): String? {
+        return """
+            <form action="/api/nextStep" method="post">
+                <input type="hidden" name="id" value="$moduleId">
+                PIN:<br>
+                <input type="text" name="pin">
+                <input type="submit" value="Submit">
+            </form>
+        """.trimIndent()
+    }
+
     private val rand = SecureRandom.getInstanceStrong()
 
     override fun ping() = "pong"

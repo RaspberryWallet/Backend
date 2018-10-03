@@ -61,6 +61,12 @@ public class Manager implements io.raspberrywallet.Manager {
         return state;
     }
 
+    @Override
+    public String getModuleUi(@NotNull String moduleId) {
+        return modules.get(moduleId).getHtmlUi();
+    }
+
+
     void addModule(Module module) {
         modules.put(module.getId(), module);
     }

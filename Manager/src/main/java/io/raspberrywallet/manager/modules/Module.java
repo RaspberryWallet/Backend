@@ -39,6 +39,11 @@ public abstract class Module {
     public abstract void register();
 
     /**
+     * this function should return HTML UI form or null if not required
+     */
+    public abstract String getHtmlUi();
+
+    /**
      * Manager uses this to start the Module after register()
      */
     public void start() {

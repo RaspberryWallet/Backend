@@ -10,6 +10,7 @@ import io.ktor.http.content.resources
 import io.ktor.http.content.static
 import io.ktor.response.respond
 import io.ktor.routing.get
+import io.ktor.routing.post
 import io.ktor.routing.routing
 import io.raspberrywallet.mock.ManagerMock
 import org.slf4j.event.Level
@@ -34,6 +35,11 @@ fun Application.mainModule() {
             call.respond(manager.modules)
         }
         get("/api/moduleState/{id}") {
+            val id = call.parameters["id"]!!
+            val moduleState = manager.getModuleState(id)
+            call.respond(mapOf("state" to moduleState.name, "message" to moduleState.message))
+        }
+        post("/api/nextStep") {
             val id = call.parameters["id"]!!
             val moduleState = manager.getModuleState(id)
             call.respond(mapOf("state" to moduleState.name, "message" to moduleState.message))
