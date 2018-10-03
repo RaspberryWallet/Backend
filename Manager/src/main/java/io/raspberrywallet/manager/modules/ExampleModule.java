@@ -13,7 +13,7 @@ public class ExampleModule extends Module {
      * Before we can decrypt a keypart, we need an encrypted one
      */
     @Override
-    public byte[] encryptInput(byte[] data, Object... params) {
+    public byte[] encryptInput(byte[] data) {
         byte[] r = data.clone();
         for (int i = 0; i < r.length; ++i)
             r[i] = (byte) (r[i] ^ KEY[i % KEY.length]);

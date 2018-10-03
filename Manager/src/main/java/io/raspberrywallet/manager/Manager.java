@@ -8,6 +8,7 @@ import io.raspberrywallet.module.ModuleState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.stream.Collectors.toList;
@@ -33,9 +34,9 @@ public class Manager implements io.raspberrywallet.Manager {
     }
 
     @Override
-    public Response nextStep(@NotNull String moduleId, byte[] input) {
-        // TODO Auto-generated method stub
-        return null;
+    public Response nextStep(@NotNull String moduleId, Map<String, String> input) {
+        modules.get(moduleId).setInputs(input);
+        return new Response(null, Response.Status.OK);
     }
 
     /*

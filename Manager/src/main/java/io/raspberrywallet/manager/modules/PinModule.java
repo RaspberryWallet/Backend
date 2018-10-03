@@ -1,21 +1,25 @@
 package io.raspberrywallet.manager.modules;
 
-public class PinModule extends Module {
-    Integer pin = null;
+import java.math.BigInteger;
 
+public class PinModule extends Module {
     @Override
     public String getDescription() {
-        return null;
+        return "Module that require enter 4 digits code";
     }
 
     @Override
     public boolean check() {
-        return pin != null;
+        return hasInput("pin");
     }
 
     @Override
     public void process() {
-
+        decrypt(payload -> {
+            BigInteger bigData = new BigInteger(payload);
+            BigInteger bigPin = new BigInteger(getInput("pin"));
+            return bigData.xor(bigPin).toByteArray();
+        });
     }
 
     @Override
@@ -25,15 +29,14 @@ public class PinModule extends Module {
 
     @Override
     public String getHtmlUi() {
-        return "<form action=\"/nextStep\" method=\"post\">\n" +
-                "\tPIN:<br>\n" +
-                "\t<input type=\"text\" name=\"pin\">\n" +
-                "\t<input type=\"submit\" value=\"Submit\">\n" +
-                "</form>";
+        return "<input type=\"text\" name=\"pin\">";
     }
 
     @Override
-    public byte[] encryptInput(byte[] data, Object... params) {
-        return new byte[0];
+    public byte[] encryptInput(byte[] data) {
+        BigInteger bigData = new BigInteger(data);
+        BigInteger bigPin = new BigInteger(getInput("pin"));
+
+        return bigData.xor(bigPin).toByteArray();
     }
 }
