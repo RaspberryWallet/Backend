@@ -10,6 +10,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import java.util.zip.*;
+import java.io.*;
+
 public class Database {
 
     @Getter
@@ -101,14 +104,24 @@ public class Database {
         Files.write(file.toPath(), data);
     }
 
-    public byte[] encrypt(byte[] data) {
+    public byte[] encrypt(byte[] data) throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	DeflaterOutputStream dos = new DeflaterOutputStream(baos);
+    	dos.write(data);
+    	dos.flush();
+    	dos.close();
         //TODO encryption
-        return data;
+        return baos.toByteArray();
     }
 
-    public byte[] decrypt(byte[] data) {
-        //TODO decryption
-        return data;
+    public byte[] decrypt(byte[] data) throws IOException {
+        ByteArrayInputStream bais = new ByteArrayInputStream(data);
+        InflaterInputStream iis = new InflaterInputStream(bais);
+        int len = -1;
+        byte[] buffer = new byte[4096];
+        while ( (len = iis.read(buffer)) != -1); //TODO join arrays into one blob
+    	//TODO decryption
+        return buffer;
     }
 
 }
