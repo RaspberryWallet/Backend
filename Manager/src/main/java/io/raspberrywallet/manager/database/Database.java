@@ -104,7 +104,7 @@ public class Database {
         Files.write(file.toPath(), data);
     }
 
-    public byte[] encrypt(byte[] data) {
+    public byte[] encrypt(byte[] data) throws IOException {
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
     	DeflaterOutputStream dos = new DeflaterOutputStream(baos);
     	dos.write(data);
@@ -114,7 +114,7 @@ public class Database {
         return baos.toByteArray();
     }
 
-    public byte[] decrypt(byte[] data) {
+    public byte[] decrypt(byte[] data) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(data);
         InflaterInputStream iis = new InflaterInputStream(bais);
         int len = -1;
