@@ -10,10 +10,10 @@ public class ExampleModule extends Module {
     public static final byte[] KEY = "EXAMPLEKEY".getBytes();
 
     /*
-    * Before we can decrypt a keypart, we need an encrypted one
-    * */
+     * Before we can decrypt a keypart, we need an encrypted one
+     */
     @Override
-    public byte[] encryptInput(byte[] data, Object... params) {
+    public byte[] encryptInput(byte[] data) {
         byte[] r = data.clone();
         for (int i = 0; i < r.length; ++i)
             r[i] = (byte) (r[i] ^ KEY[i % KEY.length]);
@@ -21,8 +21,8 @@ public class ExampleModule extends Module {
     }
 
     /*
-    * First the module is "registered" by manager just after user needs to decrypt keypart.
-    */
+     * First the module is "registered" by manager just after user needs to decrypt keypart.
+     */
     private long lastTime = 1000;
 
     @Override
@@ -31,18 +31,23 @@ public class ExampleModule extends Module {
         setStatusString("Wait 5 seconds for decryption to start");
     }
 
+    @Override
+    public String getHtmlUi() {
+        return null;
+    }
+
     /*
-    * The manager checks periodically for status. If status is true (i.e. here 5 seconds passed),
-    * process() should be called
-    */
+     * The manager checks periodically for status. If status is true (i.e. here 5 seconds passed),
+     * process() should be called
+     */
     @Override
     public boolean check() {
         return System.currentTimeMillis() - lastTime > 5000;
     }
 
     /*
-    * We are processing (decrypting) the keypart with a KEY.
-    * */
+     * We are processing (decrypting) the keypart with a KEY.
+     * */
     @Override
     public void process() {
         decrypt(new Decrypter() {
@@ -60,5 +65,5 @@ public class ExampleModule extends Module {
             }
         });
     }
-    
+
 }

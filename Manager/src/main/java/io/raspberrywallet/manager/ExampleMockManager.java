@@ -6,6 +6,7 @@ import io.raspberrywallet.manager.database.MockDatabaseFactory;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.ExampleModule;
 import io.raspberrywallet.manager.modules.Module;
+import io.raspberrywallet.manager.modules.PinModule;
 
 public class ExampleMockManager extends Manager {
 
@@ -13,6 +14,8 @@ public class ExampleMockManager extends Manager {
         super(bitcoin, tempMonitor);
         Module mod = new ExampleModule();
         addModule(mod);
+        Module pinModule = new PinModule();
+        addModule(pinModule);
 
         try {
             byte[] json = MockDatabaseFactory.getInstance()

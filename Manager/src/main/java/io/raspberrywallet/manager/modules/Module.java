@@ -1,13 +1,16 @@
 package io.raspberrywallet.manager.modules;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashMap;
+import java.util.Map;
 
 public abstract class Module {
 
-	/*
-	 * Module info formatted as JSON.
-	 * */
-	
+    /*
+     * Module info formatted as JSON.
+     * */
+
     @Override
     public String toString() {
         return "{\"id\":\"" + getId() + "\", \"status\":\"" + getStatusString() + "\"}";
@@ -16,13 +19,13 @@ public abstract class Module {
     public abstract String getDescription();
 
     public io.raspberrywallet.module.Module asServerModule() {
-        return new io.raspberrywallet.module.Module(getId(), getDescription()) {
+        return new io.raspberrywallet.module.Module(getId(), getId(), getDescription()) {
         };
     }
 
     /**
      * Check if needed interaction (User-Module) has been completed
-     * 
+     *
      * @return true, if we are ready to decrypt
      */
     public abstract boolean check();
@@ -39,6 +42,12 @@ public abstract class Module {
     public abstract void register();
 
     /**
+     * this function should return HTML UI form or null if not required
+     */
+    @Nullable
+    public abstract String getHtmlUi();
+
+    /**
      * Manager uses this to start the Module after register()
      */
     public void start() {
@@ -49,11 +58,10 @@ public abstract class Module {
     /**
      * Encryption function when creating wallet
      *
-     * @param data   - unencrypted key part
-     * @param params - additional params
+     * @param data - unencrypted key part
      * @return encrypted payload
      */
-    public abstract byte[] encryptInput(byte[] data, Object... params);
+    public abstract byte[] encryptInput(byte[] data);
 
     /**
      * Returns status of the module to show to the user
@@ -91,7 +99,7 @@ public abstract class Module {
         input.clear();
         register();
     }
-    
+
     public void setPayload(byte[] payload) {
         this.payload = payload.clone();
     }
@@ -151,7 +159,7 @@ public abstract class Module {
                     run = false;
                 }
 
-                if(System.currentTimeMillis() - startTime > timeout && status == STATUS_WAITING) {
+                if (System.currentTimeMillis() - startTime > timeout && status == STATUS_WAITING) {
                     run = false;
                     status = STATUS_TIMEOUT;
                     statusString = "Timed out waiting for Module interaction.";
@@ -167,7 +175,7 @@ public abstract class Module {
 
     CheckRunnable checkRunnable = new CheckRunnable();
 
-    /* 
+    /*
      * Used when everything has been completed, both in "cancel" and "done" cases.
      * Override this to be sure everything else is cleaned.
      * Manager should call this.
@@ -247,7 +255,8 @@ public abstract class Module {
 
     /**
      * Sets input for this Module from user
-     * @param key - key of the parameter
+     *
+     * @param key   - key of the parameter
      * @param value - value of the parameter
      */
     public void setInput(String key, String value) {
@@ -255,7 +264,15 @@ public abstract class Module {
     }
 
     /**
+     * Sets inputs for this Module from user
+     */
+    public void setInputs(Map<String, String> inputs) {
+        input.putAll(inputs);
+    }
+
+    /**
      * Checks if user has submitted any input
+     *
      * @param key - key of the parameter
      * @return - if key exists
      */
@@ -265,6 +282,7 @@ public abstract class Module {
 
     /**
      * Gets the value which user has submitted
+     *
      * @param key - parameter key
      * @return - value of the parameter
      */
