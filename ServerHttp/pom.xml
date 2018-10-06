@@ -60,6 +60,12 @@
             <version>${ktor.version}</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-html-builder</artifactId>
+            <version>${ktor.version}</version>
+            <scope>compile</scope>
+        </dependency>
         <!--Ktor-->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
