@@ -26,7 +26,10 @@ import org.slf4j.event.Level
 private lateinit var manager: Manager
 fun startKtorServer(newManager: Manager) {
     manager = newManager
-    embeddedServer(Netty, Server.PORT, module = Application::mainModule).start(wait = true)
+    embeddedServer(Netty, configure = {
+        requestQueueLimit = 4
+        runningLimit = 1
+    }, port = Server.PORT, module = Application::mainModule).start(wait = true)
 }
 
 fun Application.mainModule() {
