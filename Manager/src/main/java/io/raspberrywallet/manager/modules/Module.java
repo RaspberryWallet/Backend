@@ -31,9 +31,31 @@ public abstract class Module {
     public abstract boolean check();
 
     /**
-     * used for decryption, should include `this.decrypt(Decrypter)`
+     * decrypt payload and set the results.
+     * Method called from CheckRunnable
      */
-    public abstract void process();
+    private synchronized void process(byte[] payload) {
+        try {
+            decryptedValue = decrypt(payload);
+            this.status = Module.STATUS_OK;
+            this.statusString = "OK: 200: Decrypted keypart";
+        } catch (DecryptionException de) {
+            this.status = de.getCode();
+            this.statusString = "Error: " + de.getMessage();
+        }
+    }
+
+    /**
+     * @param keyPart - unencrypted key part
+     * @return encrypted payload
+     */
+    public abstract byte[] encrypt(byte[] keyPart);
+
+    /**
+     * @param payload - encrypted payload
+     * @return decrypted key part
+     */
+    public abstract byte[] decrypt(byte[] payload) throws DecryptionException;
 
     /**
      * this function should prepare module before consecutive use.
@@ -48,22 +70,6 @@ public abstract class Module {
     public abstract String getHtmlUi();
 
     /**
-     * Manager uses this to start the Module after register()
-     */
-    public void start() {
-        checkThread = new Thread(checkRunnable.enable().setSleepTime(100));
-        checkThread.start();
-    }
-
-    /**
-     * Encryption function when creating wallet
-     *
-     * @param data - unencrypted key part
-     * @return encrypted payload
-     */
-    public abstract byte[] encryptInput(byte[] data);
-
-    /**
      * Returns status of the module to show to the user
      *
      * @return message
@@ -72,6 +78,13 @@ public abstract class Module {
         return statusString == null ? "null" : statusString;
     }
 
+    /**
+     * Manager uses this to start the Module after register()
+     */
+    public void start() {
+        checkThread = new Thread(checkRunnable.enable().setSleepTime(100));
+        checkThread.start();
+    }
     /**
      * Setting the status message for the user
      *
@@ -155,7 +168,7 @@ public abstract class Module {
             while (run) {
 
                 if (check()) {
-                    process();
+                    process(payload);
                     run = false;
                 }
 
@@ -242,16 +255,6 @@ public abstract class Module {
 
     }
 
-    public synchronized void decrypt(Decrypter decrypter) {
-        try {
-            decryptedValue = decrypter.decrypt(payload);
-            this.status = Module.STATUS_OK;
-            this.statusString = "OK: 200: Decrypted keypart";
-        } catch (DecryptionException de) {
-            this.status = de.getCode();
-            this.statusString = "Error: " + de.getMessage();
-        }
-    }
 
     /**
      * Sets input for this Module from user

@@ -22,18 +22,7 @@ public class PushButtonModule extends Module {
     }
 
     @Override
-    public void process() {
-        decrypt(payload -> {
-            //TODO dekrypt desem i te sprawy
-            return payload;
-        });
-
-    }
-
-    @Override
     public void register() {
-        // TODO chyba nic
-
     }
 
     @Override
@@ -42,8 +31,12 @@ public class PushButtonModule extends Module {
     }
 
     @Override
-    public byte[] encryptInput(byte[] data) {
+    public byte[] encrypt(byte[] data) {
         return data;
     }
 
+    @Override
+    public byte[] decrypt(byte[] payload) {
+        return payload;
+    }
 }

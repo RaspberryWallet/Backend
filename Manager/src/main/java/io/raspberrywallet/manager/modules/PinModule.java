@@ -13,18 +13,9 @@ public class PinModule extends Module {
         return hasInput("pin");
     }
 
-    @Override
-    public void process() {
-        decrypt(payload -> {
-            BigInteger bigData = new BigInteger(payload);
-            BigInteger bigPin = new BigInteger(getInput("pin"));
-            return bigData.xor(bigPin).toByteArray();
-        });
-    }
 
     @Override
     public void register() {
-
     }
 
     @Override
@@ -33,10 +24,16 @@ public class PinModule extends Module {
     }
 
     @Override
-    public byte[] encryptInput(byte[] data) {
+    public byte[] encrypt(byte[] data) {
         BigInteger bigData = new BigInteger(data);
         BigInteger bigPin = new BigInteger(getInput("pin"));
+        return bigData.xor(bigPin).toByteArray();
+    }
 
+    @Override
+    public byte[] decrypt(byte[] payload) {
+        BigInteger bigData = new BigInteger(payload);
+        BigInteger bigPin = new BigInteger(getInput("pin"));
         return bigData.xor(bigPin).toByteArray();
     }
 }

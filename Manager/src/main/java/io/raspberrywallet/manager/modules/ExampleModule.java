@@ -10,17 +10,6 @@ public class ExampleModule extends Module {
     public static final byte[] KEY = "EXAMPLEKEY".getBytes();
 
     /*
-     * Before we can decrypt a keypart, we need an encrypted one
-     */
-    @Override
-    public byte[] encryptInput(byte[] data) {
-        byte[] r = data.clone();
-        for (int i = 0; i < r.length; ++i)
-            r[i] = (byte) (r[i] ^ KEY[i % KEY.length]);
-        return r;
-    }
-
-    /*
      * First the module is "registered" by manager just after user needs to decrypt keypart.
      */
     private long lastTime = 1000;
@@ -46,24 +35,28 @@ public class ExampleModule extends Module {
     }
 
     /*
-     * We are processing (decrypting) the keypart with a KEY.
-     * */
+     * Before we can decrypt a keypart, we need an encrypted one
+     */
     @Override
-    public void process() {
-        decrypt(new Decrypter() {
-            @Override
-            public synchronized byte[] decrypt(byte[] payload) throws DecryptionException {
-
-                if (payload == null) throw new Module.DecryptionException(Module.DecryptionException.NO_DATA);
-
-                byte[] r = payload.clone();
-
-                for (int i = 0; i < r.length; ++i)
-                    r[i] = (byte) (r[i] ^ KEY[i % KEY.length]);
-
-                return r;
-            }
-        });
+    public byte[] encrypt(byte[] data) {
+        byte[] r = data.clone();
+        for (int i = 0; i < r.length; ++i)
+            r[i] = (byte) (r[i] ^ KEY[i % KEY.length]);
+        return r;
     }
 
+    /*
+     * We are processing (decrypting) the keypart with a KEY.
+     */
+    @Override
+    public byte[] decrypt(byte[] payload) throws DecryptionException {
+        if (payload == null) throw new Module.DecryptionException(Module.DecryptionException.NO_DATA);
+
+        byte[] r = payload.clone();
+
+        for (int i = 0; i < r.length; ++i)
+            r[i] = (byte) (r[i] ^ KEY[i % KEY.length]);
+
+        return r;
+    }
 }
