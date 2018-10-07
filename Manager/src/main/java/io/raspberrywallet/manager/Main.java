@@ -19,10 +19,10 @@ public class Main {
 
         Manager manager = new ExampleMockManager(bitcoin, temperatureMonitor);
 
-        if (args.length > 0 && args[0].equals("ktor"))
-            startKtorServer(manager);
-        else
+        if (args.length > 0 && args[0].equals("vertx"))
             new Server(manager).start();
+        else
+            startKtorServer(manager);
 
     }
 }

@@ -25,7 +25,7 @@ import kotlinx.coroutines.experimental.launch
 
 class Server(private val manager: Manager) {
     companion object {
-        const val PORT = 8080
+        const val PORT = 9090
     }
 
     fun start() {
