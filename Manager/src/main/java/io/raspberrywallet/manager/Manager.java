@@ -23,7 +23,8 @@ public class Manager implements io.raspberrywallet.Manager {
     private final TemperatureMonitor tempMonitor;
 
 
-    public Manager(Bitcoin bitcoin, TemperatureMonitor tempMonitor) {
+    public Manager(List<Module> modules, Bitcoin bitcoin, TemperatureMonitor tempMonitor) {
+        modules.forEach(module -> this.modules.put(module.getId(), module));
         this.bitcoin = bitcoin;
         this.tempMonitor = tempMonitor;
     }
