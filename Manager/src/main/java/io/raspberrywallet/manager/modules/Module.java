@@ -88,25 +88,25 @@ public abstract class Module {
     /**
      * Setting the status message for the user
      *
-     * @param statusS - new status
+     * @param status - new status
      */
-    protected void setStatusString(String statusS) {
-        this.statusString = statusS;
+    void setStatusString(String status) {
+        this.statusString = status;
     }
 
     public String getId() {
         return this.getClass().getName();
     }
 
-    public static final int STATUS_OK = 200;
-    public static final int STATUS_TIMEOUT = 432;
-    public static final int STATUS_WAITING = 100;
+    private static final int STATUS_OK = 200;
+    private static final int STATUS_TIMEOUT = 432;
+    private static final int STATUS_WAITING = 100;
 
     private byte[] payload;
     private int status = STATUS_WAITING;
     private String statusString;
     private byte[] decryptedValue;
-    private HashMap<String, String> input = new HashMap<String, String>();
+    private HashMap<String, String> input = new HashMap<>();
 
     public void newSession() {
         input.clear();
@@ -126,14 +126,6 @@ public abstract class Module {
         else return decryptedValue;
     }
 
-    protected interface Decrypter {
-        public byte[] decrypt(byte[] payload) throws DecryptionException;
-    }
-
-    protected interface Encrypter {
-        public byte[] encrypt(byte[] data);
-    }
-
     private Thread checkThread;
 
     private class CheckRunnable implements Runnable {
@@ -143,17 +135,17 @@ public abstract class Module {
         private long timeout = 3000;
         private long startTime;
 
-        public CheckRunnable stop() {
+        CheckRunnable stop() {
             run = false;
             return this;
         }
 
-        public CheckRunnable enable() {
+        CheckRunnable enable() {
             run = true;
             return this;
         }
 
-        public CheckRunnable setSleepTime(long sleep) {
+        CheckRunnable setSleepTime(long sleep) {
             sleepTime = sleep;
             return this;
         }
@@ -186,7 +178,7 @@ public abstract class Module {
         }
     }
 
-    CheckRunnable checkRunnable = new CheckRunnable();
+    private CheckRunnable checkRunnable = new CheckRunnable();
 
     /*
      * Used when everything has been completed, both in "cancel" and "done" cases.
@@ -214,7 +206,7 @@ public abstract class Module {
     /*
      * Fill everything with "zeroes"
      */
-    public synchronized void zeroFill() {
+    private synchronized void zeroFill() {
         if (decryptedValue != null) {
             for (int i = 0; i < decryptedValue.length; ++i)
                 decryptedValue[i] = (byte) (i % 120);
@@ -227,17 +219,17 @@ public abstract class Module {
 
     public class DecryptionException extends Throwable {
 
-        public static final int NO_DATA = -1;
-        public static final int BAD_KEY = -2;
-        public static final int UNKNOWN = -3;
+        static final int NO_DATA = -1;
+        static final int BAD_KEY = -2;
+        static final int UNKNOWN = -3;
 
-        private int code = UNKNOWN;
+        private int code;
 
-        public DecryptionException(int code) {
+        DecryptionException(int code) {
             this.code = code;
         }
 
-        public int getCode() {
+        int getCode() {
             return this.code;
         }
 

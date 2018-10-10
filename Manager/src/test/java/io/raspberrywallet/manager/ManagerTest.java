@@ -8,20 +8,21 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.List;
 
 import static io.raspberrywallet.manager.Utils.println;
 
 class ManagerTest {
     private static Manager manager;
-    static Bitcoin bitcoin;
-    static TemperatureMonitor temperatureMonitor;
+    private static Bitcoin bitcoin;
+    private static TemperatureMonitor temperatureMonitor;
 
     @BeforeAll
     static void setup() {
         bitcoin = Mockito.mock(Bitcoin.class);
         temperatureMonitor = Mockito.mock(TemperatureMonitor.class);
-        manager = new Manager(bitcoin, temperatureMonitor);
+        manager = new Manager(Collections.emptyList(), bitcoin, temperatureMonitor);
     }
 
     @Test

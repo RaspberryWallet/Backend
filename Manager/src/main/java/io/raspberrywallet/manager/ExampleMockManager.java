@@ -8,10 +8,12 @@ import io.raspberrywallet.manager.modules.ExampleModule;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.manager.modules.PinModule;
 
+import java.util.List;
+
 public class ExampleMockManager extends Manager {
 
-    public ExampleMockManager(Bitcoin bitcoin, TemperatureMonitor tempMonitor) {
-        super(bitcoin, tempMonitor);
+    public ExampleMockManager(List<Module> modules, Bitcoin bitcoin, TemperatureMonitor tempMonitor) {
+        super(modules, bitcoin, tempMonitor);
         Module mod = new ExampleModule();
         addModule(mod);
         Module pinModule = new PinModule();
