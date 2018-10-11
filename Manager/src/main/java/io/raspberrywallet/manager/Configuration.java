@@ -1,11 +1,21 @@
 package io.raspberrywallet.manager;
 
-public abstract class Configuration {
-    
-    private static long SESSION_LENGTH = 3600000;
-    
-    public static long getSessionLength() {
-        return SESSION_LENGTH;
+import java.util.List;
+
+public class Configuration {
+    private long sessionLength = 3600000;
+    private String name = "Staszek";
+    private List<String> modules;
+
+    public long getSessionLength() {
+        return sessionLength;
     }
-    
+
+    public String getName() {
+        return name;
+    }
+
+    public List<String> getModules() {
+        return modules;
+    }
 }

@@ -8,16 +8,16 @@ import java.security.SecureRandom;
 import java.util.Date;
 
 public class SessionToken implements Destroyable, Runnable {
-    
-    private final static long SESSION_LENGTH = Configuration.getSessionLength();
+    private final Configuration configuration;
     private final static int SESSION_KEY_LENGTH = 32;
-    
+
     private UserCredentials userCredentials;
     private char[] sessionKey = new char[SESSION_KEY_LENGTH];
     private Date sessionValidUntil;
     private boolean isDestroyed = false;
-    
-    public SessionToken(UserCredentials userCredentials) {
+
+    public SessionToken(UserCredentials userCredentials, Configuration configuration) {
+        this.configuration = configuration;
         this.userCredentials = userCredentials;
         SecureRandom secureRandom = new SecureRandom();
         byte[] tempSessionKey = new byte[SESSION_KEY_LENGTH];
@@ -43,7 +43,7 @@ public class SessionToken implements Destroyable, Runnable {
     
     public void refresh() {
         Date currentDate = new Date();
-        sessionValidUntil = new Date(currentDate.getTime() + SESSION_LENGTH);
+        sessionValidUntil = new Date(currentDate.getTime() + configuration.getSessionLength());
     }
     
     public boolean isSessionValid() {

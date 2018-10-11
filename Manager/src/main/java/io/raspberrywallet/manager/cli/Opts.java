@@ -8,6 +8,7 @@ public enum Opts {
     KTOR(new Option("ktor", "Use Ktor as HTTP Server impl")),
     VERTX(new Option("vertx", "Use VertX as HTTP Server impl")),
     MODULES(new Option("modules", true, "Modules classes directory path"), "modules"),
+    CONFIG(new Option("config", true, "Config location"), "config.yaml"),
     SYNC(new Option("sync", "Sync bitcoin blockchain"));
 
     public final Option option;

@@ -1,5 +1,7 @@
 package io.raspberrywallet.manager;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.util.concurrent.Service;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cli.Opts;
@@ -31,16 +33,16 @@ public class Main {
 
         TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
 
-        Manager manager = new ExampleMockManager(modules, bitcoin, temperatureMonitor);
+        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+        Configuration config = Utils.processConfiguration(yamlMapper, Opts.CONFIG.getValue(cmd));
+
+        Manager manager = new ExampleMockManager(modules, bitcoin, temperatureMonitor, config);
 
         if (Opts.VERTX.isSet(cmd) || Opts.SERVER.getValue(cmd).equals(Opts.VERTX.name()))
             new Server(manager).start();
         else
             startKtorServer(manager);
     }
-
-
-
 
 
 }

@@ -1,0 +1,5 @@
+name: RaspberyWallet
+sessionLength: 3600000
+modules:
+- pin
+- button
