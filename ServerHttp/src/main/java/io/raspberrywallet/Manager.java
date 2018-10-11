@@ -43,6 +43,12 @@ public interface Manager {
     Response nextStep(@NotNull String moduleId, Map<String, String> inputMap); // pass input for current step and return next step
 
 
+    /**
+     * unlock/merge decrypted parts
+     *
+     * @return true if unlocking succeeded
+     */
+    boolean unlockWallet();
 
 
     /*

@@ -9,6 +9,7 @@ import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
 
+
     class SampleModule(name: String, description: String, val htmlUiForm: String? = null) : Module(name, description)
 
     private val _modules = listOf(
@@ -32,6 +33,7 @@ class ManagerMock : Manager {
     override fun nextStep(moduleId: String, input: Map<String, String>): Response =
         Response(SimpleStep("Do something"), Response.Status.OK)
 
+    override fun unlockWallet() = true
 
     override fun getModuleUi(moduleId: String): String? = _modules[moduleId]?.htmlUiForm
 

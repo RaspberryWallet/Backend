@@ -1,14 +1,20 @@
 package io.raspberrywallet.manager;
 
+import com.stasbar.Logger;
 import io.raspberrywallet.Response;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
+import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.Shamir;
+import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirKey;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.module.ModuleState;
+import org.bitcoinj.core.Base58;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.stream.Collectors.toList;
@@ -39,6 +45,7 @@ public class Manager implements io.raspberrywallet.Manager {
         modules.get(moduleId).setInputs(input);
         return new Response(null, Response.Status.OK);
     }
+
 
     /*
      * Modules
@@ -77,6 +84,24 @@ public class Manager implements io.raspberrywallet.Manager {
         return modules.getOrDefault(id, null);
     }
 
+    @Override
+    public boolean unlockWallet() {
+        ShamirKey[] shamirKeys = modules.values().stream().map(module -> {
+            try {
+                return module.getResult();
+            } catch (Module.DecryptionException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }).filter(Objects::nonNull)
+                .map(ShamirKey::fromByteArray).toArray(ShamirKey[]::new);
+        byte[] privateKey = Shamir.calculateLagrange(shamirKeys);
+        Logger.d("Private key restored: " + Base58.encode(privateKey));
+        bitcoin.importKey(privateKey);
+        Arrays.fill(privateKey, (byte) 0);
+        modules.values().forEach(Module::destroy);
+        return true;
+    }
 
     /*
      * Bitcoin Domain

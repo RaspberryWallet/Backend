@@ -33,6 +33,7 @@ import io.raspberrywallet.ktor.Paths.moduleState
 import io.raspberrywallet.ktor.Paths.modules
 import io.raspberrywallet.ktor.Paths.nextStep
 import io.raspberrywallet.ktor.Paths.ping
+import io.raspberrywallet.ktor.Paths.unlockWallet
 import io.raspberrywallet.server.Server
 import kotlinx.html.*
 import org.slf4j.event.Level
@@ -53,6 +54,7 @@ object Paths {
     val moduleState = prefix + "moduleState/{id}"
     val nextStep = prefix + "nextStep/{id}"
     val moduleHtmlUi = prefix + "moduleHtmlUi/{id}"
+    val unlockWallet = prefix + "unlockWallet"
     val currentAddress = prefix + "currentAddress"
     val freshAddress = prefix + "freshAddress"
     val estimatedBalance = prefix + "estimatedBalance"
@@ -98,6 +100,9 @@ fun Application.mainModule() {
             val id = call.parameters["id"]!!
             val htmlUiForm = manager.getModuleUi(id) ?: ""
             call.respondText(text = htmlUiForm, contentType = ContentType.Text.Html)
+        }
+        get(unlockWallet) {
+            call.respond(manager.unlockWallet())
         }
         get(currentAddress) {
             call.respond(mapOf("currentAddress" to manager.currentReceiveAddress))
