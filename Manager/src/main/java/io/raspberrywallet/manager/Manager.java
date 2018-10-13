@@ -3,6 +3,8 @@ package io.raspberrywallet.manager;
 import io.raspberrywallet.Response;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
+import io.raspberrywallet.manager.linux.WifiScanner;
+import io.raspberrywallet.manager.linux.WifiStatus;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.module.ModuleState;
 import org.jetbrains.annotations.NotNull;
@@ -116,4 +118,9 @@ public class Manager implements io.raspberrywallet.Manager {
         return tempMonitor.call();
     }
 
+    @Override
+    public String[] getNetworkList() { return new WifiScanner().call(); }
+
+    @Override
+    public Map<String, String> getWifiStatus() { return new WifiStatus().call(); }
 }

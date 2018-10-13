@@ -1,7 +1,9 @@
 package io.raspberrywallet.manager.linux;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.InvalidObjectException;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,19 +18,23 @@ public class WifiScanner extends Executable<String[]> {
      * @throws Exception
      */
     @Override
-    public String[] call() throws Exception {
+    public String[] call() {
         ArrayList<String> networks = new ArrayList<>();
-        Process process = Runtime.getRuntime().exec("/opt/wallet/tools/listwifi.sh");
-        process.waitFor();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        String line;
-        while( (line = reader.readLine()) != null ) {
-            Matcher matcher = wifiPattern.matcher(line);
-            if(matcher.matches()) {
-                networks.add(matcher.group(1));
+        try {
+            Process process = Runtime.getRuntime().exec("/opt/wallet/tools/listwifi.sh");
+            process.waitFor();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = wifiPattern.matcher(line);
+                if (matcher.matches()) {
+                    networks.add(matcher.group(1));
+                }
             }
+        } catch(InterruptedException | IOException e) {
+            System.err.println(e.getMessage());
         }
-        return (String[])networks.toArray();
+        return networks.toArray(new String[]{});
     }
 
 }

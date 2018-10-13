@@ -33,7 +33,7 @@ public class WifiStatus extends Executable<Map<String, String>> {
      * @throws Exception
      */
     @Override
-    public Map<String, String> call() throws Exception {
+    public Map<String, String> call() {
         HashMap<String, String> values = new HashMap<String, String>();
         try {
 
