@@ -4,6 +4,7 @@ import com.stasbar.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -22,8 +23,9 @@ public class ModuleClassLoader {
     @NotNull
     public static List<Module> getModulesFrom(File modulesDir) {
         if (!modulesDir.exists()) {
-            System.out.println("Modules folder not found, skipping");
-            return Collections.emptyList();
+            System.out.println("\""+modulesDir.getPath()+"\" doesn't exist! Defaulting to /opt/wallet/modules");
+            modulesDir = new File("/opt/wallet/modules");
+            if(!modulesDir.exists() && !modulesDir.mkdirs()) {System.err.println("Cannot create necessary directories!"); return Collections.emptyList();}
         }
         File[] files = Objects.requireNonNull(modulesDir.listFiles(), "moduleDir files can not be null");
         try {
