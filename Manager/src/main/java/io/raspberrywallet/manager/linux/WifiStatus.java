@@ -10,11 +10,11 @@ import java.util.regex.Pattern;
 
 public class WifiStatus extends Executable<Map<String, String>> {
 
-    Pattern essidPattern = Pattern.compile("^.*ESSID:\"(.*)\"$");
-    Pattern macPattern = Pattern.compile("^.*Access Point: ([0-9:]+)$");
+    Pattern essidPattern = Pattern.compile("^.*ESSID:\"(.*)\".*$");
+    Pattern macPattern = Pattern.compile("^.*Access Point: ([0-9:]+).*$");
     Pattern qualityPattern = Pattern.compile("^.*Link Quality=([0-9]+/[0-9]+) .*$");
     Pattern freqPattern = Pattern.compile("^.*Frequency:([0-9.]+ GHz).*$");
-    Pattern speedPattern = Pattern.compile("^.*Bit Rate=([0-9]+ M|Gb/s).*$");
+    Pattern speedPattern = Pattern.compile("^.*Bit Rate=([0-9]+ (?:M|G)b/s).*$");
     Pattern ipPattern = Pattern.compile("^.*inet ([0-9.]+) .*$");
     Pattern ipv6Pattern = Pattern.compile("^.*inet6 ([0-9a-fA-F:]+).*<link>$");
     Pattern globalipPattern = Pattern.compile("^.*inet6 ([0-9a-fA-F:]+).*<global>$");
