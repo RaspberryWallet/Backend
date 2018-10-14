@@ -24,13 +24,19 @@ public class ModuleClassLoader {
     public static List<Module> getModulesFrom(File modulesDir) {
         if (!modulesDir.exists()) {
             System.out.println("\""+modulesDir.getPath()+"\" doesn't exist! Defaulting to /opt/wallet/modules");
+            
             modulesDir = new File("/opt/wallet/modules");
-            if(!modulesDir.exists() && !modulesDir.mkdirs()) {System.err.println("Cannot create necessary directories!"); return Collections.emptyList();}
+            if (!modulesDir.exists() && !modulesDir.mkdirs()) {
+                System.err.println("Cannot create necessary directories!");
+                return Collections.emptyList();
+            }
         }
+        
         File[] files = Objects.requireNonNull(modulesDir.listFiles(), "moduleDir files can not be null");
         try {
             URL url = modulesDir.toURI().toURL();
             URLClassLoader classLoader = new URLClassLoader(new URL[]{url});
+            
             List<Class<?>> classes = getClasses(files, classLoader);
             List<Module> modules = instaniateModulesObjects(classes);
             printLoadedModules(modules);
