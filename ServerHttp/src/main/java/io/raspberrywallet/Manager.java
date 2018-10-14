@@ -43,12 +43,20 @@ public interface Manager {
     Response nextStep(@NotNull String moduleId, Map<String, String> inputMap); // pass input for current step and return next step
 
 
+    boolean isLocked();
     /**
      * unlock/merge decrypted parts
      *
      * @return true if unlocking succeeded
      */
     boolean unlockWallet();
+
+    /**
+     * lock wallet remove key from bitcoinJ, fill zeros on modules decryptedValue props
+     *
+     * @return true if locking succeeded
+     */
+    boolean lockWallet();
 
 
     /*
@@ -91,12 +99,24 @@ public interface Manager {
     @NonNls
     String getAvailableBalance();
 
+
+    /**
+     * Send amount of bitcoins to the recipientAddress
+     *
+     * @param amount           of bitcoins to send to the recipientAddress
+     * @param recipientAddress recipient address
+     */
+    void sendCoins(@NotNull String amount, @NotNull String recipientAddress);
+
     /**
      * Restores seed/privateKey from backup phrase (12 mnemonic words)
      *
-     * @param mnemonicWords 12 words corresponding to private key
+     * @param mnemonicWords             12 words corresponding to private key
+     * @param selectedModulesWithInputs modules selected to encrypt this private key moduleId -> Map(inputName -> inputValue)
+     * @param required                  number of modules required to unlock the wallet <= moduleIdsToDecrypt.size
      */
-    void restoreFromBackupPhrase(@NotNull List<String> mnemonicWords);
+    void restoreFromBackupPhrase(@NonNls List<String> mnemonicWords,
+                                 @NonNls Map<String, Map<String, String>> selectedModulesWithInputs, int required);
 
     /*
      * Utilities
@@ -109,5 +129,11 @@ public interface Manager {
      */
     @NonNls
     String getCpuTemperature();
+
+
+    /**
+     * Tap manager, delaying auto lock
+     */
+    void tap();
 
 }

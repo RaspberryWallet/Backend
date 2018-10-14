@@ -31,11 +31,9 @@ class DatabaseTest {
             db = new Database(true);
             walletEntity1 = new WalletEntity();
 
-            keyPartEntity1_1.order = 1;
             keyPartEntity1_1.payload = KEYPART_1_1;
             keyPartEntity1_1.module = KEYPART_1_1_MODULE;
 
-            keyPartEntity1_2.order = 2;
             keyPartEntity1_2.payload = KEYPART_1_2;
             keyPartEntity1_2.module = KEYPART_1_2_MODULE;
 

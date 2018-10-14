@@ -1,28 +1,39 @@
 package io.raspberrywallet.manager;
 
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
+import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
+import io.raspberrywallet.manager.modules.Module;
+import io.raspberrywallet.manager.modules.PinModule;
+import io.raspberrywallet.manager.modules.PushButtonModule;
 import org.bitcoinj.crypto.MnemonicException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import static io.raspberrywallet.manager.Utils.println;
+import static org.mockito.Mockito.mock;
 
 class ManagerTest {
     private static Manager manager;
     private static Bitcoin bitcoin;
     private static TemperatureMonitor temperatureMonitor;
+    private static Database db;
+    private static List<Module> modules;
 
     @BeforeAll
     static void setup() {
-        bitcoin = Mockito.mock(Bitcoin.class);
-        temperatureMonitor = Mockito.mock(TemperatureMonitor.class);
-        manager = new Manager(Collections.emptyList(), bitcoin, temperatureMonitor);
+        bitcoin = mock(Bitcoin.class);
+        temperatureMonitor = mock(TemperatureMonitor.class);
+        db = mock(Database.class);
+        modules = new ArrayList<>();
+        modules.add(new PinModule());
+        modules.add(new PushButtonModule());
+        manager = new Manager(db, modules, bitcoin, temperatureMonitor);
     }
 
     @Test
@@ -34,9 +45,9 @@ class ManagerTest {
     void restoreFromBackupPhrase() throws NoSuchAlgorithmException, MnemonicException {
         List<String> mnemonicCode = TestUtils.generateRandomDeterministicMnemonicCode();
         mnemonicCode.forEach(System.out::println);
-
-        manager.restoreFromBackupPhrase(mnemonicCode);
-        Mockito.verify(bitcoin).restoreFromBackupPhrase(mnemonicCode);
+        //TODO Mock
+//        manager.restoreFromBackupPhrase(mnemonicCode, modules.stream().map(Module::getId).map(id -> ).collect(Collectors.toList()), 2);
+        Mockito.verify(bitcoin).restoreFromSeed(mnemonicCode);
         Mockito.verifyNoMoreInteractions(bitcoin);
     }
 

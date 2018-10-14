@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Module {
-
     /*
      * Module info formatted as JSON.
      * */
@@ -19,7 +18,7 @@ public abstract class Module {
     public abstract String getDescription();
 
     public io.raspberrywallet.module.Module asServerModule() {
-        return new io.raspberrywallet.module.Module(getId(), getId(), getDescription()) {
+        return new io.raspberrywallet.module.Module(getId(), getId(), getDescription(), getHtmlUi()) {
         };
     }
 
@@ -63,6 +62,7 @@ public abstract class Module {
      */
     public abstract void register();
 
+
     /**
      * this function should return HTML UI form or null if not required
      */
@@ -85,6 +85,7 @@ public abstract class Module {
         checkThread = new Thread(checkRunnable.enable().setSleepTime(100));
         checkThread.start();
     }
+
     /**
      * Setting the status message for the user
      *

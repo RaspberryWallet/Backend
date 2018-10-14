@@ -14,12 +14,17 @@ public class KeyPartEntity {
     public byte[] payload;
     @Getter
     @Setter
-    @JsonProperty("order")
-    public int order;
-    @Getter
-    @Setter
     @JsonProperty("module")
     public String module;
+
+    public KeyPartEntity() {
+
+    }
+
+    public KeyPartEntity(byte[] payload, String module) {
+        this.payload = payload;
+        this.module = module;
+    }
 
     /*
      * Filling everything with zeroes to keep RAM safe
@@ -30,8 +35,6 @@ public class KeyPartEntity {
             for (int i = 0; i < payload.length; ++i)
                 payload[i] = (byte) (i % 120);
         }
-
-        order = Integer.rotateRight(order, order);
     }
 
     /*
@@ -44,7 +47,6 @@ public class KeyPartEntity {
             KeyPartEntity kpe = (KeyPartEntity) obj;
             return (
                     this.module.equals(kpe.module)
-                            && this.order == kpe.order
                             && Arrays.equals(this.payload, kpe.payload)
             );
         }

@@ -22,9 +22,8 @@ public class MockDatabaseFactory {
         }
     }
 
-    public MockDatabaseFactory placeKeyPart(byte[] payload, int order) {
+    public MockDatabaseFactory placeKeyPart(byte[] payload) {
         KeyPartEntity kp = new KeyPartEntity();
-        kp.order = order;
         kp.payload = payload.clone();
         if (walletEntity == null) walletEntity = new WalletEntity();
         walletEntity.parts.add(kp);

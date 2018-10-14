@@ -3,6 +3,7 @@ package io.raspberrywallet.manager.modules;
 import java.math.BigInteger;
 
 public class PinModule extends Module {
+
     @Override
     public String getDescription() {
         return "Module that require enter 4 digits code";
