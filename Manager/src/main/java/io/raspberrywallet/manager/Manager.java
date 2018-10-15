@@ -11,6 +11,8 @@ import io.raspberrywallet.manager.database.WalletEntity;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.module.ModuleState;
+import kotlin.text.Charsets;
+import org.bitcoinj.wallet.UnreadableWalletException;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
@@ -138,9 +140,15 @@ public class Manager implements io.raspberrywallet.Manager {
                 .toArray(ShamirKey[]::new);
 
         byte[] privateKey = Shamir.calculateLagrange(shamirKeys);
-        bitcoin.restoreFromSeed(privateKey.clone());
-        Arrays.fill(privateKey, (byte) 0);
-        return true;
+        try {
+            bitcoin.restoreFromSeed(new String(privateKey, Charsets.UTF_8));
+            Arrays.fill(privateKey, (byte) 0);
+            return true;
+        } catch (UnreadableWalletException e) {
+            e.printStackTrace();
+            Arrays.fill(privateKey, (byte) 0);
+            return false;
+        }
     }
 
     @Override
@@ -163,8 +171,8 @@ public class Manager implements io.raspberrywallet.Manager {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        byte[] seed = bitcoin.restoreFromSeed(mnemonicCode);
-
+        bitcoin.restoreFromSeed(mnemonicCode);
+        byte[] seed = String.join(" ", mnemonicCode).getBytes(Charsets.UTF_8);
         int numBits = seed.length * 8; //We need bits not bytes
         try {
             BigInteger[] params = Shamir.generateParams(required, numBits, seed);

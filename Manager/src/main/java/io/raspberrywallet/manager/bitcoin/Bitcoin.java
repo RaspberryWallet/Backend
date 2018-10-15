@@ -8,6 +8,7 @@ import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.utils.BriefLogFormatter;
 import org.bitcoinj.wallet.DeterministicSeed;
+import org.bitcoinj.wallet.UnreadableWalletException;
 import org.bitcoinj.wallet.Wallet;
 
 import javax.annotation.Nullable;
@@ -123,8 +124,8 @@ public class Bitcoin {
         fileSpvBlockchain.delete();
     }
 
-    public void restoreFromSeed(byte[] entropy) {
-        DeterministicSeed seed = new DeterministicSeed(entropy, "", 1539388800);
+    public void restoreFromSeed(String mnemonicCode) throws UnreadableWalletException {
+        DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 1539388800);
         Logger.d("restoreFromSeedEntropy: " + seed.toString());
         // Shut down bitcoinj and restart it with the new seed.
         kit.addListener(new Service.Listener() {
