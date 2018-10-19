@@ -42,8 +42,21 @@ public interface Manager {
      */
     Response nextStep(@NotNull String moduleId, Map<String, String> inputMap); // pass input for current step and return next step
 
+    /**
+     * Restores seed/privateKey from backup phrase (12 mnemonic words)
+     *
+     * @param mnemonicWords             12 words corresponding to private key
+     * @param selectedModulesWithInputs modules selected to encrypt this private key moduleId -> Map(inputName -> inputValue)
+     * @param required                  number of modules required to unlock the wallet <= moduleIdsToDecrypt.size
+     */
+    void restoreFromBackupPhrase(@NonNls List<String> mnemonicWords,
+                                 @NonNls Map<String, Map<String, String>> selectedModulesWithInputs, int required);
 
-    boolean isLocked();
+    /**
+     * @return current wallet status
+     */
+    WalletStatus getWalletStatus();
+
     /**
      * unlock/merge decrypted parts
      *
@@ -107,16 +120,6 @@ public interface Manager {
      * @param recipientAddress recipient address
      */
     void sendCoins(@NotNull String amount, @NotNull String recipientAddress);
-
-    /**
-     * Restores seed/privateKey from backup phrase (12 mnemonic words)
-     *
-     * @param mnemonicWords             12 words corresponding to private key
-     * @param selectedModulesWithInputs modules selected to encrypt this private key moduleId -> Map(inputName -> inputValue)
-     * @param required                  number of modules required to unlock the wallet <= moduleIdsToDecrypt.size
-     */
-    void restoreFromBackupPhrase(@NonNls List<String> mnemonicWords,
-                                 @NonNls Map<String, Map<String, String>> selectedModulesWithInputs, int required);
 
     /*
      * Utilities

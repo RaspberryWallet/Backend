@@ -23,19 +23,20 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.raspberrywallet.Manager
-import io.raspberrywallet.ktor.Paths.availableBalance
-import io.raspberrywallet.ktor.Paths.cpuTemp
-import io.raspberrywallet.ktor.Paths.currentAddress
-import io.raspberrywallet.ktor.Paths.estimatedBalance
-import io.raspberrywallet.ktor.Paths.freshAddress
-import io.raspberrywallet.ktor.Paths.isLocked
-import io.raspberrywallet.ktor.Paths.moduleState
-import io.raspberrywallet.ktor.Paths.modules
-import io.raspberrywallet.ktor.Paths.nextStep
-import io.raspberrywallet.ktor.Paths.ping
-import io.raspberrywallet.ktor.Paths.restoreFromBackupPhrase
-import io.raspberrywallet.ktor.Paths.sendCoins
-import io.raspberrywallet.ktor.Paths.unlockWallet
+import io.raspberrywallet.ktor.Paths.Bitcoin.availableBalance
+import io.raspberrywallet.ktor.Paths.Bitcoin.currentAddress
+import io.raspberrywallet.ktor.Paths.Bitcoin.estimatedBalance
+import io.raspberrywallet.ktor.Paths.Bitcoin.freshAddress
+import io.raspberrywallet.ktor.Paths.Bitcoin.sendCoins
+import io.raspberrywallet.ktor.Paths.Modules.lockWallet
+import io.raspberrywallet.ktor.Paths.Modules.moduleState
+import io.raspberrywallet.ktor.Paths.Modules.modules
+import io.raspberrywallet.ktor.Paths.Modules.nextStep
+import io.raspberrywallet.ktor.Paths.Modules.restoreFromBackupPhrase
+import io.raspberrywallet.ktor.Paths.Modules.unlockWallet
+import io.raspberrywallet.ktor.Paths.Modules.walletStatus
+import io.raspberrywallet.ktor.Paths.Utils.cpuTemp
+import io.raspberrywallet.ktor.Paths.Utils.ping
 import io.raspberrywallet.server.Server
 import kotlinx.html.*
 import org.slf4j.event.Level
@@ -51,19 +52,29 @@ fun startKtorServer(newManager: Manager) {
 
 object Paths {
     const val prefix = "/api/"
-    const val ping = prefix + "ping"
-    const val modules = prefix + "modules"
-    const val moduleState = prefix + "moduleState/{id}"
-    const val nextStep = prefix + "nextStep/{id}"
-    const val restoreFromBackupPhrase = prefix + "restoreFromBackupPhrase"
-    const val unlockWallet = prefix + "unlockWallet"
-    const val isLocked = prefix + "isLocked"
-    const val currentAddress = prefix + "currentAddress"
-    const val freshAddress = prefix + "freshAddress"
-    const val estimatedBalance = prefix + "estimatedBalance"
-    const val availableBalance = prefix + "availableBalance"
-    const val sendCoins = prefix + "sendCoins"
-    const val cpuTemp = prefix + "cpuTemp"
+
+    object Utils {
+        const val ping = prefix + "ping"
+        const val cpuTemp = prefix + "cpuTemp"
+    }
+
+    object Modules {
+        const val modules = prefix + "modules"
+        const val moduleState = prefix + "moduleState/{id}"
+        const val nextStep = prefix + "nextStep/{id}"
+        const val restoreFromBackupPhrase = prefix + "restoreFromBackupPhrase"
+        const val unlockWallet = prefix + "unlockWallet"
+        const val lockWallet = prefix + "lockWallet"
+        const val walletStatus = prefix + "walletStatus"
+    }
+
+    object Bitcoin {
+        const val currentAddress = prefix + "currentAddress"
+        const val freshAddress = prefix + "freshAddress"
+        const val estimatedBalance = prefix + "estimatedBalance"
+        const val availableBalance = prefix + "availableBalance"
+        const val sendCoins = prefix + "sendCoins"
+    }
 }
 
 fun Application.mainModule() {
@@ -78,6 +89,7 @@ fun Application.mainModule() {
     install(DefaultHeaders)
 
     routing {
+        /*Utils*/
         get(ping) {
             manager.tap()
             call.respond(mapOf("ping" to manager.ping()))
@@ -86,6 +98,8 @@ fun Application.mainModule() {
             manager.tap()
             call.respond(mapOf("cpuTemp" to manager.cpuTemperature))
         }
+
+        /*Modules*/
         get(modules) {
             manager.tap()
             call.respond(manager.modules)
@@ -104,23 +118,29 @@ fun Application.mainModule() {
             val response = manager.nextStep(id, inputMap)
             call.respond(mapOf("response" to response.status))
         }
-        post(sendCoins) {
+        post(restoreFromBackupPhrase) {
             manager.tap()
-            val (amount, recipient) = call.receive<SendCoinBody>()
-            manager.sendCoins(amount, recipient)
-            call.respond(HttpStatusCode.OK)
+            val (mnemonicWords, modules, required) = call.receive<RestoreFromBackup>()
+            call.respond(manager.restoreFromBackupPhrase(mnemonicWords, modules, required))
         }
-        get(isLocked) {
-            call.respond(mapOf("isLocked" to manager.isLocked))
+        get(walletStatus) {
+            manager.tap()
+            call.respond(mapOf("walletStatus" to manager.walletStatus))
         }
         get(unlockWallet) {
             manager.tap()
             call.respond(manager.unlockWallet())
         }
-        post(restoreFromBackupPhrase) {
+        get(lockWallet) {
+            call.respond(manager.lockWallet())
+        }
+
+        /*Bitcoin*/
+        post(sendCoins) {
             manager.tap()
-            val (mnemonicWords, modules, required) = call.receive<RestoreFromBackup>()
-            call.respond(manager.restoreFromBackupPhrase(mnemonicWords, modules, required))
+            val (amount, recipient) = call.receive<SendCoinBody>()
+            manager.sendCoins(amount, recipient)
+            call.respond(HttpStatusCode.OK)
         }
         get(currentAddress) {
             manager.tap()
@@ -142,6 +162,7 @@ fun Application.mainModule() {
             manager.tap()
             call.respond(indexPage)
         }
+
         static("/") {
             resources("assets")
         }
@@ -160,10 +181,10 @@ val indexPage = HtmlContent {
         h2 { +"Utils" }
         ul {
             li {
-                a(href = Paths.ping) { +Paths.ping }
+                a(href = ping) { +ping }
             }
             li {
-                a(href = Paths.cpuTemp) { +Paths.cpuTemp }
+                a(href = cpuTemp) { +cpuTemp }
             }
         }
         h2 { +"Modules" }
@@ -179,12 +200,20 @@ val indexPage = HtmlContent {
                 a(href = nextStep) { +nextStep }
             }
             li {
+                a(href = restoreFromBackupPhrase) { +restoreFromBackupPhrase }
+            }
+            li {
+                a(href = walletStatus) { +walletStatus }
+            }
+            li {
                 a(href = unlockWallet) { +unlockWallet }
+            }
+            li {
+                a(href = lockWallet) { +lockWallet }
             }
         }
         h2 { +"Bitcoin" }
         ul {
-
             li {
                 a(href = currentAddress) { +currentAddress }
             }

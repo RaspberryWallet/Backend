@@ -25,19 +25,6 @@ public class Main {
         CommandLine cmd = parseArgs(args);
 
         Bitcoin bitcoin = new Bitcoin();
-        if (Opts.SYNC.isSet(cmd)) {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                Logger.info("Finishing...");
-                bitcoin.kit.stopAsync();
-                try {
-                    bitcoin.kit.awaitTerminated(3, TimeUnit.SECONDS);
-                } catch (TimeoutException e) {
-                    e.printStackTrace();
-                }
-                // Forcibly terminate the JVM because Orchid likes to spew non-daemon threads everywhere.
-                Runtime.getRuntime().exit(0);
-            }));
-        }
 
         File modulesDir = new File(Opts.MODULES.getValue(cmd));
         List<Module> modules = ModuleClassLoader.getModulesFrom(modulesDir);
@@ -47,6 +34,26 @@ public class Main {
         Database db = new Database();
 
         Manager manager = new Manager(db, modules, bitcoin, temperatureMonitor);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Logger.info("Finishing...");
+            try {
+                if (manager.lockWallet()) Logger.info("Wallet Encrypted");
+                else Logger.err("Failed Wallet Encryption");
+            } catch (NullPointerException e) {
+                Logger.err("Failed Wallet Encryption");
+                e.printStackTrace();
+            }
+
+            bitcoin.kit.stopAsync();
+            try {
+                bitcoin.kit.awaitTerminated(3, TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+                Logger.err(e.getMessage());
+            }
+            // Forcibly terminate the JVM because Orchid likes to spew non-daemon threads everywhere.
+            Runtime.getRuntime().exit(0);
+        }));
 
         if (Opts.VERTX.isSet(cmd) || Opts.SERVER.getValue(cmd).equals(Opts.VERTX.name()))
             new Server(manager).start();

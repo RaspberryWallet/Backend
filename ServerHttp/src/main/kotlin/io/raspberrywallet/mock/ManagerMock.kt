@@ -2,21 +2,20 @@ package io.raspberrywallet.mock
 
 import io.raspberrywallet.Manager
 import io.raspberrywallet.Response
+import io.raspberrywallet.WalletStatus
 import io.raspberrywallet.module.Module
 import io.raspberrywallet.module.ModuleState
 import io.raspberrywallet.step.SimpleStep
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
+    override fun getWalletStatus() = WalletStatus.ENCRYPTED
+
     override fun tap() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun lockWallet(): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun isLocked(): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

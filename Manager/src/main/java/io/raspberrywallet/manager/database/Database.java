@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stasbar.Logger;
-import lombok.Getter;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,9 +17,9 @@ import java.util.zip.InflaterInputStream;
 
 public class Database {
 
-    @Getter
     @JsonProperty("wallet")
     public WalletEntity wallet = null;
+
 
     private File databaseFile;
 

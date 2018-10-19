@@ -33,17 +33,6 @@ public class BitcoinTest {
 
 
     @Test
-    void should_sync_test_net() {
-
-        assertEquals(bitcoin.params(), TestNet3Params.get());
-        assertEquals(bitcoin.kit.directory(), bitcoin.rootDirectory);
-        assertTrue(bitcoin.fileWallet.exists());
-        assertTrue(bitcoin.fileSpvBlockchain.exists());
-
-        bitcoin.fileSpvBlockchain.delete();
-    }
-
-    @Test
     void should_restore_randomly_generated_mnemonic_words() throws NoSuchAlgorithmException, MnemonicException {
         List<String> mnemonicCode = TestUtils.generateRandomDeterministicMnemonicCode();
         mnemonicCode.forEach(System.out::println);

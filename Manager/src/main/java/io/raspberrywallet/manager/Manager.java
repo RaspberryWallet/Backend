@@ -1,6 +1,8 @@
 package io.raspberrywallet.manager;
 
+import com.stasbar.Logger;
 import io.raspberrywallet.Response;
+import io.raspberrywallet.WalletStatus;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.Shamir;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirException;
@@ -12,9 +14,13 @@ import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.module.ModuleState;
 import kotlin.text.Charsets;
-import org.bitcoinj.wallet.UnreadableWalletException;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.crypto.KeyCrypter;
+import org.bitcoinj.crypto.KeyCrypterException;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.spongycastle.crypto.params.KeyParameter;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -53,13 +59,14 @@ public class Manager implements io.raspberrywallet.Manager {
             @Override
             public void run() {
                 if (autoLockRemainingMinutes == 1) {
+                    Logger.d("Autolock triggered");
                     lockWallet();
                     timer.cancel();
                 }
                 --autoLockRemainingMinutes;
 
             }
-        }, 60000, 60000);
+        }, 60 * 1000 /* second */, 60 * 1000 /* second */);
     }
 
 
@@ -113,55 +120,6 @@ public class Manager implements io.raspberrywallet.Manager {
         return modules.getOrDefault(id, null);
     }
 
-    @Override
-    public boolean isLocked() {
-        try {
-            bitcoin.kit.wallet();
-        } catch (IllegalStateException e) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean unlockWallet() {
-        ShamirKey[] shamirKeys = modules.values().stream()
-                .map(module -> {
-                    try {
-                        KeyPartEntity dbEntity = database.getKeypartForModuleId(module.getId()).get();
-                        return module.decrypt(dbEntity.payload);
-                    } catch (Module.DecryptionException e) {
-                        e.printStackTrace();
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .map(ShamirKey::fromByteArray)
-                .toArray(ShamirKey[]::new);
-
-        byte[] privateKey = Shamir.calculateLagrange(shamirKeys);
-        try {
-            bitcoin.restoreFromSeed(new String(privateKey, Charsets.UTF_8));
-            Arrays.fill(privateKey, (byte) 0);
-            return true;
-        } catch (UnreadableWalletException e) {
-            e.printStackTrace();
-            Arrays.fill(privateKey, (byte) 0);
-            return false;
-        }
-    }
-
-    @Override
-    public boolean lockWallet() {
-        //todo not sure if it works
-        bitcoin.kit.wallet().reset();
-        modules.values().forEach(Module::destroy);
-        return true;
-    }
-
-    /*
-     * Bitcoin Domain
-     */
 
     @Override
     public void restoreFromBackupPhrase(@NotNull List<String> mnemonicCode, Map<String, Map<String, String>> selectedModulesWithInputs, int required) {
@@ -196,6 +154,81 @@ public class Manager implements io.raspberrywallet.Manager {
         }
 
     }
+
+    @Override
+    public WalletStatus getWalletStatus() {
+        try {
+            return bitcoin.kit.wallet().isEncrypted() ?
+                    WalletStatus.ENCRYPTED : WalletStatus.DECRYPTED;
+        } catch (IllegalStateException e) {
+            return WalletStatus.UNSET;
+        }
+    }
+
+    @Override
+    public boolean unlockWallet() {
+        byte[] privateKeyHash = Sha256Hash.hash(getPrivateKeyFromModules());
+        KeyParameter key = new KeyParameter(privateKeyHash);
+        try {
+            bitcoin.kit.wallet().decrypt(key);
+            return true;
+        } catch (KeyCrypterException e) {
+            return false;
+        } finally {
+            Arrays.fill(key.getKey(), (byte) 0);
+            clearModules();
+        }
+    }
+
+    @Override
+    public boolean lockWallet() {
+        KeyCrypter keyCrypter = Optional
+                .ofNullable(bitcoin.kit.wallet().getKeyCrypter())
+                .orElseGet(KeyCrypterScrypt::new);
+
+        byte[] privateKeyHash = Sha256Hash.hash(getPrivateKeyFromModules());
+        KeyParameter key = new KeyParameter(privateKeyHash);
+
+        try {
+            bitcoin.kit.wallet().encrypt(keyCrypter, key);
+            return true;
+        } catch (KeyCrypterException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            Arrays.fill(key.getKey(), (byte) 0);
+            clearModules();
+        }
+    }
+
+    private void clearModules() {
+        modules.values().forEach(Module::destroy);
+    }
+
+    private byte[] getPrivateKeyFromModules() {
+        ShamirKey[] shamirKeys = modules.values().stream()
+                .map(module -> {
+                    try {
+                        module.start(); //TODO do we need it ?
+                        KeyPartEntity dbEntity = database.getKeypartForModuleId(module.getId()).get();
+                        module.setPayload(dbEntity.payload); //TODO do we need it ?
+                        return module.decrypt(dbEntity.payload);
+                    } catch (Module.DecryptionException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .map(ShamirKey::fromByteArray)
+                .toArray(ShamirKey[]::new);
+
+        return Shamir.calculateLagrange(shamirKeys);
+    }
+
+
+    /*
+     * Bitcoin Domain
+     */
 
     @Override
     public String getCurrentReceiveAddress() {
