@@ -19,6 +19,7 @@
         <ktor.version>0.9.5</ktor.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+        <junit.version>5.2.0</junit.version>
     </properties>
 
     <repositories>
@@ -120,14 +121,6 @@
             <groupId>com.github.stasbar</groupId>
             <artifactId>easy-logger</artifactId>
             <version>1.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.Kotlin</groupId>
-            <artifactId>kotlinx-html-jvm</artifactId>
-            <version>0.6.12-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>C:/Users/Aurorae/.m2/repository/com/github/Kotlin/kotlinx-html-jvm/0.6.12-SNAPSHOT/kotlinx-html-jvm-0.6.12-SNAPSHOT.jar</systemPath>
         </dependency>
 
         <dependency>
