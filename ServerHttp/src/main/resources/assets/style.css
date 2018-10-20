@@ -1,0 +1,54 @@
+* {
+    font-family: Sans-Serif;
+}
+
+a:link, a:visited, a:active {
+    text-decoration: none;
+    color:#073213;
+    text-shadow: 0px 0px 0px transparent;
+}
+
+a:hover {
+    color: #0D6561;
+    transition: color 0.25s linear;
+    text-shadow: 1px 1px 2px #3a5f69;
+}
+
+table {
+    border-collapse: collapse;
+    border: 1px solid black;
+}
+
+td {
+    border: 1px solid black;
+    padding: 4px 8px;
+}
+
+td.param {
+    font-weight: bold;
+    background-color: #eee;
+}
+
+div.temperature {
+    font-weight:bold;
+    margin: 8px 2px;
+}
+
+div.temperature span {
+    font-weight: normal;
+}
+
+span.hot {
+    color: red;
+    text-shadow: 1px 1px 1px yellow;
+}
+
+span.medium {
+    color: orange;
+    text-shadow: 1px 1px 1px brown;
+}
+
+span.cold {
+    color: blue;
+    text-shadow: 1px 1px 1px cyan;
+}

@@ -104,4 +104,28 @@ public interface Manager {
     @NonNls
     String getCpuTemperature();
 
+    /**
+     * Lists nearby wireless networks
+     * @return String array of found networks
+     */
+    @NonNls
+    String[] getNetworkList();
+
+    /**
+     * Get current status of Wi-Fi
+     * @return map with status parameters, described in io.raspberrywallet.manager.linux.WifiStatus::call
+     */
+    @NonNls
+    Map<String, String> getWifiStatus();
+
+    /**
+     * Gets current config of Wi-Fi: saved SSID and encrypted PSK
+     * @return Map with configuration parameters
+     */
+    @NonNls
+    Map<String, String> getWifiConfig();
+
+    @NonNls
+    int setWifiConfig(Map<String, String> newConf);
+
 }
