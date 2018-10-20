@@ -3,6 +3,7 @@ package io.raspberrywallet.manager;
 import io.raspberrywallet.Response;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
+import io.raspberrywallet.manager.linux.WPAConfiguration;
 import io.raspberrywallet.manager.linux.WifiScanner;
 import io.raspberrywallet.manager.linux.WifiStatus;
 import io.raspberrywallet.manager.modules.Module;
@@ -23,12 +24,14 @@ public class Manager implements io.raspberrywallet.Manager {
     private final ConcurrentHashMap<String, Module> modules = new ConcurrentHashMap<>();
     private final Bitcoin bitcoin;
     private final TemperatureMonitor tempMonitor;
+    private final WPAConfiguration wpaConfiguration;
 
 
     public Manager(List<Module> modules, Bitcoin bitcoin, TemperatureMonitor tempMonitor) {
         modules.forEach(module -> this.modules.put(module.getId(), module));
         this.bitcoin = bitcoin;
         this.tempMonitor = tempMonitor;
+        this.wpaConfiguration = new WPAConfiguration();
     }
 
     @Override
@@ -123,4 +126,10 @@ public class Manager implements io.raspberrywallet.Manager {
 
     @Override
     public Map<String, String> getWifiStatus() { return new WifiStatus().call(); }
+
+    @Override
+    public Map<String, String> getWifiConfig() { return this.wpaConfiguration.getAsMap(); }
+
+    @Override
+    public int setWifiConfig(Map<String, String> config) { return this.wpaConfiguration.setFromMap(config); }
 }

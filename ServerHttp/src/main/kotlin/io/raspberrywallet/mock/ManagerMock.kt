@@ -53,4 +53,8 @@ class ManagerMock : Manager {
     override fun getNetworkList(): Array<String> = arrayOf<String>("UPCwifi", "other wifi", "klocuch12")
 
     override fun getWifiStatus(): MutableMap<String, String> = mutableMapOf("freq" to "21.37 GHz", "speed" to "21.37 Tb/s")
+
+    override fun getWifiConfig(): MutableMap<String, String> = mutableMapOf("ssid" to "fakenet")
+
+    override fun setWifiConfig(newConf: MutableMap<String, String>?): Int = 0
 }

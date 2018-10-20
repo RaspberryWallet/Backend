@@ -118,4 +118,14 @@ public interface Manager {
     @NonNls
     Map<String, String> getWifiStatus();
 
+    /**
+     * Gets current config of Wi-Fi: saved SSID and encrypted PSK
+     * @return Map with configuration parameters
+     */
+    @NonNls
+    Map<String, String> getWifiConfig();
+
+    @NonNls
+    int setWifiConfig(Map<String, String> newConf);
+
 }
