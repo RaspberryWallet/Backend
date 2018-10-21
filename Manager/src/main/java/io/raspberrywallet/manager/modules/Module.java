@@ -91,7 +91,7 @@ public abstract class Module {
      * @param key   - key of the parameter
      * @param value - value of the parameter
      */
-    void setInput(String key, String value) {
+    public void setInput(String key, String value) {
         input.put(key, value);
     }
 

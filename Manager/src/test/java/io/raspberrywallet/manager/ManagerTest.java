@@ -2,49 +2,72 @@ package io.raspberrywallet.manager;
 
 import io.raspberrywallet.RequiredInputNotFound;
 import io.raspberrywallet.WalletNotInitialized;
+import io.raspberrywallet.WalletStatus;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
+import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirKey;
 import io.raspberrywallet.manager.database.Database;
+import io.raspberrywallet.manager.database.KeyPartEntity;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.ExampleModule;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.manager.modules.PinModule;
 import io.raspberrywallet.module.ModuleState;
 import org.bitcoinj.crypto.MnemonicException;
-import org.junit.jupiter.api.BeforeAll;
+import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.wallet.DeterministicSeed;
+import org.bitcoinj.wallet.Wallet;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.File;
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static io.raspberrywallet.manager.TestUtils.generateRandomDeterministicSeed;
 import static io.raspberrywallet.manager.Utils.println;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ManagerTest {
-    private static Manager manager;
-    private static Bitcoin bitcoin;
-    private static TemperatureMonitor temperatureMonitor;
-    private static Database db;
-    private static List<Module> modules;
-    private static PinModule pinModule;
-    private static ExampleModule exampleModule;
+    private Manager manager;
+    private Bitcoin bitcoin;
+    private TemperatureMonitor temperatureMonitor;
+    private Database database;
+    private PinModule pinModule;
+    private ExampleModule exampleModule;
+    private static DeterministicSeed seed;
 
-    @BeforeAll
-    static void setup() {
+    static {
+        try {
+            seed = generateRandomDeterministicSeed();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static File walletFile = new File("test_wallet.wallet");
+
+    @BeforeEach
+    void setup() {
         bitcoin = mock(Bitcoin.class);
         temperatureMonitor = mock(TemperatureMonitor.class);
-        db = mock(Database.class);
-        modules = new ArrayList<>();
+        database = mock(Database.class);
+        List<Module> modules = new ArrayList<>();
         exampleModule = new ExampleModule();
         pinModule = new PinModule();
         modules.add(exampleModule);
-
         modules.add(pinModule);
-        manager = new Manager(db, modules, bitcoin, temperatureMonitor);
+        manager = new Manager(database, modules, bitcoin, temperatureMonitor);
+    }
+
+
+    @AfterAll
+    static void tearDown() {
+        walletFile.delete();
     }
 
     @Test
@@ -55,6 +78,20 @@ class ManagerTest {
     @Test
     void getModules() {
         manager.getModules().forEach(module -> assertTrue(module instanceof io.raspberrywallet.module.Module));
+    }
+
+    @Test
+    void getWalletStatusUnset() throws WalletNotInitialized {
+        when(bitcoin.getWallet()).thenThrow(new WalletNotInitialized());
+        assertEquals(manager.getWalletStatus(), WalletStatus.UNSET);
+    }
+
+    @Test
+    void getWalletStatusSet() throws MnemonicException, NoSuchAlgorithmException, RequiredInputNotFound, WalletNotInitialized {
+        restoreFromBackupPhrase();
+        when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), generateRandomDeterministicSeed()));
+
+        assertEquals(manager.getWalletStatus(), WalletStatus.DECRYPTED);
     }
 
     @Test
@@ -79,9 +116,55 @@ class ManagerTest {
 
         manager.restoreFromBackupPhrase(mnemonicCode, selectedModulesWithInputs, 2);
         Mockito.verify(bitcoin).restoreFromSeed(mnemonicCode);
-        Mockito.verifyNoMoreInteractions(bitcoin);
     }
 
+    @Test
+    void unlockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound {
+        when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
+
+        pinModule.setInput(PinModule.Inputs.PIN, "1234");
+
+        ShamirKey exampleKey = new ShamirKey(BigInteger.ONE, BigInteger.TEN, BigInteger.ONE);
+        ShamirKey pinKey = new ShamirKey(BigInteger.TEN, BigInteger.ONE, BigInteger.TEN);
+        final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encrypt(exampleKey.toByteArray()), exampleModule.getId());
+        final KeyPartEntity pinKeyPart = new KeyPartEntity(pinModule.encrypt(pinKey.toByteArray()), pinModule.getId());
+        when(database.getKeypartForModuleId(exampleModule.getId())).thenReturn(Optional.of(exampleKeyPart));
+        when(database.getKeypartForModuleId(pinModule.getId())).thenReturn(Optional.of(pinKeyPart));
+
+        assertThrows(IllegalStateException.class, () -> manager.unlockWallet());
+    }
+
+    @Test
+    void lockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound {
+        when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
+
+        pinModule.setInput(PinModule.Inputs.PIN, "1234");
+
+        ShamirKey exampleKey = new ShamirKey(BigInteger.ONE, BigInteger.TEN, BigInteger.ONE);
+        ShamirKey pinKey = new ShamirKey(BigInteger.TEN, BigInteger.ONE, BigInteger.TEN);
+        final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encrypt(exampleKey.toByteArray()), exampleModule.getId());
+        final KeyPartEntity pinKeyPart = new KeyPartEntity(pinModule.encrypt(pinKey.toByteArray()), pinModule.getId());
+        when(database.getKeypartForModuleId(exampleModule.getId())).thenReturn(Optional.of(exampleKeyPart));
+        when(database.getKeypartForModuleId(pinModule.getId())).thenReturn(Optional.of(pinKeyPart));
+
+        when(bitcoin.getWalletFile()).thenReturn(walletFile);
+
+        manager.lockWallet();
+
+        assertTrue(walletFile.exists());
+        assertEquals(manager.getWalletStatus(), WalletStatus.ENCRYPTED);
+        //todo assert that inputs are cleared
+    }
+
+    @Test
+    void unlockWalletWhenLocked() throws WalletNotInitialized, RequiredInputNotFound {
+        lockWalletWhenUnlocked();
+
+        pinModule.setInput(PinModule.Inputs.PIN, "1234");
+
+        manager.unlockWallet();
+        assertEquals(manager.getWalletStatus(), WalletStatus.DECRYPTED);
+    }
 
     @Test
     void getCurrentReceiveAddress() throws WalletNotInitialized {

@@ -158,15 +158,14 @@ public class Manager implements io.raspberrywallet.Manager {
     }
 
     @Override
-    public boolean unlockWallet() {
+    public void unlockWallet() throws WalletNotInitialized {
         byte[] privateKeyHash = Sha256Hash.hash(getPrivateKeyFromModules());
         KeyParameter key = new KeyParameter(privateKeyHash);
         try {
             bitcoin.getWallet().decrypt(key);
-            return true;
         } catch (KeyCrypterException | WalletNotInitialized e) {
             e.printStackTrace();
-            return false;
+            throw e;
         } finally {
             Arrays.fill(key.getKey(), (byte) 0);
         }
@@ -200,7 +199,7 @@ public class Manager implements io.raspberrywallet.Manager {
         modules.values().forEach(Module::clearInputs);
     }
 
-    private byte[] getPrivateKeyFromModules() {
+    public byte[] getPrivateKeyFromModules() {
         ShamirKey[] shamirKeys = modules.values().stream()
                 .map(module -> {
                     try {

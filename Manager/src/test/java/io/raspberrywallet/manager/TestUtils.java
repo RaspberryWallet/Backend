@@ -18,4 +18,9 @@ public class TestUtils {
         assertNotNull(mnemonicCode);
         return mnemonicCode;
     }
+
+    public static DeterministicSeed generateRandomDeterministicSeed() throws NoSuchAlgorithmException {
+        return new DeterministicSeed(SecureRandom.getInstanceStrong(),
+                DeterministicSeed.DEFAULT_SEED_ENTROPY_BITS, "", System.currentTimeMillis());
+    }
 }

@@ -19,7 +19,7 @@ public class ShamirKey {
 
     }
 
-    ShamirKey(BigInteger p, BigInteger f, BigInteger x) {
+    public ShamirKey(BigInteger p, BigInteger f, BigInteger x) {
         this.p = p;
         this.f = f;
         this.x = x;
@@ -58,13 +58,18 @@ public class ShamirKey {
         return total.getBytes();
     }
 
+    /**
+     * @param bytes three parameters p,f and x encoded in UTF-8 and formatted like Base58(p):Base58(x):Base58(f)
+     * @return ShamirKey of p, f and x
+     */
     @NonNls
     public static ShamirKey fromByteArray(@NonNls byte[] bytes) {
         if (bytes.length <= 0) throw new IllegalArgumentException("bytes can not be empty");
         String total = new String(bytes);
 
         String[] parts = total.split(":");
-        if (parts.length != 3) throw new IllegalArgumentException("could not find all 3 formula parts p, x and f");
+        if (parts.length != 3)
+            throw new IllegalArgumentException("could not find all 3 formula parts p, x and f separated by \':\' in " + total);
 
         BigInteger p = Base58.decodeToBigInteger(parts[0]);
         BigInteger f = Base58.decodeToBigInteger(parts[1]);

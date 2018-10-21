@@ -55,7 +55,7 @@ public interface Manager {
      *
      * @return true if unlocking succeeded
      */
-    boolean unlockWallet();
+    void unlockWallet() throws WalletNotInitialized;
 
     /**
      * lock wallet remove key from bitcoinJ, fill zeros on modules decryptedValue props
