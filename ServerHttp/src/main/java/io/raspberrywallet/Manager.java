@@ -2,7 +2,6 @@ package io.raspberrywallet;
 
 import io.raspberrywallet.module.Module;
 import io.raspberrywallet.module.ModuleState;
-import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -18,19 +17,13 @@ public interface Manager {
     /**
      * @return all available modules
      */
-    @NonNls
+    @NotNull
     List<Module> getModules();
 
     /**
      * @return state of specified module
      */
     ModuleState getModuleState(@NotNull String moduleId);
-
-    /**
-     * @return HTML UI form that require some input from user
-     */
-    @Nullable
-    String getModuleUi(@NotNull String moduleId);
 
     /**
      * Validate input for specified module, and receive next Step or Failure
@@ -48,8 +41,8 @@ public interface Manager {
      * @param selectedModulesWithInputs modules selected to encrypt this private key moduleId -> Map(inputName -> inputValue)
      * @param required                  number of modules required to unlock the wallet <= moduleIdsToDecrypt.size
      */
-    void restoreFromBackupPhrase(@NonNls List<String> mnemonicWords,
-                                 @NonNls Map<String, Map<String, String>> selectedModulesWithInputs, int required) throws WalletNotInitialized, RequiredInputNotFound;
+    void restoreFromBackupPhrase(@NotNull List<String> mnemonicWords,
+                                 @NotNull Map<String, Map<String, String>> selectedModulesWithInputs, int required) throws WalletNotInitialized, RequiredInputNotFound;
 
     /**
      * @return current wallet status
@@ -80,7 +73,7 @@ public interface Manager {
      * @see <a href="https://docs.google.com/document/d/1wW5mRy51MvwghFcwk7K07LozbIV1sD53q4ejCQhjzFw#heading=h.pwiwojq2hjnr"/a>)
      * Bitcoin addresses should be used only once in order to keep your total balance private
      */
-    @NonNls
+    @NotNull
     String getCurrentReceiveAddress() throws WalletNotInitialized;
 
     /**
@@ -88,7 +81,7 @@ public interface Manager {
      * @see <a href="https://docs.google.com/document/d/1wW5mRy51MvwghFcwk7K07LozbIV1sD53q4ejCQhjzFw#heading=h.pwiwojq2hjnr"/a>)
      * Bitcoin addresses should be used only once in order to keep your total balance private
      */
-    @NonNls
+    @NotNull
     String getFreshReceiveAddress() throws WalletNotInitialized;
 
     /**
@@ -97,7 +90,7 @@ public interface Manager {
      *
      * @return current balance in BTC unit
      */
-    @NonNls
+    @NotNull
     String getEstimatedBalance() throws WalletNotInitialized;
 
     /**
@@ -108,7 +101,7 @@ public interface Manager {
      *
      * @return current balance in BTC unit
      */
-    @NonNls
+    @NotNull
     String getAvailableBalance() throws WalletNotInitialized;
 
 
@@ -129,7 +122,7 @@ public interface Manager {
      *
      * @return temperature as string in Celsius
      */
-    @NonNls
+    @NotNull
     String getCpuTemperature();
 
 
@@ -145,24 +138,24 @@ public interface Manager {
      * Lists nearby wireless networks
      * @return String array of found networks
      */
-    @NonNls
+    @NotNull
     String[] getNetworkList();
 
     /**
      * Get current status of Wi-Fi
      * @return map with status parameters, described in io.raspberrywallet.manager.linux.WifiStatus::call
      */
-    @NonNls
+    @NotNull
     Map<String, String> getWifiStatus();
 
     /**
      * Gets current config of Wi-Fi: saved SSID and encrypted PSK
      * @return Map with configuration parameters
      */
-    @NonNls
+    @NotNull
     Map<String, String> getWifiConfig();
 
-    @NonNls
+    @NotNull
     int setWifiConfig(Map<String, String> newConf);
 
 }

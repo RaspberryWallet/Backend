@@ -9,6 +9,7 @@ import io.raspberrywallet.step.SimpleStep
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
+
     override fun getWalletStatus() = WalletStatus.ENCRYPTED
 
     override fun tap() {
