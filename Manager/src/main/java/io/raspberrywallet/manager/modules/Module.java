@@ -2,17 +2,17 @@ package io.raspberrywallet.manager.modules;
 
 import io.raspberrywallet.RequiredInputNotFound;
 import io.raspberrywallet.manager.modules.exceptions.KeypartDecryptionException;
-import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Module {
-    @NonNls
+    @NotNull
     private String statusString;
 
-    @NonNls
+    @NotNull
     private HashMap<String, String> input = new HashMap<>();
 
     /**
@@ -20,7 +20,7 @@ public abstract class Module {
      *
      * @param initialStatusString - initial module status string
      */
-    public Module(@NonNls String initialStatusString) {
+    public Module(@NotNull String initialStatusString) {
         statusString = initialStatusString;
     }
 
@@ -81,7 +81,7 @@ public abstract class Module {
      *
      * @param status - new status
      */
-    void setStatusString(@NonNls String status) {
+    void setStatusString(@NotNull String status) {
         this.statusString = status;
     }
 

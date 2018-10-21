@@ -21,9 +21,9 @@ You can change this direcotry with param `-modules /path/to/your/custom/modules/
 
 In order to compile your `CustomModule.java` source file to bytecode class, execute this command:
 
-`javac -cp Manager/target/Manager-<version>-jar-with-dependencies.jar /path/to/your/CustomModule.java`
+`javac -cp Manager/target/Manager-<version>-jar-with-dependencies.jar /path/to/your/CustomModule.java -d modules/`
+`jar cvf modules/*`
 
-then place your generated `CustomModule.class` to `/modules` folder
 It will be automatically loaded on startup
 ```
 ℹ[INFO][18:12:39][ModuleClassLoader] Loaded 2 modules

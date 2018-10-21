@@ -4,7 +4,6 @@ import com.stasbar.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -23,20 +22,21 @@ public class ModuleClassLoader {
     @NotNull
     public static List<Module> getModulesFrom(File modulesDir) {
         if (!modulesDir.exists()) {
-            System.out.println("\""+modulesDir.getPath()+"\" doesn't exist! Defaulting to /opt/wallet/modules");
-            
+            System.out.println("\"" + modulesDir.getPath() + "\" doesn't exist! Defaulting to /opt/wallet/modules");
+
             modulesDir = new File("/opt/wallet/modules");
             if (!modulesDir.exists() && !modulesDir.mkdirs()) {
                 System.err.println("Cannot create necessary directories!");
                 return Collections.emptyList();
             }
         }
-        
+
         File[] files = Objects.requireNonNull(modulesDir.listFiles(), "moduleDir files can not be null");
         try {
             URL url = modulesDir.toURI().toURL();
-            URLClassLoader classLoader = new URLClassLoader(new URL[]{url});
-            
+
+            URLClassLoader classLoader = new URLClassLoader(new URL[]{url}, ModuleClassLoader.class.getClassLoader());
+
             List<Class<?>> classes = getClasses(files, classLoader);
             List<Module> modules = instaniateModulesObjects(classes);
             printLoadedModules(modules);
@@ -51,7 +51,8 @@ public class ModuleClassLoader {
         return Arrays.stream(files).map(file ->
                 {
                     try {
-                        String className = "io.raspberrywallet.manager.modules." + file.getName().replace(".class", "");
+                        String className = "io.raspberrywallet.manager.modules."
+                                + file.getName().substring(0, file.getName().indexOf("."));
                         return classLoader.loadClass(className);
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();

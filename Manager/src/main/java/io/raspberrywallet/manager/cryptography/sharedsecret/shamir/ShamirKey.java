@@ -2,7 +2,7 @@ package io.raspberrywallet.manager.cryptography.sharedsecret.shamir;
 
 
 import org.bitcoinj.core.Base58;
-import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
 
 import java.math.BigInteger;
 
@@ -62,8 +62,8 @@ public class ShamirKey {
      * @param bytes three parameters p,f and x encoded in UTF-8 and formatted like Base58(p):Base58(x):Base58(f)
      * @return ShamirKey of p, f and x
      */
-    @NonNls
-    public static ShamirKey fromByteArray(@NonNls byte[] bytes) {
+    @NotNull
+    public static ShamirKey fromByteArray(@NotNull byte[] bytes) {
         if (bytes.length <= 0) throw new IllegalArgumentException("bytes can not be empty");
         String total = new String(bytes);
 
