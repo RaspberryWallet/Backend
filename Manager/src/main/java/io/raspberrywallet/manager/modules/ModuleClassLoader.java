@@ -1,12 +1,16 @@
 package io.raspberrywallet.manager.modules;
 
 import com.stasbar.Logger;
+import io.raspberrywallet.manager.pki.JarVerifier;
+import io.raspberrywallet.manager.pki.PkiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -51,15 +55,32 @@ public class ModuleClassLoader {
         return Arrays.stream(files).map(file ->
                 {
                     try {
-                        String className = "io.raspberrywallet.manager.modules."
-                                + file.getName().substring(0, file.getName().indexOf("."));
-                        return classLoader.loadClass(className);
-                    } catch (ClassNotFoundException e) {
+                        if (verifyJarSignature(file)) {
+                            String className = "io.raspberrywallet.manager.modules."
+                                    + file.getName().substring(0, file.getName().indexOf("."));
+                            return classLoader.loadClass(className);
+                        } else {
+                            return null;
+                        }
+                    } catch (ClassNotFoundException | IOException e) {
                         e.printStackTrace();
                         return null;
                     }
                 }
         ).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    private static boolean verifyJarSignature(File file) throws MalformedURLException {
+        JarVerifier jarVerifier = new JarVerifier(file.toURI().toURL());
+        try {
+            jarVerifier.verify(PkiUtils.getCert());
+            return true;
+        } catch (SecurityException e) {
+            return false;
+        } catch (CertificateException | IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private static List<Module> instaniateModulesObjects(List<Class<?>> classes) {
