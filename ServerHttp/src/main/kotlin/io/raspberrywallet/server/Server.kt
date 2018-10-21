@@ -2,7 +2,7 @@ package io.raspberrywallet.server
 
 import com.stasbar.Logger
 import io.raspberrywallet.Manager
-import io.raspberrywallet.server.Server.Companion.PORT
+import io.raspberrywallet.ktor.PORT
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServer
@@ -24,9 +24,6 @@ import kotlinx.coroutines.experimental.launch
 
 
 class Server(private val manager: Manager) {
-    companion object {
-        const val PORT = 9090
-    }
 
     fun start() {
         val vertx = Vertx.vertx()

@@ -6,6 +6,10 @@ import java.math.BigInteger;
 
 public class PinModule extends Module {
 
+    public PinModule() {
+        super("Enter PIN");
+    }
+
     @Override
     public String getDescription() {
         return "Module that require enter 4 digits code";
@@ -36,11 +40,16 @@ public class PinModule extends Module {
         return crypt(payload);
     }
 
+
     private byte[] crypt(byte[] payload) throws RequiredInputNotFound {
         BigInteger bigData = new BigInteger(payload);
         String pin = getInput("pin");
         if (pin == null) throw new RequiredInputNotFound(getId(), "pin");
         BigInteger bigPin = new BigInteger(pin);
         return bigData.xor(bigPin).toByteArray();
+    }
+
+    public static class Inputs {
+        public static String PIN = "pin";
     }
 }

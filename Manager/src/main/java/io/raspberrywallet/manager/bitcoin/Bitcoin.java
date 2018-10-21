@@ -39,9 +39,6 @@ public class Bitcoin {
         this.params = params;
         this.rootDirectory = rootDirectory;
         this.walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
-
-        //setupWalletKit(null);
-        //kit.startAsync();
     }
 
     private void setupWalletKit(@Nullable DeterministicSeed seed) {
@@ -49,10 +46,15 @@ public class Bitcoin {
         kit = new WalletAppKit(params, rootDirectory, walletFileName) {
             @Override
             protected void onSetupCompleted() {
+                Logger.info("Bitcoin setup complete");
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
                 // their own money!
-                kit.wallet().allowSpendingUnconfirmedTransactions();
-                Logger.info("Bitcoin setup complete");
+                try {
+                    getWallet().allowSpendingUnconfirmedTransactions();
+                } catch (WalletNotInitialized walletNotInitialized) {
+                    walletNotInitialized.printStackTrace();
+                    throw new IllegalStateException("Wallet must be initialized at this point");
+                }
             }
         };
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
@@ -83,12 +85,12 @@ public class Bitcoin {
         getWallet().importKey(key);
     }
 
-    void removeKey(byte[] keyBytes) {
+    void removeKey(byte[] keyBytes) throws WalletNotInitialized {
         removeKey(ECKey.fromPrivate(keyBytes));
     }
 
-    private void removeKey(ECKey key) {
-        kit.wallet().removeKey(key);
+    private void removeKey(ECKey key) throws WalletNotInitialized {
+        getWallet().removeKey(key);
     }
 
     public String getFreshReceiveAddress() throws WalletNotInitialized {
@@ -117,10 +119,9 @@ public class Bitcoin {
         return getWallet().getBalance(Wallet.BalanceType.AVAILABLE).toFriendlyString();
     }
 
-    public void restoreFromSeed(List<String> mnemonicCode) throws WalletNotInitialized {
+    public void restoreFromSeed(List<String> mnemonicCode) {
         DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 1539388800);
-        Logger.d("restoreFromSeedwords: " + seed.toString());
-        // Shut down bitcoinj and restart it with the new seed.
+        // Shut down synchronization and restart it with the new seed.
         Runnable setupWalletFromBackup = () -> {
             setupWalletKit(seed);
             try {

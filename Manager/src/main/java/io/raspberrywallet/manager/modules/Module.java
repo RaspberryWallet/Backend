@@ -15,6 +15,16 @@ public abstract class Module {
     @NonNls
     private HashMap<String, String> input = new HashMap<>();
 
+    /**
+     * This constructor enforce that the state is always present
+     *
+     * @param initialStatusString - initial module status string
+     */
+    public Module(@NonNls String initialStatusString) {
+        statusString = initialStatusString;
+    }
+
+
     public String getId() {
         return this.getClass().getName();
     }

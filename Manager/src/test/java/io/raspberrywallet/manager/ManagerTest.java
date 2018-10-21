@@ -1,12 +1,14 @@
 package io.raspberrywallet.manager;
 
+import io.raspberrywallet.RequiredInputNotFound;
 import io.raspberrywallet.WalletNotInitialized;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
+import io.raspberrywallet.manager.modules.ExampleModule;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.manager.modules.PinModule;
-import io.raspberrywallet.manager.modules.PushButtonModule;
+import io.raspberrywallet.module.ModuleState;
 import org.bitcoinj.crypto.MnemonicException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,9 +16,12 @@ import org.mockito.Mockito;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static io.raspberrywallet.manager.Utils.println;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 class ManagerTest {
@@ -25,6 +30,8 @@ class ManagerTest {
     private static TemperatureMonitor temperatureMonitor;
     private static Database db;
     private static List<Module> modules;
+    private static PinModule pinModule;
+    private static ExampleModule exampleModule;
 
     @BeforeAll
     static void setup() {
@@ -32,8 +39,11 @@ class ManagerTest {
         temperatureMonitor = mock(TemperatureMonitor.class);
         db = mock(Database.class);
         modules = new ArrayList<>();
-        modules.add(new PinModule());
-        modules.add(new PushButtonModule());
+        exampleModule = new ExampleModule();
+        pinModule = new PinModule();
+        modules.add(exampleModule);
+
+        modules.add(pinModule);
         manager = new Manager(db, modules, bitcoin, temperatureMonitor);
     }
 
@@ -43,14 +53,35 @@ class ManagerTest {
     }
 
     @Test
-    void restoreFromBackupPhrase() throws NoSuchAlgorithmException, MnemonicException, WalletNotInitialized {
+    void getModules() {
+        manager.getModules().forEach(module -> assertTrue(module instanceof io.raspberrywallet.module.Module));
+    }
+
+    @Test
+    void getModuleState() {
+        ModuleState pinState = manager.getModuleState(pinModule.getId());
+        assertEquals(0, pinState.compareTo(ModuleState.WAITING));
+        assertEquals(pinState.getMessage(), pinModule.getStatusString());
+
+    }
+
+    @Test
+    void restoreFromBackupPhrase() throws NoSuchAlgorithmException, MnemonicException, RequiredInputNotFound {
         List<String> mnemonicCode = TestUtils.generateRandomDeterministicMnemonicCode();
         mnemonicCode.forEach(System.out::println);
-        //TODO Mock
-//        manager.restoreFromBackupPhrase(mnemonicCode, modules.stream().map(Module::getId).map(id -> ).collect(Collectors.toList()), 2);
+
+        Map<String, String> pinInputs = new HashMap<>();
+        pinInputs.put(PinModule.Inputs.PIN, "1234");
+
+        Map<String, Map<String, String>> selectedModulesWithInputs = new HashMap<>();
+        selectedModulesWithInputs.put(pinModule.getId(), pinInputs);
+        selectedModulesWithInputs.put(exampleModule.getId(), new HashMap<>());
+
+        manager.restoreFromBackupPhrase(mnemonicCode, selectedModulesWithInputs, 2);
         Mockito.verify(bitcoin).restoreFromSeed(mnemonicCode);
         Mockito.verifyNoMoreInteractions(bitcoin);
     }
+
 
     @Test
     void getCurrentReceiveAddress() throws WalletNotInitialized {
@@ -58,8 +89,8 @@ class ManagerTest {
         String currentAddress = manager.getCurrentReceiveAddress();
         Mockito.verify(bitcoin).getCurrentReceiveAddress();
         Mockito.verifyNoMoreInteractions(bitcoin);
-        assert currentAddress != null;
-        assert currentAddress.length() == 34;
+        assertNotNull(currentAddress);
+        assertEquals(currentAddress.length(), 34);
         println(currentAddress);
     }
 
@@ -69,8 +100,8 @@ class ManagerTest {
         String freshAddress = manager.getFreshReceiveAddress();
         Mockito.verify(bitcoin).getFreshReceiveAddress();
         Mockito.verifyNoMoreInteractions(bitcoin);
-        assert freshAddress != null;
-        assert freshAddress.length() == 34;
+        assertNotNull(freshAddress);
+        assertEquals(freshAddress.length(), 34);
         println(freshAddress);
     }
 
@@ -81,7 +112,7 @@ class ManagerTest {
         String estimatedBalance = manager.getEstimatedBalance();
         Mockito.verify(bitcoin).getEstimatedBalance();
         Mockito.verifyNoMoreInteractions(bitcoin);
-        assert estimatedBalance.equals(mockEstimatedBalance);
+        assertEquals(estimatedBalance, mockEstimatedBalance);
     }
 
     @Test
@@ -91,7 +122,7 @@ class ManagerTest {
         String availableBalance = manager.getAvailableBalance();
         Mockito.verify(bitcoin).getAvailableBalance();
         Mockito.verifyNoMoreInteractions(bitcoin);
-        assert availableBalance.equals(mockAvailableBalance);
+        assertEquals(availableBalance, mockAvailableBalance);
     }
 
     @Test
@@ -101,7 +132,7 @@ class ManagerTest {
         String cpuTemperature = manager.getCpuTemperature();
         Mockito.verify(temperatureMonitor).call();
         Mockito.verifyNoMoreInteractions(temperatureMonitor);
-        assert cpuTemperature.equals(mockCpuTemp);
+        assertEquals(cpuTemperature, mockCpuTemp);
     }
 
 }

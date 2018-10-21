@@ -4,6 +4,10 @@ import io.raspberrywallet.manager.modules.exceptions.KeypartDecryptionException;
 
 public class ExampleModule extends Module {
 
+    public ExampleModule() {
+        super("Do something");
+    }
+
     @Override
     public String getDescription() {
         return "An example waiting and xoring module to show how things work.";
@@ -19,7 +23,6 @@ public class ExampleModule extends Module {
     @Override
     public void register() {
         lastTime = System.currentTimeMillis();
-        setStatusString("Wait 5 seconds for decryption to start");
     }
 
     @Override

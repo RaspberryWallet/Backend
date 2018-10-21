@@ -89,8 +89,6 @@ public class Manager implements io.raspberrywallet.Manager {
         return new Response(null, Response.Status.OK);
     }
 
-
-
     /*
      * Modules
      */
@@ -115,22 +113,8 @@ public class Manager implements io.raspberrywallet.Manager {
     }
 
     @Override
-    public String getModuleUi(@NotNull String moduleId) {
-        return modules.get(moduleId).getHtmlUi();
-    }
-
-
-    void addModule(Module module) {
-        modules.put(module.getId(), module);
-    }
-
-    protected Module getModule(String id) {
-        return modules.getOrDefault(id, null);
-    }
-
-
-    @Override
-    public void restoreFromBackupPhrase(@NotNull List<String> mnemonicCode, Map<String, Map<String, String>> selectedModulesWithInputs, int required) throws WalletNotInitialized, RequiredInputNotFound {
+    public void restoreFromBackupPhrase(@NotNull List<String> mnemonicCode, Map<String, Map<String,
+            String>> selectedModulesWithInputs, int required) throws RequiredInputNotFound {
 
         List<Module> modulesToDecrypt = selectedModulesWithInputs.keySet().stream()
                 .map(modules::get)

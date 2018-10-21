@@ -37,17 +37,17 @@ import io.raspberrywallet.ktor.Paths.Modules.unlockWallet
 import io.raspberrywallet.ktor.Paths.Modules.walletStatus
 import io.raspberrywallet.ktor.Paths.Utils.cpuTemp
 import io.raspberrywallet.ktor.Paths.Utils.ping
-import io.raspberrywallet.server.Server
 import kotlinx.html.*
 import org.slf4j.event.Level
 
+const val PORT = 9090
 private lateinit var manager: Manager
 fun startKtorServer(newManager: Manager) {
     manager = newManager
     embeddedServer(Netty, configure = {
         requestQueueLimit = 6
         runningLimit = 4
-    }, port = Server.PORT, module = Application::mainModule).start(wait = true)
+    }, port = PORT, module = Application::mainModule).start(wait = true)
 }
 
 object Paths {

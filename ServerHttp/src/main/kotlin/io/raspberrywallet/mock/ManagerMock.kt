@@ -49,8 +49,6 @@ class ManagerMock : Manager {
 
     override fun unlockWallet() = true
 
-    override fun getModuleUi(moduleId: String): String? = _modules[moduleId]?.htmlUiForm
-
     override fun getCurrentReceiveAddress() = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
 
     override fun getFreshReceiveAddress() = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
