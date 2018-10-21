@@ -27,6 +27,12 @@ public interface Manager {
     ModuleState getModuleState(@NotNull String moduleId);
 
     /**
+     * @return HTML UI form that require some input from user
+     */
+    @Nullable
+    String getModuleUi(@NotNull String moduleId);
+
+    /**
      * Validate input for specified module, and receive next Step or Failure
      *
      * @param moduleId id of corresponding nodule
@@ -131,5 +137,32 @@ public interface Manager {
      * Tap manager, delaying auto lock
      */
     void tap();
+
+    /*
+     * Network
+     */
+    /**
+     * Lists nearby wireless networks
+     * @return String array of found networks
+     */
+    @NonNls
+    String[] getNetworkList();
+
+    /**
+     * Get current status of Wi-Fi
+     * @return map with status parameters, described in io.raspberrywallet.manager.linux.WifiStatus::call
+     */
+    @NonNls
+    Map<String, String> getWifiStatus();
+
+    /**
+     * Gets current config of Wi-Fi: saved SSID and encrypted PSK
+     * @return Map with configuration parameters
+     */
+    @NonNls
+    Map<String, String> getWifiConfig();
+
+    @NonNls
+    int setWifiConfig(Map<String, String> newConf);
 
 }

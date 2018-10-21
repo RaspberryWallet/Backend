@@ -13,6 +13,9 @@ import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.database.KeyPartEntity;
 import io.raspberrywallet.manager.database.WalletEntity;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
+import io.raspberrywallet.manager.linux.WPAConfiguration;
+import io.raspberrywallet.manager.linux.WifiScanner;
+import io.raspberrywallet.manager.linux.WifiStatus;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.manager.modules.exceptions.KeypartDecryptionException;
 import io.raspberrywallet.module.ModuleState;
@@ -45,6 +48,7 @@ public class Manager implements io.raspberrywallet.Manager {
     private final Bitcoin bitcoin;
     @NonNls
     private final TemperatureMonitor tempMonitor;
+    private final WPAConfiguration wpaConfiguration;
     @NonNls
     private final Database database;
 
@@ -58,6 +62,7 @@ public class Manager implements io.raspberrywallet.Manager {
         this.database = database;
         this.bitcoin = bitcoin;
         this.tempMonitor = tempMonitor;
+        this.wpaConfiguration = new WPAConfiguration();
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -76,7 +81,6 @@ public class Manager implements io.raspberrywallet.Manager {
             }
         }, 60 * 1000 /* second */, 60 * 1000 /* second */);
     }
-
 
     @Override
     public String ping() {
@@ -265,4 +269,17 @@ public class Manager implements io.raspberrywallet.Manager {
         autoLockRemainingMinutes = 10;
     }
 
+    /* Network */
+
+    @Override
+    public String[] getNetworkList() { return new WifiScanner().call(); }
+
+    @Override
+    public Map<String, String> getWifiStatus() { return new WifiStatus().call(); }
+
+    @Override
+    public Map<String, String> getWifiConfig() { return this.wpaConfiguration.getAsMap(); }
+
+    @Override
+    public int setWifiConfig(Map<String, String> config) { return this.wpaConfiguration.setFromMap(config); }
 }
