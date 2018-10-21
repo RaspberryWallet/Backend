@@ -181,7 +181,7 @@ val indexPage = HtmlContent {
         h2 { +"Utils" }
         ul {
             li {
-                a(href = ping) { +ping }
+                a(href = ping) { +Paths.Utils.ping }
             }
             li {
                 a(href = cpuTemp) { +cpuTemp }

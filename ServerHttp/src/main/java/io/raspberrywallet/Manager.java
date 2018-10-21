@@ -50,7 +50,7 @@ public interface Manager {
      * @param required                  number of modules required to unlock the wallet <= moduleIdsToDecrypt.size
      */
     void restoreFromBackupPhrase(@NonNls List<String> mnemonicWords,
-                                 @NonNls Map<String, Map<String, String>> selectedModulesWithInputs, int required);
+                                 @NonNls Map<String, Map<String, String>> selectedModulesWithInputs, int required) throws WalletNotInitialized, RequiredInputNotFound;
 
     /**
      * @return current wallet status
@@ -69,7 +69,7 @@ public interface Manager {
      *
      * @return true if locking succeeded
      */
-    boolean lockWallet();
+    boolean lockWallet() throws WalletNotInitialized;
 
 
     /*
@@ -82,7 +82,7 @@ public interface Manager {
      * Bitcoin addresses should be used only once in order to keep your total balance private
      */
     @NonNls
-    String getCurrentReceiveAddress();
+    String getCurrentReceiveAddress() throws WalletNotInitialized;
 
     /**
      * @return fresh new bitcoin receive address (for new derived key) which is base58( hash160( hash160(publicKey))) encoded
@@ -90,7 +90,7 @@ public interface Manager {
      * Bitcoin addresses should be used only once in order to keep your total balance private
      */
     @NonNls
-    String getFreshReceiveAddress();
+    String getFreshReceiveAddress() throws WalletNotInitialized;
 
     /**
      * Balance calculated assuming all pending transactions are in fact included into the best chain by miners.
@@ -99,7 +99,7 @@ public interface Manager {
      * @return current balance in BTC unit
      */
     @NonNls
-    String getEstimatedBalance();
+    String getEstimatedBalance() throws WalletNotInitialized;
 
     /**
      * Balance that could be safely used to create new spends, if we had all the needed private keys. This is
@@ -110,7 +110,7 @@ public interface Manager {
      * @return current balance in BTC unit
      */
     @NonNls
-    String getAvailableBalance();
+    String getAvailableBalance() throws WalletNotInitialized;
 
 
     /**
@@ -119,7 +119,7 @@ public interface Manager {
      * @param amount           of bitcoins to send to the recipientAddress
      * @param recipientAddress recipient address
      */
-    void sendCoins(@NotNull String amount, @NotNull String recipientAddress);
+    void sendCoins(@NotNull String amount, @NotNull String recipientAddress) throws WalletNotInitialized;
 
     /*
      * Utilities

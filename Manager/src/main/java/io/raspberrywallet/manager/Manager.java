@@ -1,7 +1,9 @@
 package io.raspberrywallet.manager;
 
 import com.stasbar.Logger;
+import io.raspberrywallet.RequiredInputNotFound;
 import io.raspberrywallet.Response;
+import io.raspberrywallet.WalletNotInitialized;
 import io.raspberrywallet.WalletStatus;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.Shamir;
@@ -12,12 +14,14 @@ import io.raspberrywallet.manager.database.KeyPartEntity;
 import io.raspberrywallet.manager.database.WalletEntity;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
+import io.raspberrywallet.manager.modules.exceptions.KeypartDecryptionException;
 import io.raspberrywallet.module.ModuleState;
 import kotlin.text.Charsets;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterException;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -60,7 +64,11 @@ public class Manager implements io.raspberrywallet.Manager {
             public void run() {
                 if (autoLockRemainingMinutes == 1) {
                     Logger.d("Autolock triggered");
-                    lockWallet();
+                    try {
+                        lockWallet();
+                    } catch (WalletNotInitialized ignored) {
+                        //we don't care about locking if it wasn't even inited
+                    }
                     timer.cancel();
                 }
                 --autoLockRemainingMinutes;
@@ -122,7 +130,7 @@ public class Manager implements io.raspberrywallet.Manager {
 
 
     @Override
-    public void restoreFromBackupPhrase(@NotNull List<String> mnemonicCode, Map<String, Map<String, String>> selectedModulesWithInputs, int required) {
+    public void restoreFromBackupPhrase(@NotNull List<String> mnemonicCode, Map<String, Map<String, String>> selectedModulesWithInputs, int required) throws WalletNotInitialized, RequiredInputNotFound {
 
         List<Module> modulesToDecrypt = selectedModulesWithInputs.keySet().stream()
                 .map(modules::get)
@@ -158,9 +166,9 @@ public class Manager implements io.raspberrywallet.Manager {
     @Override
     public WalletStatus getWalletStatus() {
         try {
-            return bitcoin.kit.wallet().isEncrypted() ?
+            return bitcoin.getWallet().isEncrypted() ?
                     WalletStatus.ENCRYPTED : WalletStatus.DECRYPTED;
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException | WalletNotInitialized e) {
             return WalletStatus.UNSET;
         }
     }
@@ -170,29 +178,32 @@ public class Manager implements io.raspberrywallet.Manager {
         byte[] privateKeyHash = Sha256Hash.hash(getPrivateKeyFromModules());
         KeyParameter key = new KeyParameter(privateKeyHash);
         try {
-            bitcoin.kit.wallet().decrypt(key);
+            bitcoin.getWallet().decrypt(key);
             return true;
-        } catch (KeyCrypterException e) {
+        } catch (KeyCrypterException | WalletNotInitialized e) {
+            e.printStackTrace();
             return false;
         } finally {
             Arrays.fill(key.getKey(), (byte) 0);
-            clearModules();
         }
     }
 
     @Override
-    public boolean lockWallet() {
+    public boolean lockWallet() throws WalletNotInitialized {
         KeyCrypter keyCrypter = Optional
-                .ofNullable(bitcoin.kit.wallet().getKeyCrypter())
+                .ofNullable(bitcoin.getWallet().getKeyCrypter())
                 .orElseGet(KeyCrypterScrypt::new);
 
         byte[] privateKeyHash = Sha256Hash.hash(getPrivateKeyFromModules());
         KeyParameter key = new KeyParameter(privateKeyHash);
 
         try {
-            bitcoin.kit.wallet().encrypt(keyCrypter, key);
+            Wallet wallet = bitcoin.getWallet();
+            wallet.encrypt(keyCrypter, key);
+            wallet.saveToFile(bitcoin.getWalletFile());
             return true;
-        } catch (KeyCrypterException e) {
+        } catch (KeyCrypterException | IOException e) {
+            Logger.err(e.getMessage());
             e.printStackTrace();
             return false;
         } finally {
@@ -202,18 +213,20 @@ public class Manager implements io.raspberrywallet.Manager {
     }
 
     private void clearModules() {
-        modules.values().forEach(Module::destroy);
+        modules.values().forEach(Module::clearInputs);
     }
 
     private byte[] getPrivateKeyFromModules() {
         ShamirKey[] shamirKeys = modules.values().stream()
                 .map(module -> {
                     try {
-                        module.start(); //TODO do we need it ?
-                        KeyPartEntity dbEntity = database.getKeypartForModuleId(module.getId()).get();
-                        module.setPayload(dbEntity.payload); //TODO do we need it ?
+                        Optional<KeyPartEntity> keyPartEntity = database.getKeypartForModuleId(module.getId());
+                        if (!keyPartEntity.isPresent())  // could not find module with this module.getId()
+                            return null;
+
+                        KeyPartEntity dbEntity = keyPartEntity.get();
                         return module.decrypt(dbEntity.payload);
-                    } catch (Module.DecryptionException e) {
+                    } catch (KeypartDecryptionException | RequiredInputNotFound e) {
                         e.printStackTrace();
                         return null;
                     }
@@ -231,27 +244,27 @@ public class Manager implements io.raspberrywallet.Manager {
      */
 
     @Override
-    public String getCurrentReceiveAddress() {
+    public String getCurrentReceiveAddress() throws WalletNotInitialized {
         return bitcoin.getCurrentReceiveAddress();
     }
 
     @Override
-    public String getFreshReceiveAddress() {
+    public String getFreshReceiveAddress() throws WalletNotInitialized {
         return bitcoin.getFreshReceiveAddress();
     }
 
     @Override
-    public String getEstimatedBalance() {
+    public String getEstimatedBalance() throws WalletNotInitialized {
         return bitcoin.getEstimatedBalance();
     }
 
     @Override
-    public String getAvailableBalance() {
+    public String getAvailableBalance() throws WalletNotInitialized {
         return bitcoin.getAvailableBalance();
     }
 
     @Override
-    public void sendCoins(@NotNull String amount, @NotNull String recipientAddress) {
+    public void sendCoins(@NotNull String amount, @NotNull String recipientAddress) throws WalletNotInitialized {
         bitcoin.sendCoins(amount, recipientAddress);
     }
 

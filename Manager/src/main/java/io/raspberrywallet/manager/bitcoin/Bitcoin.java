@@ -2,6 +2,7 @@ package io.raspberrywallet.manager.bitcoin;
 
 import com.google.common.util.concurrent.Service;
 import com.stasbar.Logger;
+import io.raspberrywallet.WalletNotInitialized;
 import org.bitcoinj.core.*;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.TestNet3Params;
@@ -22,7 +23,8 @@ public class Bitcoin {
     final File rootDirectory;
     private final String walletFileName;
     private final NetworkParameters params;
-    public WalletAppKit kit;
+    @Nullable
+    private WalletAppKit kit;
 
     public Bitcoin() {
         this(TestNet3Params.get());
@@ -38,8 +40,8 @@ public class Bitcoin {
         this.rootDirectory = rootDirectory;
         this.walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
 
-        setupWalletKit(null);
-        kit.startAsync();
+        //setupWalletKit(null);
+        //kit.startAsync();
     }
 
     private void setupWalletKit(@Nullable DeterministicSeed seed) {
@@ -55,19 +57,30 @@ public class Bitcoin {
         };
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
-        kit.setBlockingStartup(false)
+        kit.setAutoSave(false)
+                .setBlockingStartup(false)
                 .setUserAgent("RaspberryWallet", "1.0");
 
         if (seed != null)
             kit.restoreWalletFromSeed(seed);
     }
 
-    void importKey(byte[] keyBytes) {
+    public WalletAppKit getKit() throws WalletNotInitialized {
+        if (kit == null) throw new WalletNotInitialized();
+        return kit;
+    }
+
+    public Wallet getWallet() throws WalletNotInitialized {
+        if (kit == null) throw new WalletNotInitialized();
+        return kit.wallet();
+    }
+
+    void importKey(byte[] keyBytes) throws WalletNotInitialized {
         importKey(ECKey.fromPrivate(keyBytes));
     }
 
-    private void importKey(ECKey key) {
-        kit.wallet().importKey(key);
+    private void importKey(ECKey key) throws WalletNotInitialized {
+        getWallet().importKey(key);
     }
 
     void removeKey(byte[] keyBytes) {
@@ -78,20 +91,20 @@ public class Bitcoin {
         kit.wallet().removeKey(key);
     }
 
-    public String getFreshReceiveAddress() {
-        return kit.wallet().freshReceiveAddress().toBase58();
+    public String getFreshReceiveAddress() throws WalletNotInitialized {
+        return getWallet().freshReceiveAddress().toBase58();
     }
 
-    public String getCurrentReceiveAddress() {
-        return kit.wallet().currentReceiveAddress().toBase58();
+    public String getCurrentReceiveAddress() throws WalletNotInitialized {
+        return getWallet().currentReceiveAddress().toBase58();
     }
 
     /**
      * Balance calculated assuming all pending transactions are in fact included into the best chain by miners.
      * This includes the value of immature coinbase transactions.
      */
-    public String getEstimatedBalance() {
-        return kit.wallet().getBalance(Wallet.BalanceType.ESTIMATED).toFriendlyString();
+    public String getEstimatedBalance() throws WalletNotInitialized {
+        return getWallet().getBalance(Wallet.BalanceType.ESTIMATED).toFriendlyString();
     }
 
     /**
@@ -100,33 +113,48 @@ public class Bitcoin {
      * least 1 confirmation and pending transactions created by our own wallet which have been propagated across
      * the network. Whether we <i>actually</i> have the private keys or not is irrelevant for this balance type.
      */
-    public String getAvailableBalance() {
-        return kit.wallet().getBalance(Wallet.BalanceType.AVAILABLE).toFriendlyString();
+    public String getAvailableBalance() throws WalletNotInitialized {
+        return getWallet().getBalance(Wallet.BalanceType.AVAILABLE).toFriendlyString();
     }
 
-    public void restoreFromSeed(List<String> mnemonicCode) {
+    public void restoreFromSeed(List<String> mnemonicCode) throws WalletNotInitialized {
         DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 1539388800);
         Logger.d("restoreFromSeedwords: " + seed.toString());
         // Shut down bitcoinj and restart it with the new seed.
-        kit.addListener(new Service.Listener() {
-            @Override
-            public void terminated(Service.State from) {
-                setupWalletKit(seed);
-                kit.startAsync();
+        Runnable setupWalletFromBackup = () -> {
+            setupWalletKit(seed);
+            try {
+                getKit().startAsync();
+            } catch (WalletNotInitialized walletNotInitialized) {
+                walletNotInitialized.printStackTrace();
             }
-        }, Executors.newSingleThreadExecutor());
-        kit.stopAsync();
+        };
+        try {
+            getKit().addListener(new Service.Listener() {
+                @Override
+                public void terminated(Service.State from) {
+                    setupWalletFromBackup.run();
+                }
+            }, Executors.newSingleThreadExecutor());
+            getKit().stopAsync();
+        } catch (WalletNotInitialized e) {
+            setupWalletFromBackup.run();
+        }
     }
 
-    public void sendCoins(String amount, String recipient) {
+    public void sendCoins(String amount, String recipient) throws WalletNotInitialized {
         Coin coinsAmount = Coin.parseCoin(amount);
         Address recipientAddress = Address.fromBase58(params, recipient);
         try {
-            kit.wallet().sendCoins(kit.peerGroup(), recipientAddress, coinsAmount);
+            getWallet().sendCoins(getKit().peerGroup(), recipientAddress, coinsAmount);
         } catch (InsufficientMoneyException e) {
             Logger.err(e.getMessage());
             e.printStackTrace();
 
         }
+    }
+
+    public File getWalletFile() {
+        return new File(rootDirectory, walletFileName + ".wallet");
     }
 }

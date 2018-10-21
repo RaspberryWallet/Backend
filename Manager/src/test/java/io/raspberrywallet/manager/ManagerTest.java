@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager;
 
+import io.raspberrywallet.WalletNotInitialized;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
@@ -42,7 +43,7 @@ class ManagerTest {
     }
 
     @Test
-    void restoreFromBackupPhrase() throws NoSuchAlgorithmException, MnemonicException {
+    void restoreFromBackupPhrase() throws NoSuchAlgorithmException, MnemonicException, WalletNotInitialized {
         List<String> mnemonicCode = TestUtils.generateRandomDeterministicMnemonicCode();
         mnemonicCode.forEach(System.out::println);
         //TODO Mock
@@ -52,7 +53,7 @@ class ManagerTest {
     }
 
     @Test
-    void getCurrentReceiveAddress() {
+    void getCurrentReceiveAddress() throws WalletNotInitialized {
         Mockito.when(bitcoin.getCurrentReceiveAddress()).thenReturn("mwrHAGCN2kLFGB2eZF7F93fC4yVss3iDDj");
         String currentAddress = manager.getCurrentReceiveAddress();
         Mockito.verify(bitcoin).getCurrentReceiveAddress();
@@ -63,7 +64,7 @@ class ManagerTest {
     }
 
     @Test
-    void getFreshReceiveAddress() {
+    void getFreshReceiveAddress() throws WalletNotInitialized {
         Mockito.when(bitcoin.getFreshReceiveAddress()).thenReturn("mwrHAGCN2kLFGB2eZF7F93fC4yVss3iDDj");
         String freshAddress = manager.getFreshReceiveAddress();
         Mockito.verify(bitcoin).getFreshReceiveAddress();
@@ -74,7 +75,7 @@ class ManagerTest {
     }
 
     @Test
-    void getEstimatedBalance() {
+    void getEstimatedBalance() throws WalletNotInitialized {
         final String mockEstimatedBalance = "1.23 BTC";
         Mockito.when(bitcoin.getEstimatedBalance()).thenReturn(mockEstimatedBalance);
         String estimatedBalance = manager.getEstimatedBalance();
@@ -84,7 +85,7 @@ class ManagerTest {
     }
 
     @Test
-    void getAvailableBalance() {
+    void getAvailableBalance() throws WalletNotInitialized {
         final String mockAvailableBalance = "0.00 BTC";
         Mockito.when(bitcoin.getAvailableBalance()).thenReturn(mockAvailableBalance);
         String availableBalance = manager.getAvailableBalance();

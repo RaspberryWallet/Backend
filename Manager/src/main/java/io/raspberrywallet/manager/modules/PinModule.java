@@ -1,5 +1,7 @@
 package io.raspberrywallet.manager.modules;
 
+import io.raspberrywallet.RequiredInputNotFound;
+
 import java.math.BigInteger;
 
 public class PinModule extends Module {
@@ -25,16 +27,20 @@ public class PinModule extends Module {
     }
 
     @Override
-    public byte[] encrypt(byte[] data) {
-        BigInteger bigData = new BigInteger(data);
-        BigInteger bigPin = new BigInteger(getInput("pin"));
-        return bigData.xor(bigPin).toByteArray();
+    public byte[] encrypt(byte[] payload) throws RequiredInputNotFound {
+        return crypt(payload);
     }
 
     @Override
-    public byte[] decrypt(byte[] payload) {
+    public byte[] decrypt(byte[] payload) throws RequiredInputNotFound {
+        return crypt(payload);
+    }
+
+    private byte[] crypt(byte[] payload) throws RequiredInputNotFound {
         BigInteger bigData = new BigInteger(payload);
-        BigInteger bigPin = new BigInteger(getInput("pin"));
+        String pin = getInput("pin");
+        if (pin == null) throw new RequiredInputNotFound(getId(), "pin");
+        BigInteger bigPin = new BigInteger(pin);
         return bigData.xor(bigPin).toByteArray();
     }
 }

@@ -1,5 +1,7 @@
 package io.raspberrywallet.manager.modules;
 
+import io.raspberrywallet.manager.modules.exceptions.KeypartDecryptionException;
+
 public class ExampleModule extends Module {
 
     @Override
@@ -49,8 +51,8 @@ public class ExampleModule extends Module {
      * We are processing (decrypting) the keypart with a KEY.
      */
     @Override
-    public byte[] decrypt(byte[] payload) throws DecryptionException {
-        if (payload == null) throw new Module.DecryptionException(Module.DecryptionException.NO_DATA);
+    public byte[] decrypt(byte[] payload) throws KeypartDecryptionException {
+        if (payload == null) throw new KeypartDecryptionException(KeypartDecryptionException.NO_DATA);
 
         byte[] r = payload.clone();
 
