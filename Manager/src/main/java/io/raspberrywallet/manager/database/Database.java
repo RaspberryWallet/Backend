@@ -54,9 +54,9 @@ public class Database {
      */
     private synchronized void cleanUp() {
         if (wallet == null) return;
-        for (KeyPartEntity kpe : wallet.parts)
+        for (KeyPartEntity kpe : wallet.getParts())
             kpe.clean();
-        wallet.parts.clear();
+        wallet.getParts().clear();
         wallet = null;
     }
 
@@ -147,6 +147,6 @@ public class Database {
     }
 
     public Optional<KeyPartEntity> getKeypartForModuleId(String id) {
-        return wallet.parts.stream().filter(keyPart -> keyPart.module.equals(id)).findFirst();
+        return wallet.getParts().stream().filter(keyPart -> keyPart.getModule().equals(id)).findFirst();
     }
 }

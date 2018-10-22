@@ -37,8 +37,8 @@ class DatabaseTest {
             keyPartEntity1_2.payload = KEYPART_1_2;
             keyPartEntity1_2.module = KEYPART_1_2_MODULE;
 
-            walletEntity1.parts.add(keyPartEntity1_1);
-            walletEntity1.parts.add(keyPartEntity1_2);
+            walletEntity1.getParts().add(keyPartEntity1_1);
+            walletEntity1.getParts().add(keyPartEntity1_2);
 
             db.setWallet(walletEntity1);
         } catch (IOException e) {

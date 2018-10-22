@@ -26,7 +26,7 @@ public class MockDatabaseFactory {
         KeyPartEntity kp = new KeyPartEntity();
         kp.payload = payload.clone();
         if (walletEntity == null) walletEntity = new WalletEntity();
-        walletEntity.parts.add(kp);
+        walletEntity.getParts().add(kp);
         return this;
     }
 
