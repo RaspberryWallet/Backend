@@ -1,8 +1,8 @@
 package io.raspberrywallet.manager.modules;
 
 import io.raspberrywallet.RequiredInputNotFound;
-import io.raspberrywallet.manager.modules.exceptions.KeypartDecryptionException;
 import org.jetbrains.annotations.NotNull;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -53,7 +53,7 @@ public abstract class Module {
      * @param payload - encrypted payload
      * @return decrypted key part
      */
-    public abstract byte[] decrypt(byte[] payload) throws KeypartDecryptionException, RequiredInputNotFound;
+    public abstract byte[] decrypt(byte[] payload) throws DecryptionException, RequiredInputNotFound;
 
     /**
      * this function should prepare module before consecutive use.

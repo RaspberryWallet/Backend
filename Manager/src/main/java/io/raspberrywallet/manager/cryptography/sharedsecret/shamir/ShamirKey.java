@@ -1,6 +1,8 @@
 package io.raspberrywallet.manager.cryptography.sharedsecret.shamir;
 
 
+import lombok.Getter;
+import lombok.Setter;
 import org.bitcoinj.core.Base58;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,8 +13,14 @@ import java.math.BigInteger;
  * f = poly(x) mod p </p>
  */
 public class ShamirKey {
+    @Getter
+    @Setter
     private BigInteger p;
+    @Getter
+    @Setter
     private BigInteger f;
+    @Getter
+    @Setter
     private BigInteger x;
 
     ShamirKey() {
@@ -23,30 +31,6 @@ public class ShamirKey {
         this.p = p;
         this.f = f;
         this.x = x;
-    }
-
-    public void setP(BigInteger p) {
-        this.p = p;
-    }
-
-    public void setF(BigInteger f) {
-        this.f = f;
-    }
-
-    public void setX(BigInteger x) {
-        this.x = x;
-    }
-
-    public BigInteger getP() {
-        return p;
-    }
-
-    public BigInteger getF() {
-        return f;
-    }
-
-    public BigInteger getX() {
-        return x;
     }
 
     public byte[] toByteArray() {

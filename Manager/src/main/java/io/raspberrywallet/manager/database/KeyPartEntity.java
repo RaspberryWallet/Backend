@@ -1,25 +1,24 @@
 package io.raspberrywallet.manager.database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Arrays;
 
 public class KeyPartEntity {
+    @Getter
+    @Setter
     @JsonProperty("payload")
     public byte[] payload;
+
+    @Getter
+    @Setter
     @JsonProperty("module")
     public String module;
 
     public KeyPartEntity() {
 
-    }
-
-    public String getModule() {
-        return module;
-    }
-
-    public void setModule(String module) {
-        this.module = module;
     }
 
     public KeyPartEntity(byte[] payload, String module) {

@@ -6,6 +6,7 @@ import io.raspberrywallet.Response;
 import io.raspberrywallet.WalletNotInitialized;
 import io.raspberrywallet.WalletStatus;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.Shamir;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirException;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirKey;
@@ -17,7 +18,6 @@ import io.raspberrywallet.manager.linux.WPAConfiguration;
 import io.raspberrywallet.manager.linux.WifiScanner;
 import io.raspberrywallet.manager.linux.WifiStatus;
 import io.raspberrywallet.manager.modules.Module;
-import io.raspberrywallet.manager.modules.exceptions.KeypartDecryptionException;
 import io.raspberrywallet.module.ModuleState;
 import kotlin.text.Charsets;
 import org.bitcoinj.core.Sha256Hash;
@@ -141,7 +141,7 @@ public class Manager implements io.raspberrywallet.Manager {
                 keyPartEntity.module = module.getId();
                 keyPartEntities.add(keyPartEntity);
             }
-            walletEntity.parts = keyPartEntities;
+            walletEntity.setParts(keyPartEntities);
             database.saveWallet(walletEntity);
 
         } catch (ShamirException | IOException e) {
@@ -212,7 +212,7 @@ public class Manager implements io.raspberrywallet.Manager {
 
                         KeyPartEntity dbEntity = keyPartEntity.get();
                         return module.decrypt(dbEntity.payload);
-                    } catch (KeypartDecryptionException | RequiredInputNotFound e) {
+                    } catch (DecryptionException | RequiredInputNotFound e) {
                         e.printStackTrace();
                         return null;
                     }
