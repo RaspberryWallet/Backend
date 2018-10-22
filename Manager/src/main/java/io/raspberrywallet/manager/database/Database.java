@@ -4,28 +4,29 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
+import com.stasbar.Logger;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-
-import java.util.zip.*;
-import java.io.*;
+import java.util.Optional;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 public class Database {
 
-    @Getter
     @JsonProperty("wallet")
     public WalletEntity wallet = null;
+
+
+    private File databaseFile;
 
     public Database() throws IOException {
         this(false);
     }
 
-    public void setWallet(WalletEntity wallet) {
-        this.wallet = wallet;
-    }
 
     public Database(boolean mock) throws IOException {
 
@@ -33,8 +34,9 @@ public class Database {
             return;
         }
 
-        File databaseFile = new File("/var/wallet/database.bin");
+        databaseFile = new File("./database.bin");
         if (!databaseFile.exists()) {
+            databaseFile.getParentFile().mkdirs();
             databaseFile.createNewFile();
             saveDatabase(databaseFile);
         } else {
@@ -42,13 +44,19 @@ public class Database {
         }
     }
 
+    public void setWallet(WalletEntity wallet) {
+        this.wallet = wallet;
+    }
+
+
     /**
      * zerofill everything in RAM
      */
     private synchronized void cleanUp() {
-        for (KeyPartEntity kpe : wallet.parts)
+        if (wallet == null) return;
+        for (KeyPartEntity kpe : wallet.getParts())
             kpe.clean();
-        wallet.parts.clear();
+        wallet.getParts().clear();
         wallet = null;
     }
 
@@ -71,9 +79,11 @@ public class Database {
      * @throws IOException - filesystem problem
      */
     private void loadDatabase(File file) throws IOException {
+        if (Files.size(file.toPath()) == 0) return;
         cleanUp();
         byte[] data = Files.readAllBytes(file.toPath());
-        data = decrypt(data);
+        //todo enable decrypting
+        //data = decrypt(data);
 
         setWallet(deserialize(data));
     }
@@ -87,6 +97,7 @@ public class Database {
     public WalletEntity deserialize(byte[] data) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         //TODO jak tego sie uzywa xdd
+        Logger.d("deserialize: " + new String(data));
         WalletEntity wallet = mapper.readValue(data, new TypeReference<WalletEntity>() {
         });
 
@@ -100,16 +111,22 @@ public class Database {
      * @throws IOException - filesystem problem
      */
     private void saveDatabase(File file) throws IOException {
-        byte[] data = encrypt(getSerialized());
+        byte[] data = getSerialized();
+        //todo enable encrypting
+        //data = encrypt(data);
         Files.write(file.toPath(), data);
     }
 
+    private void saveDatabaseToFile() throws IOException {
+        saveDatabase(databaseFile);
+    }
+
     public byte[] encrypt(byte[] data) throws IOException {
-    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	DeflaterOutputStream dos = new DeflaterOutputStream(baos);
-    	dos.write(data);
-    	dos.flush();
-    	dos.close();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DeflaterOutputStream dos = new DeflaterOutputStream(baos);
+        dos.write(data);
+        dos.flush();
+        dos.close();
         //TODO encryption
         return baos.toByteArray();
     }
@@ -119,9 +136,17 @@ public class Database {
         InflaterInputStream iis = new InflaterInputStream(bais);
         int len = -1;
         byte[] buffer = new byte[4096];
-        while ( (len = iis.read(buffer)) != -1); //TODO join arrays into one blob
-    	//TODO decryption
+        while ((len = iis.read(buffer)) != -1) ; //TODO join arrays into one blob
+        //TODO decryption
         return buffer;
     }
 
+    public void saveWallet(WalletEntity walletEntity) throws IOException {
+        setWallet(walletEntity);
+        saveDatabaseToFile();
+    }
+
+    public Optional<KeyPartEntity> getKeypartForModuleId(String id) {
+        return wallet.getParts().stream().filter(keyPart -> keyPart.getModule().equals(id)).findFirst();
+    }
 }

@@ -2,6 +2,7 @@ package io.raspberrywallet.mock
 
 import io.raspberrywallet.Manager
 import io.raspberrywallet.Response
+import io.raspberrywallet.WalletStatus
 import io.raspberrywallet.module.Module
 import io.raspberrywallet.module.ModuleState
 import io.raspberrywallet.step.SimpleStep
@@ -9,7 +10,22 @@ import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
 
-    class SampleModule(name: String, description: String, val htmlUiForm: String? = null) : Module(name, description)
+    override fun getWalletStatus() = WalletStatus.ENCRYPTED
+
+    override fun tap() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun lockWallet(): Boolean {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun sendCoins(amount: String, recipientAddress: String) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+
+    class SampleModule(name: String, description: String, val htmlUiForm: String? = null) : Module(name, description, null)
 
     private val _modules = listOf(
         SampleModule("PIN", "Module that require enter 4 digits code", """<input type="text" name="pin">"""),
@@ -32,8 +48,7 @@ class ManagerMock : Manager {
     override fun nextStep(moduleId: String, input: Map<String, String>): Response =
         Response(SimpleStep("Do something"), Response.Status.OK)
 
-
-    override fun getModuleUi(moduleId: String): String? = _modules[moduleId]?.htmlUiForm
+    override fun unlockWallet() {}
 
     override fun getCurrentReceiveAddress() = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
 
@@ -43,7 +58,7 @@ class ManagerMock : Manager {
 
     override fun getAvailableBalance() = "0.0"
 
-    override fun restoreFromBackupPhrase(mnemonicWords: MutableList<String>) {
+    override fun restoreFromBackupPhrase(mnemonicWords: MutableList<String>, selectedModulesWithInputs: MutableMap<String, MutableMap<String, String>>, required: Int) {
         val phrase = mnemonicWords.reduce { acc, s -> acc + s }
         println(phrase)
     }
