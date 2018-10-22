@@ -1,5 +1,7 @@
 package io.raspberrywallet.manager.modules;
 
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
+
 public class ExampleModule extends Module {
 
     @Override
@@ -50,7 +52,7 @@ public class ExampleModule extends Module {
      */
     @Override
     public byte[] decrypt(byte[] payload) throws DecryptionException {
-        if (payload == null) throw new Module.DecryptionException(Module.DecryptionException.NO_DATA);
+        if (payload == null) throw new DecryptionException(DecryptionException.getNO_DATA());
 
         byte[] r = payload.clone();
 
