@@ -13,3 +13,4 @@ ServerHttp/target/
 out/
 build/
 *.bin
+gradle/

@@ -25,7 +25,6 @@ import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterException;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.wallet.Wallet;
-import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.spongycastle.crypto.params.KeyParameter;
 
@@ -42,22 +41,22 @@ public class Manager implements io.raspberrywallet.Manager {
     /**
      * Module id -> Module instance
      */
-    @NonNls
+    @NotNull
     private final ConcurrentHashMap<String, Module> modules = new ConcurrentHashMap<>();
-    @NonNls
+    @NotNull
     private final Bitcoin bitcoin;
-    @NonNls
+    @NotNull
     private final TemperatureMonitor tempMonitor;
     private final WPAConfiguration wpaConfiguration;
-    @NonNls
+    @NotNull
     private final Database database;
 
     private int autoLockRemainingMinutes = 10;
 
-    public Manager(@NonNls Database database,
-                   @NonNls List<Module> modules,
-                   @NonNls Bitcoin bitcoin,
-                   @NonNls TemperatureMonitor tempMonitor) {
+    public Manager(@NotNull Database database,
+                   @NotNull List<Module> modules,
+                   @NotNull Bitcoin bitcoin,
+                   @NotNull TemperatureMonitor tempMonitor) {
         modules.forEach(module -> this.modules.put(module.getId(), module));
         this.database = database;
         this.bitcoin = bitcoin;
