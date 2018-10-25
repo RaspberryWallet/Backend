@@ -3,26 +3,39 @@ package io.raspberrywallet.manager.modules.authorizationserver;
 
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthServerTests {
     
-    private AuthorizationServerModule module = new AuthorizationServerModule();
+    private byte[] encryptionData = "secret data".getBytes();
+    private byte[] differentEncryptionData = "different secret data".getBytes();
+    
+    private AuthorizationServerModule module;
+    
+    @BeforeEach
+    void initializeModule() {
+        module = new AuthorizationServerModule();
+        module.setInput("password", "abadziaba123");
+    }
     
     @Test
-    public void WalletEncryptionAndDecryptionWorks() {
-        byte[] encryptionData = "secret data".getBytes();
-        byte[] ignored = new byte[1];
+    void AuthorizationServerModuleInitializesCorrectly() {
+        assertTrue(module.check());
+    }
     
+    @Test
+    void WalletEncryptionAndDecryptionWorks() {
         try {
-            module.encrypt(encryptionData);
-            byte[] decryptedData = module.decrypt(ignored);
+            assertTrue(module.check());
+            
+            byte[] data = module.encrypt(encryptionData);
+            byte[] decryptedData = module.decrypt(data);
             
             assertTrue(Arrays.equals(decryptedData, encryptionData));
             
@@ -32,18 +45,13 @@ class AuthServerTests {
     }
     
     @Test
-    public void MultipleEncryptionAndDecryptionOperationWorks() {
-        byte[] encryptionData = "secret data".getBytes();
-        byte[] differentEncryptionData = "different secret data".getBytes();
-        byte[] ignored = new byte[1];
-    
+    void MultipleEncryptionAndDecryptionOperationWorks() {
         try {
-            module.encrypt(encryptionData);
-            module.encrypt(differentEncryptionData);
-            byte[] decryptedData = module.decrypt(ignored);
+            byte[] firstEncryptedData = module.encrypt(encryptionData);
+            assertTrue(Arrays.equals(encryptionData, module.decrypt(firstEncryptedData)));
             
-            assertTrue(Arrays.equals(differentEncryptionData, decryptedData));
-            assertFalse(Arrays.equals(encryptionData, decryptedData));
+            byte[] secondEncryptedData = module.encrypt(differentEncryptionData);
+            assertTrue(Arrays.equals(differentEncryptionData, module.decrypt(secondEncryptedData)));
             
         } catch (EncryptionException | DecryptionException e) {
             fail(e.getMessage());

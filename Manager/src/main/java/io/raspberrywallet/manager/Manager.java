@@ -7,6 +7,7 @@ import io.raspberrywallet.WalletNotInitialized;
 import io.raspberrywallet.WalletStatus;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.Shamir;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirException;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirKey;
@@ -144,10 +145,10 @@ public class Manager implements io.raspberrywallet.Manager {
             walletEntity.setParts(keyPartEntities);
             database.saveWallet(walletEntity);
 
-        } catch (ShamirException | IOException e) {
+        } catch (ShamirException | IOException | EncryptionException e) {
             e.printStackTrace();
         }
-
+    
     }
 
     @Override

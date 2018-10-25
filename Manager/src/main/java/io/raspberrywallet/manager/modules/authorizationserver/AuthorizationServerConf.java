@@ -24,5 +24,6 @@ class AuthorizationServerConf {
     private String getSecretEndpoint = address + "/authorization/secret/get";
     private String overwriteEndpoint = address + "/authorization/secret/overwrite";
     private String walletExistsEndpoint = address + "/authorization/exists";
+    private String isSecretSetEndpoint = address + "/authorization/secret/exists";
     
 }

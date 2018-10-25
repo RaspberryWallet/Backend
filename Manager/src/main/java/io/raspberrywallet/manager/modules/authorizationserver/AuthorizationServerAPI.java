@@ -18,29 +18,22 @@ import java.time.LocalDate;
 class AuthorizationServerAPI {
     
     private AuthorizationServerConf configuration;
-    private Credentials credentials;
 
     private HttpClient httpClient;
-    private Form preparedCredentials;
     
     private Token token;
     private Boolean isRegisteredFlag, isLoggedInFlag;
     
-    AuthorizationServerAPI(AuthorizationServerConf configuration, Credentials credentials) {
+    AuthorizationServerAPI(AuthorizationServerConf configuration) {
         this.configuration = configuration;
         Form defaultHeaders = Form.form()
                 .add(HttpHeaders.CONTENT_TYPE, "application/json")
                 .add("charset", "UTF-8");
     
-        this.credentials = credentials;
-        preparedCredentials = Form.form()
-                .add(APIKeys.WALLETUUID.val, credentials.getName())
-                .add(APIKeys.PASSWORD.val, credentials.getPassword());
-    
         httpClient = new ApacheHttpClient(configuration.getHost(), defaultHeaders);
     }
     
-    Token login(int sessionLength) throws RequestException {
+    Token login(Credentials credentials, int sessionLength) throws RequestException {
         Form requestBody = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
                 .add(APIKeys.PASSWORD.val, credentials.getPassword())
@@ -49,13 +42,17 @@ class AuthorizationServerAPI {
         return login(requestBody);
     }
     
-    Token login() throws RequestException {
-        return login(preparedCredentials);
+    Token login(Credentials credentials) throws RequestException {
+        return login(credentials, 1800);
     }
     
     private Token login(Form requestBody) throws RequestException {
         try {
             HttpResponse httpResponse = executeRequest(requestBody, configuration.getLoginEndpoint());
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+            if (statusCode != HttpStatus.SC_OK)
+                throw new RequestException("Request failed with error code: " + statusCode);
+            
             String token = EntityUtils.toString(httpResponse.getEntity());
             return new Token(token, LocalDate.MAX);
         } catch (IOException e) {
@@ -63,18 +60,26 @@ class AuthorizationServerAPI {
         }
     }
     
-    boolean logout() throws RequestException {
-        HttpResponse response = executeRequest(preparedCredentials, configuration.getLogoutEndpoint());
+    boolean logout(Credentials credentials) throws RequestException {
+        Form body = Form.form()
+                .add(APIKeys.WALLETUUID.val, credentials.getName())
+                .add(APIKeys.TOKEN.val, token.getData());
+        
+        HttpResponse response = executeRequest(body, configuration.getLogoutEndpoint());
         isLoggedInFlag = !handleResponse(response);
         return isLoggedInFlag;
     }
     
-    boolean register() throws RequestException {
-        HttpResponse response = executeRequest(preparedCredentials, configuration.getRegisterEndpoint());
+    boolean register(Credentials credentials) throws RequestException {
+        Form body = Form.form()
+                .add(APIKeys.WALLETUUID.val, credentials.getName())
+                .add(APIKeys.PASSWORD.val, credentials.getPassword());
+        
+        HttpResponse response = executeRequest(body, configuration.getRegisterEndpoint());
         return handleResponse(response);
     }
     
-    boolean isRegistered() throws RequestException {
+    boolean isRegistered(Credentials credentials) throws RequestException {
         if (isRegisteredFlag != null)
             return isRegisteredFlag;
         
@@ -99,8 +104,8 @@ class AuthorizationServerAPI {
      * @return Base64 encoded secret
      * @throws RequestException
      */
-    String getSecret() throws RequestException {
-        registerAndLogin();
+    String getSecret(Credentials credentials) throws RequestException {
+        registerAndLogin(credentials);
     
         Form requestBody = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
@@ -123,8 +128,8 @@ class AuthorizationServerAPI {
         throw new NotImplementedException();
     }
     
-    void overwriteSecret(String secret) throws RequestException {
-        registerAndLogin();
+    void overwriteSecret(Credentials credentials, String secret) throws RequestException {
+        registerAndLogin(credentials);
         
         Form requestBody = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
@@ -133,6 +138,22 @@ class AuthorizationServerAPI {
         
         HttpResponse response = executeRequest(requestBody, configuration.getOverwriteEndpoint());
         handleResponse(response);
+    }
+    
+    boolean secretIsSet(Credentials credentials) throws RequestException {
+        Form requestBody = Form.form()
+                .add(APIKeys.WALLETUUID.val, credentials.getName())
+                .add(APIKeys.TOKEN.val, token.getData());
+        
+        HttpResponse response = executeRequest(requestBody, configuration.getIsSecretSetEndpoint());
+        
+        int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode == HttpStatus.SC_OK)
+            return true;
+        if (statusCode == HttpStatus.SC_NOT_FOUND)
+            return false;
+        else
+            throw new RequestException("Request failed with error code: " + statusCode);
     }
     
     private HttpResponse executeRequest(Form body, String endpoint) throws RequestException {
@@ -151,24 +172,24 @@ class AuthorizationServerAPI {
         return true;
     }
     
-    private void registerAndLogin() throws RequestException {
-        if (!isRegisteredCheck())
-            isRegisteredFlag = register();
+    public void registerAndLogin(Credentials credentials) throws RequestException {
+        if (!isRegisteredCheck(credentials))
+            isRegisteredFlag = register(credentials);
         
         if (!isLoggedIn()) {
-            token = login();
+            token = login(credentials);
             isLoggedInFlag = true;
         }
     }
     
-    private boolean isRegisteredCheck() throws RequestException {
+    private boolean isRegisteredCheck(Credentials credentials) throws RequestException {
         if (isRegisteredFlag == null || !isRegisteredFlag)
-            isRegisteredFlag = isRegistered();
+            isRegisteredFlag = isRegistered(credentials);
         
         return isRegisteredFlag;
     }
     
-    private boolean isLoggedIn() {
+    boolean isLoggedIn() {
         if (token == null || token.isExpired())
             return false;
         else
