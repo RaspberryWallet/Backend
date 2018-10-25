@@ -1,7 +1,7 @@
 package io.raspberrywallet.server
 
+import io.raspberrywallet.ktor.PORT
 import io.raspberrywallet.mock.ManagerMock
-import io.raspberrywallet.server.Server.Companion.PORT
 import io.vertx.core.Vertx
 import io.vertx.ext.unit.TestOptions
 import io.vertx.ext.unit.TestSuite

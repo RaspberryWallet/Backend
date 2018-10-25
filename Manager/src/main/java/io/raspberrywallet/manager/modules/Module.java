@@ -1,55 +1,44 @@
 package io.raspberrywallet.manager.modules;
 
-import io.raspberrywallet.manager.common.ArrayDestroyer;
-import io.raspberrywallet.manager.common.interfaces.Destroyable;
+import io.raspberrywallet.RequiredInputNotFound;
+import org.jetbrains.annotations.NotNull;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
-import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
-import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class Module implements Destroyable {
-    
-    private static final int STATUS_OK = 200;
-    private static final int STATUS_TIMEOUT = 432;
-    private static final int STATUS_WAITING = 100;
-    
-    private byte[] payload;
-    private int status = STATUS_WAITING;
-    
-    @Setter
-    @Getter
-    private String statusString = "null";
-    
-    private byte[] decryptedValue;
-    private HashMap<String, String> input = new HashMap<>();
-    
-    /**
-     * Returns module info.
-     * @return Info formatted as JSONObject casted to string.
-     */
+public abstract class Module {
+    @NotNull
+    private String statusString;
 
-    @Override
-    public String toString() {
-        JSONObject idAndStatus = new JSONObject();
-        idAndStatus.put("id", getId()).put("status", getStatusString());
-        return idAndStatus.toString();
-        
+    @NotNull
+    private HashMap<String, String> input = new HashMap<>();
+
+    /**
+     * This constructor enforce that the state is always present
+     *
+     * @param initialStatusString - initial module status string
+     */
+    public Module(@NotNull String initialStatusString) {
+        statusString = initialStatusString;
+    }
+
+
+    public String getId() {
+        return this.getClass().getName();
+    }
+
+    public io.raspberrywallet.module.Module asServerModule() {
+        return new io.raspberrywallet.module.Module(getId(), getId(), getDescription(), getHtmlUi()) {
+        };
     }
 
     public abstract String getDescription();
 
-    public io.raspberrywallet.module.Module asServerModule() {
-        return new io.raspberrywallet.module.Module(getId(), getId(), getDescription()) {
-        };
-    }
-
     /**
-     * Check if needed interaction (User-Module) has been completed.
+     * Check if needed interaction (User-Module) has been completed
+     *
      * @return true, if we are ready to decrypt
      */
     public abstract boolean check();
@@ -58,13 +47,13 @@ public abstract class Module implements Destroyable {
      * @param keyPart - unencrypted key part
      * @return encrypted payload
      */
-    public abstract byte[] encrypt(byte[] keyPart) throws EncryptionException;
+    public abstract byte[] encrypt(byte[] keyPart) throws RequiredInputNotFound;
 
     /**
      * @param payload - encrypted payload
      * @return decrypted key part
      */
-    public abstract byte[] decrypt(byte[] payload) throws DecryptionException;
+    public abstract byte[] decrypt(byte[] payload) throws DecryptionException, RequiredInputNotFound;
 
     /**
      * this function should prepare module before consecutive use.
@@ -78,52 +67,44 @@ public abstract class Module implements Destroyable {
     @Nullable
     public abstract String getHtmlUi();
 
-    public String getId() {
-        return this.getClass().getName();
+    /**
+     * Returns status of the module to show to the user
+     *
+     * @return message
+     */
+    public String getStatusString() {
+        return statusString == null ? "null" : statusString;
     }
 
-    public void newSession() {
-        input.clear();
-        register();
+    /**
+     * Setting the status message for the user
+     *
+     * @param status - new status
+     */
+    void setStatusString(@NotNull String status) {
+        this.statusString = status;
     }
 
-    public void setPayload(byte[] payload) {
-        this.payload = payload.clone();
-    }
-
-    public int getStatus() {
-        return this.status;
-    }
-
-    public byte[] getResult() throws DecryptionException {
-        if (getStatus() != STATUS_OK) throw new DecryptionException(getStatus());
-        else return decryptedValue;
-    }
-    
     /**
      * Sets input for this Module from user
+     *
      * @param key   - key of the parameter
      * @param value - value of the parameter
      */
     public void setInput(String key, String value) {
         input.put(key, value);
     }
-    
+
     /**
      * Sets inputs for this Module from user
-     * @param inputs Map with key-value inputs.
      */
     public void setInputs(Map<String, String> inputs) {
         input.putAll(inputs);
     }
 
-    @Override
-    public void destroy() {
-        ArrayDestroyer.destroy(decryptedValue);
-    }
-    
     /**
      * Checks if user has submitted any input
+     *
      * @param key - key of the parameter
      * @return - if key exists
      */
@@ -137,8 +118,24 @@ public abstract class Module implements Destroyable {
      * @param key - parameter key
      * @return - value of the parameter
      */
+    @Nullable
     String getInput(String key) {
         return input.get(key);
     }
 
+    /**
+     * Clear the user inputs, prepare for new
+     */
+    public void clearInputs() {
+        input.clear();
+    }
+
+
+    /**
+     * Module info formatted as JSON.
+     */
+    @Override
+    public String toString() {
+        return "{\"id\":\"" + getId() + "\", \"status\":\"" + getStatusString() + "\"}";
+    }
 }

@@ -1,0 +1,29 @@
+allprojects {
+    apply plugin: 'maven'
+
+    group = 'io.raspberrywallet'
+    version = '1.0.0'
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: "application"
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+
+    repositories {
+        mavenLocal()
+        maven { url = "http://repo.maven.apache.org/maven2" }
+        maven { url = "https://jitpack.io" }
+        maven { url = "http://dl.bintray.com/kotlin/ktor" }
+        maven { url = "http://dl.bintray.com/kotlin/kotlinx" }
+        maven { url = "http://jcenter.bintray.com" }
+    }
+
+
+    dependencies {
+        compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+        implementation "com.github.stasbar:easy-logger:1.2"
+    }
+}

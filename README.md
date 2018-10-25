@@ -20,11 +20,14 @@ Manager loads modules (in `bytecode` format) from `/modules` directory relative 
 You can change this direcotry with param `-modules /path/to/your/custom/modules/`
 
 In order to compile your `CustomModule.java` source file to bytecode class, execute this command:
+`javac -cp Manager/target/Manager-<version>-jar-with-dependencies.jar /path/to/your/CustomModule.java -d modules/`
+Then create jars
+`jar cvf modules/*`
+Sign jar
+`jarsigner -keystore RaspberryWallet.keystore -signedjar CustomModule.jar CustomModule.jar signModules`
+And now it can be loaded on startup
 
-`javac -cp Manager/target/Manager-<version>-jar-with-dependencies.jar /path/to/your/CustomModule.java`
-
-then place your generated `CustomModule.class` to `/modules` folder
-It will be automatically loaded on startup
+It will be automatically loaded and verified on startup
 ```
 ℹ[INFO][18:12:39][ModuleClassLoader] Loaded 2 modules
 ℹ[INFO][18:12:39][] Module {

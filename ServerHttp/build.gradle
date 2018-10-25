@@ -1,9 +1,9 @@
+apply plugin: "kotlin"
+
 buildscript {
     ext {
-        vertxVersion = '3.5.2'
-        kotlin_version = '1.2.70'
+        kotlin_version = "1.2.70"
     }
-
     repositories {
         mavenLocal()
         jcenter()
@@ -16,45 +16,30 @@ buildscript {
     }
 }
 
-apply plugin: 'kotlin'
-apply plugin: 'maven'
-apply plugin: 'application'
+mainClassName = "io.raspberrywallet.MainKt"
 
-
-mainClassName = 'io.raspberrywallet.MainKt'
-version = '1.0.0'
-sourceCompatibility = '1.8'
-
-run {
-    args = ['run', mainClassName,
-            "--launcher-class=io.vertx.core.Launcher",
-            "--redeploy=src/**/*.*",
-            "--on-redeploy=./gradlew classes"]
-    manifest {
-        attributes 'Main-Class': mainClassName
-    }
-}
 dependencies {
+    def ktorVersion = "0.9.5"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "io.ktor:ktor-server-core:$ktorVersion"
+    implementation "io.ktor:ktor-server-netty:$ktorVersion"
+    implementation "io.ktor:ktor-jackson:$ktorVersion"
+    implementation "io.ktor:ktor-html-builder:$ktorVersion"
+
+    def vertxVersion = "3.5.3"
     implementation "io.vertx:vertx-core:$vertxVersion"
     implementation "io.vertx:vertx-web:$vertxVersion"
     implementation "io.vertx:vertx-web-client:$vertxVersion"
-    implementation "io.vertx:vertx-unit:$vertxVersion"
     implementation "io.vertx:vertx-jdbc-client:$vertxVersion"
     implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
     implementation "io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'com.github.stasbar:easy-logger:1.2'
+    implementation "com.github.stasbar:easy-logger:1.2"
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
-    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.2.0'
+    testImplementation "io.vertx:vertx-unit:$vertxVersion"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.2.0"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:5.2.0"
 }
 
-
-
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
-}
 kotlin {
     experimental {
         coroutines 'enable'

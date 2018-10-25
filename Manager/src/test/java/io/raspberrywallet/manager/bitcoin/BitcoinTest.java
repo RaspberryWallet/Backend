@@ -1,6 +1,6 @@
 package io.raspberrywallet.manager.bitcoin;
 
-import com.google.common.util.concurrent.Service;
+import io.raspberrywallet.WalletNotInitialized;
 import io.raspberrywallet.manager.TestUtils;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.params.TestNet3Params;
@@ -17,59 +17,44 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BitcoinTest {
     static private Bitcoin bitcoin;
-    static private Service syncBlockchainService;
+
 
     @BeforeAll
     static void setup() {
         bitcoin = new Bitcoin();
-        syncBlockchainService = bitcoin.startBlockchainAsync();
     }
 
     @Test
-    void should_setup_test_net() {
+    void should_setup_test_net() throws WalletNotInitialized {
         Bitcoin bitcoin = new Bitcoin(TestNet3Params.get());
 
-        assertEquals(bitcoin.kit.params(), TestNet3Params.get());
-        assertEquals(bitcoin.kit.directory(), bitcoin.rootDirectory);
+        assertEquals(bitcoin.getKit().params(), TestNet3Params.get());
+        assertEquals(bitcoin.getKit().directory(), bitcoin.rootDirectory);
     }
 
 
     @Test
-    void should_sync_test_net() {
-        syncBlockchainService.awaitRunning();
-
-        assertEquals(bitcoin.params(), TestNet3Params.get());
-        assertEquals(bitcoin.kit.directory(), bitcoin.rootDirectory);
-        assertTrue(bitcoin.fileWallet.exists());
-        assertTrue(bitcoin.fileSpvBlockchain.exists());
-
-        bitcoin.fileSpvBlockchain.delete();
-    }
-
-    @Test
-    void should_restore_randomly_generated_mnemonic_words() throws NoSuchAlgorithmException, MnemonicException {
+    void should_restore_randomly_generated_mnemonic_words() throws NoSuchAlgorithmException, MnemonicException, WalletNotInitialized {
         List<String> mnemonicCode = TestUtils.generateRandomDeterministicMnemonicCode();
         mnemonicCode.forEach(System.out::println);
 
-        bitcoin.restoreFromBackupPhrase(mnemonicCode);
+        bitcoin.restoreFromSeed(mnemonicCode);
     }
 
     @Test
-    void should_restore_private_key_bytes() throws NoSuchAlgorithmException {
+    void should_restore_private_key_bytes() throws NoSuchAlgorithmException, WalletNotInitialized {
         byte[] seed = SecureRandom.getInstanceStrong().generateSeed(32);
 
         // Importing keys is available only with blockchain synced
-        syncBlockchainService.awaitRunning();
 
         bitcoin.importKey(seed);
-        assertTrue(Arrays.equals(bitcoin.kit.wallet().getImportedKeys().get(0).getPrivKeyBytes(), seed));
+        assertTrue(Arrays.equals(bitcoin.getWallet().getImportedKeys().get(0).getPrivKeyBytes(), seed));
         bitcoin.removeKey(seed);
     }
 
 
     @Test
-    void getCurrentReceiveAddress() {
-        syncBlockchainService.awaitRunning();
+    void getCurrentReceiveAddress() throws WalletNotInitialized {
         String currentAddress = bitcoin.getCurrentReceiveAddress();
 
         assertNotNull(currentAddress);
@@ -79,9 +64,7 @@ public class BitcoinTest {
     }
 
     @Test
-    void getFreshReceiveAddress() {
-        syncBlockchainService.awaitRunning();
-
+    void getFreshReceiveAddress() throws WalletNotInitialized {
         String freshAddress = bitcoin.getFreshReceiveAddress();
         assertNotNull(freshAddress);
         assertEquals(freshAddress.length(), 34);
@@ -89,17 +72,13 @@ public class BitcoinTest {
     }
 
     @Test
-    void getEstimatedBalance() {
-        syncBlockchainService.awaitRunning();
-
+    void getEstimatedBalance() throws WalletNotInitialized {
         String balance = bitcoin.getEstimatedBalance();
         println(balance);
     }
 
     @Test
-    void getAvailableBalance() {
-        syncBlockchainService.awaitRunning();
-
+    void getAvailableBalance() throws WalletNotInitialized {
         String availableBalance = bitcoin.getAvailableBalance();
         println(availableBalance);
     }

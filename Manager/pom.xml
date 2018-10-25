@@ -20,6 +20,9 @@
         <src.dir.test.java>${project.basedir}/src/test/java</src.dir.test.java>
         <src.dir.test.resources>${project.basedir}/src/test/resources</src.dir.test.resources>
         <jackson.version>2.9.5</jackson.version>
+        <junit.version>5.2.0</junit.version>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
     </properties>
 
     <dependencies>

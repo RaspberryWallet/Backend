@@ -29,7 +29,7 @@ public class TemperatureMonitor extends Executable<String> {
 
             String parsedTemp = parseTemperatureFrom(process);
             float value = Float.parseFloat(parsedTemp);
-            return String.format("%.3f °C", value / 1000);
+            return String.format("%.3f", value / 1000);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             return "error";

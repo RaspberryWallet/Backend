@@ -12,17 +12,17 @@ public class Shamir {
      * Create a share using Shamir's scheme
      *
      * @param x Shamir's shares
-     * @param k array of ShamirKeys
+     * @param shamirKeys array of ShamirKeys
      * @return true is x is in k
      */
-    public static boolean isRepeat(BigInteger x, ShamirKey[] k) {
-        if (k.length == 0)
+    public static boolean isRepeat(BigInteger x, ShamirKey[] shamirKeys) {
+        if (shamirKeys.length == 0)
             return false;
 
-        for (int i = 0; i < k.length; i++) {
-            if (k[i] == null)
+        for (ShamirKey key : shamirKeys) {
+            if (key == null)
                 break;
-            if (k[i].getX() == x)
+            if (key.getX().equals(x))
                 return true;
         }
 
@@ -37,7 +37,7 @@ public class Shamir {
      * @param p prime number (for calulate mod)
      * @return solution of polynomial
      */
-    public static BigInteger calculatePolynomial(BigInteger s[], BigInteger x, BigInteger p) {
+    private static BigInteger calculatePolynomial(BigInteger s[], BigInteger x, BigInteger p) {
         BigInteger result = BigInteger.ZERO;
         for (int i = 0; i < s.length; i++)
             result = result.add(s[i].multiply(x.pow(i)));
