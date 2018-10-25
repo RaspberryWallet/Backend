@@ -5,12 +5,12 @@ import io.raspberrywallet.manager.common.wrappers.Secret;
 import io.raspberrywallet.manager.common.wrappers.Token;
 import io.raspberrywallet.manager.common.http.ApacheHttpClient;
 import io.raspberrywallet.manager.common.http.HttpClient;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.util.EntityUtils;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -82,11 +82,24 @@ class AuthorizationServerAPI {
                 .add(APIKeys.WALLETUUID.val, credentials.getName());
         
         HttpResponse response = executeRequest(requestBody, configuration.getWalletExistsEndpoint());
-        isRegisteredFlag = handleResponse(response);
-        return isRegisteredFlag;
+        int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode == HttpStatus.SC_OK) {
+            isRegisteredFlag = true;
+            return true;
+        }
+        if (statusCode == HttpStatus.SC_NOT_FOUND) {
+            isRegisteredFlag = false;
+            return false;
+        } else
+            throw new RequestException("Request failed with error code: " + statusCode);
     }
     
-    Secret getSecret() throws RequestException {
+    /**
+     *
+     * @return Base64 encoded secret
+     * @throws RequestException
+     */
+    String getSecret() throws RequestException {
         registerAndLogin();
     
         Form requestBody = Form.form()
@@ -95,8 +108,7 @@ class AuthorizationServerAPI {
         
         try {
             HttpResponse httpResponse = executeRequest(requestBody, configuration.getGetSecretEndpoint());
-            String secret = EntityUtils.toString(httpResponse.getEntity());
-            return new Secret(secret.getBytes());
+            return EntityUtils.toString(httpResponse.getEntity());
         } catch (IOException e) {
             throw new RequestException(e);
         }
@@ -111,13 +123,13 @@ class AuthorizationServerAPI {
         throw new NotImplementedException();
     }
     
-    void overwriteSecret(Secret secret) throws RequestException {
+    void overwriteSecret(String secret) throws RequestException {
         registerAndLogin();
         
         Form requestBody = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
                 .add(APIKeys.TOKEN.val, token.getData())
-                .add(APIKeys.SECRET.val, new String(secret.getData()));
+                .add(APIKeys.SECRET.val, secret);
         
         HttpResponse response = executeRequest(requestBody, configuration.getOverwriteEndpoint());
         handleResponse(response);
@@ -141,10 +153,12 @@ class AuthorizationServerAPI {
     
     private void registerAndLogin() throws RequestException {
         if (!isRegisteredCheck())
-            register();
+            isRegisteredFlag = register();
         
-        if (!isLoggedIn())
+        if (!isLoggedIn()) {
             token = login();
+            isLoggedInFlag = true;
+        }
     }
     
     private boolean isRegisteredCheck() throws RequestException {

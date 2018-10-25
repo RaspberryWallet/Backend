@@ -3,7 +3,6 @@ package io.raspberrywallet.manager.modules.authorizationserver;
 import io.raspberrywallet.manager.common.readers.StringReader;
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
 import io.raspberrywallet.manager.common.wrappers.Credentials;
-import io.raspberrywallet.manager.common.wrappers.Secret;
 import io.raspberrywallet.manager.cryptography.common.Password;
 import io.raspberrywallet.manager.cryptography.crypto.AESEncryptedObject;
 import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
@@ -14,6 +13,7 @@ import io.raspberrywallet.manager.common.readers.WalletUUIDReader;
 import org.apache.commons.lang.SerializationUtils;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Base64;
 import java.util.UUID;
 
 public class AuthorizationServerModule extends Module {
@@ -63,13 +63,14 @@ public class AuthorizationServerModule extends Module {
     
     @Override
     public byte[] encrypt(byte[] keyPart) throws EncryptionException {
-        AESEncryptedObject<ByteWrapper> encryptedKeyPart =
+        AESEncryptedObject<ByteWrapper> encryptedSecret =
                 CryptoObject.encrypt(new ByteWrapper(keyPart), encryptionPassword);
         
-        byte[] serializedEncryptedKey = SerializationUtils.serialize(encryptedKeyPart);
-        Secret secret = new Secret(serializedEncryptedKey);
+        byte[] serializedSecret = SerializationUtils.serialize(encryptedSecret);
+        String serializedAndEncodedSecret = Base64.getEncoder().encodeToString(serializedSecret);
+
         try {
-            serverAPI.overwriteSecret(secret);
+            serverAPI.overwriteSecret(serializedAndEncodedSecret);
         } catch (RequestException e) {
             throw new EncryptionException("Failed to save encrypted key part on server.");
         }
@@ -82,9 +83,11 @@ public class AuthorizationServerModule extends Module {
     @Override
     public byte[] decrypt(byte[] payload) throws DecryptionException {
         try {
-            Secret encryptedSecret = serverAPI.getSecret();
+            String encodedSecret = serverAPI.getSecret();
+            byte[] decodedSecret = Base64.getDecoder().decode(encodedSecret);
+            
             AESEncryptedObject<ByteWrapper> deserializedEncryptedSecret =
-                    (AESEncryptedObject<ByteWrapper>)SerializationUtils.deserialize(encryptedSecret.getData());
+                    (AESEncryptedObject<ByteWrapper>)SerializationUtils.deserialize(decodedSecret);
             
             return CryptoObject.decrypt(deserializedEncryptedSecret, encryptionPassword)
                     .getData();
@@ -102,7 +105,11 @@ public class AuthorizationServerModule extends Module {
     @Nullable
     @Override
     public String getHtmlUi() {
-        return null;
+        StringBuilder html = new StringBuilder();
+        html.append("<input type=\"text\" name=\"username\">");
+        html.append("</br>");
+        html.append("<input type=\"text\" name=\"password\">");
+        return html.toString();
     }
     
 }

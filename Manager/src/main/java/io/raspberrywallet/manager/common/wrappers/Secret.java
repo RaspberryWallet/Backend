@@ -6,23 +6,30 @@ import java.util.Base64;
 
 public class Secret implements Destroyable {
     
-    private ByteWrapper byteWrapper;
+    ByteWrapper byteWrapper;
     
     public byte[] getData() {
         return byteWrapper.getData();
     }
     
-    public Secret(byte[] data) {
-        byte[] dataConverted = Base64.getEncoder().encode(data);
-        byteWrapper = new ByteWrapper(dataConverted);
-    }
+    Secret() {}
     
-    public byte[] decode() {
-        return Base64.getDecoder().decode(byteWrapper.getData());
+    /**
+     * Warning, this constructor assumes, that given data is encoded in Base64
+     * @param base64Data base64 encoded data
+     */
+    public Secret(String base64Data) {
+        byte[] decodedData = Base64.getDecoder().decode(base64Data);
+        byteWrapper = new ByteWrapper(decodedData);
     }
     
     @Override
     public void destroy() {
         byteWrapper.destroy();
+    }
+    
+    @Override
+    public int hashCode() {
+       return byteWrapper.hashCode();
     }
 }
