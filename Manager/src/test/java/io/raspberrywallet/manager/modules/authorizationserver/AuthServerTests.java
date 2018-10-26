@@ -47,6 +47,8 @@ class AuthServerTests {
     @Test
     void MultipleEncryptionAndDecryptionOperationWorks() {
         try {
+            assertTrue(module.check());
+            
             byte[] firstEncryptedData = module.encrypt(encryptionData);
             assertTrue(Arrays.equals(encryptionData, module.decrypt(firstEncryptedData)));
             

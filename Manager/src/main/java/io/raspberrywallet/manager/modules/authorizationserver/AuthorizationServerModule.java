@@ -74,8 +74,11 @@ public class AuthorizationServerModule extends Module {
         if (!serverAPI.isLoggedIn())
             serverAPI.login(serverCredentials);
         
-        if (!serverAPI.secretIsSet(serverCredentials))
-            serverAPI.overwriteSecret(serverCredentials, getRandomString());
+        if (!serverAPI.secretIsSet(serverCredentials)) {
+            String randomSecret = getRandomString();
+            String encodedSecret = Base64.getEncoder().encodeToString(randomSecret.getBytes());
+            serverAPI.overwriteSecret(serverCredentials, encodedSecret);
+        }
     }
     
     private String getRandomString() {
@@ -95,7 +98,7 @@ public class AuthorizationServerModule extends Module {
             AESEncryptedObject<ByteWrapper> encryptedSecret =
                     CryptoObject.encrypt(new ByteWrapper(payload), password);
             
-            return SerializationUtils.serialize(encodedSecret);
+            return SerializationUtils.serialize(encryptedSecret);
             
         } catch (RequestException e) {
             throw new EncryptionException(e.getMessage());

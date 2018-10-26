@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @Getter
@@ -19,12 +19,13 @@ public class Token {
      * then even with different expiration date they are the same.
      */
     @EqualsAndHashCode.Exclude
-    private LocalDate expirationDate;
+    private LocalDateTime expirationDate;
+    
+    public Token(String data, int sessionLength) {
+        this(data, LocalDateTime.now().plusSeconds(sessionLength));
+    }
     
     public boolean isExpired() {
-        if (expirationDate.compareTo(LocalDate.now()) < 0)
-            return true;
-        else
-            return false;
+        return expirationDate.compareTo(LocalDateTime.now()) < 0;
     }
 }

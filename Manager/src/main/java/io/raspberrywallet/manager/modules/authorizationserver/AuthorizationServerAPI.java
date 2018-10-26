@@ -13,7 +13,6 @@ import org.apache.http.client.fluent.Form;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
-import java.time.LocalDate;
 
 class AuthorizationServerAPI {
     
@@ -33,28 +32,28 @@ class AuthorizationServerAPI {
         httpClient = new ApacheHttpClient(configuration.getHost(), defaultHeaders);
     }
     
-    Token login(Credentials credentials, int sessionLength) throws RequestException {
+    void login(Credentials credentials, int sessionLength) throws RequestException {
         Form requestBody = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
-                .add(APIKeys.PASSWORD.val, credentials.getPassword())
+                .add(APIKeys.PASSWORD.val, credentials.getPasswordBase64())
                 .add(APIKeys.SESSION_LENGTH.val, Integer.toString(sessionLength));
     
-        return login(requestBody);
+        login(requestBody, sessionLength);
     }
     
-    Token login(Credentials credentials) throws RequestException {
-        return login(credentials, 1800);
+    void login(Credentials credentials) throws RequestException {
+        login(credentials, 1800);
     }
     
-    private Token login(Form requestBody) throws RequestException {
+    private void login(Form requestBody, int sessionLength) throws RequestException {
         try {
             HttpResponse httpResponse = executeRequest(requestBody, configuration.getLoginEndpoint());
             int statusCode = httpResponse.getStatusLine().getStatusCode();
             if (statusCode != HttpStatus.SC_OK)
                 throw new RequestException("Request failed with error code: " + statusCode);
             
-            String token = EntityUtils.toString(httpResponse.getEntity());
-            return new Token(token, LocalDate.MAX);
+            String tokenString = EntityUtils.toString(httpResponse.getEntity());
+            token = new Token(tokenString, sessionLength);
         } catch (IOException e) {
             throw new RequestException(e);
         }
@@ -73,7 +72,7 @@ class AuthorizationServerAPI {
     boolean register(Credentials credentials) throws RequestException {
         Form body = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
-                .add(APIKeys.PASSWORD.val, credentials.getPassword());
+                .add(APIKeys.PASSWORD.val, credentials.getPasswordBase64());
         
         HttpResponse response = executeRequest(body, configuration.getRegisterEndpoint());
         return handleResponse(response);
@@ -105,8 +104,6 @@ class AuthorizationServerAPI {
      * @throws RequestException
      */
     String getSecret(Credentials credentials) throws RequestException {
-        registerAndLogin(credentials);
-    
         Form requestBody = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
                 .add(APIKeys.TOKEN.val, token.getData());
@@ -129,8 +126,6 @@ class AuthorizationServerAPI {
     }
     
     void overwriteSecret(Credentials credentials, String secret) throws RequestException {
-        registerAndLogin(credentials);
-        
         Form requestBody = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
                 .add(APIKeys.TOKEN.val, token.getData())
@@ -177,7 +172,7 @@ class AuthorizationServerAPI {
             isRegisteredFlag = register(credentials);
         
         if (!isLoggedIn()) {
-            token = login(credentials);
+            login(credentials);
             isLoggedInFlag = true;
         }
     }
@@ -190,10 +185,7 @@ class AuthorizationServerAPI {
     }
     
     boolean isLoggedIn() {
-        if (token == null || token.isExpired())
-            return false;
-        else
-            return true;
+        return token != null && !token.isExpired();
     }
     
 }
