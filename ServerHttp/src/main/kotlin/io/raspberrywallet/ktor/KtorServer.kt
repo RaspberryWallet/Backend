@@ -297,6 +297,8 @@ val setNetwork = HtmlContent {
     head {
         title { +"Change Wi-Fi settings" }
         link(rel = "Stylesheet", type = "text/css", href = "/style.css")
+        script { src="/scripts.js"; type = "text/javascript" }
+        script { src="/jquery.min.js"; type = "text/javascript" }
     }
     body {
         h1 { a(href = "/index/") { +"<- Back" } }
@@ -304,6 +306,7 @@ val setNetwork = HtmlContent {
         h3 { +"ESSID:" }
         form(method = FormMethod.post, action = setWifi) {
             select {
+                id="ssid"
                 name = "ssid"
                 for (network in manager.networkList) {
                     option {
@@ -311,6 +314,11 @@ val setNetwork = HtmlContent {
                         +network
                     }
                 }
+            }
+            span {
+                onClick = "refreshNetworks()"
+                style = "cursor: pointer, link, hand"
+                + "Refresh"
             }
             h3 { +"Pre shared key:" }
             input(type = InputType.password, name = "psk") {}
@@ -334,6 +342,9 @@ val status = HtmlContent {
                 manager.cpuTemperature.toFloat() < 40 -> span(classes = "cold") { +(manager.cpuTemperature + " 'C") }
                 else -> span(classes = "medium") { +(manager.cpuTemperature + " 'C") }
             }
+        }
+        a(href = setupWiFi) {
+            +"Configure Wi-Fi"
         }
         table {
             for ((param, value) in manager.wifiStatus) {
