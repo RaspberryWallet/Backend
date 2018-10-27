@@ -1,4 +1,4 @@
-package io.raspberrywallet.step;
+package io.raspberrywallet.contract.step;
 
 public final class SimpleStep extends Step{
 

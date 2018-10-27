@@ -1,6 +1,6 @@
 package io.raspberrywallet.manager.bitcoin;
 
-import io.raspberrywallet.WalletNotInitialized;
+import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.TestUtils;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.params.TestNet3Params;

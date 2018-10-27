@@ -1,7 +1,7 @@
 package io.raspberrywallet.manager.cryptography.sharedsecret.shamir;
 
 import java.math.BigInteger;
-import java.util.Random;
+import java.security.SecureRandom;
 /**
  * <p> Calculate Shamir scheme. You need t shares of n for resolve the secret </p>
  */
@@ -66,7 +66,7 @@ public class Shamir {
         //System.out.println("s(0) = " + secret + " (secret)" );
 
         for (int i = 1; i < t; i++) {
-            s[i] = new BigInteger(numBits, new Random());
+            s[i] = new BigInteger(numBits, new SecureRandom());
             //System.out.println("s("+i+") = " +s[i]);
         }
 
@@ -118,12 +118,12 @@ public class Shamir {
         if (t > n)
             throw new ShamirException("number of need shares greater than number of shares");
 
-        BigInteger prime = BigInteger.probablePrime(numBits, new Random());
+        BigInteger prime = BigInteger.probablePrime(numBits, new SecureRandom());
 
         BigInteger fx, x;
         for (int i = 1; i <= n; i++) {
             do {
-                x = new BigInteger(numBits, new Random());
+                x = new BigInteger(numBits, new SecureRandom());
             } while (isRepeat(x, keys));
             fx = calculatePolynomial(polynomialParams, x, prime);
             keys[i - 1] = new ShamirKey();

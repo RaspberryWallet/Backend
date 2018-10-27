@@ -14,21 +14,25 @@ usage: java -jar Manager.jar [-ktor] [-modules <arg>] [-server <arg>]
 ## Custom modules
 Your `CustomModule.java`
 - must implement `io.raspberrywallet.manager.modules.Module interface`
-- must be in package `io.raspberrywallet.manager.modules`
+- must be in package `io.raspberrywallet.manager.modules.<your_package_name>`
 
-Manager loads modules (in `bytecode` format) from `/modules` directory relative to your current directory.
-You can change this direcotry with param `-modules /path/to/your/custom/modules/`
+Manager loads modules (in `jar` format) from `/opt/wallet/modules` or specified by `-modules path/to/modules/` relative to your current directory.
 
 In order to compile your `CustomModule.java` source file to bytecode class, execute this command:
 `javac -cp Manager/target/Manager-<version>-jar-with-dependencies.jar /path/to/your/CustomModule.java -d modules/`
 Then create jars
-`jar cvf modules/*`
+`jar cvf CustomModule.jar CustomModule.class`
 Sign jar
 `jarsigner -keystore RaspberryWallet.keystore -signedjar CustomModule.jar CustomModule.jar signModules`
 And now it can be loaded on startup
 
+There is also helper script in `Scripts/modules/compileJarSignAndCopyModules.py` that automate everything
+
+```
 It will be automatically loaded and verified on startup
 ```
+ℹ[INFO][23:45:55][] Successfully verified module io.raspberrywallet.manager.modules.pin.PinModule
+ℹ[INFO][23:45:55][] Successfully verified module io.raspberrywallet.manager.modules.example.ExampleModule
 ℹ[INFO][18:12:39][ModuleClassLoader] Loaded 2 modules
 ℹ[INFO][18:12:39][] Module {
         name: ExampleModule
@@ -43,3 +47,5 @@ It will be automatically loaded and verified on startup
 ```
 
 Docs: https://docs.google.com/document/d/1wW5mRy51MvwghFcwk7K07LozbIV1sD53q4ejCQhjzFw/edit?usp=sharing
+
+mnemonic code for tests purposes `farm hospital shadow common raw neither pond access suggest army prefer expire`
