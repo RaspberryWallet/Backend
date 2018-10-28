@@ -1,13 +1,8 @@
 # Backend
 
 ```
-usage: java -jar Manager.jar [-ktor] [-modules <arg>] [-server <arg>]
-       [-sync] [-vertx]
- -ktor            Use Ktor as HTTP Server impl
+usage: java -jar Manager.jar[-modules <arg>]
  -modules <arg>   Modules classes directory path
- -server <arg>    HTTP Server impl
- -sync            Sync bitcoin blockchain
- -vertx           Use VertX as HTTP Server impl
 ```
 
 
