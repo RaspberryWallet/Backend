@@ -21,10 +21,17 @@ dependencies {
     implementation "commons-io:commons-io:2.4"
     implementation "commons-lang:commons-lang:2.6"
     implementation "com.pi4j:pi4j-core:1.1"
+    
     def jacksonVersion = "2.9.0"
     implementation "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
     implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
     implementation "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+    
+    implementation "org.apache.httpcomponents:httpclient:4.5.6"
+    implementation "org.apache.httpcomponents:fluent-hc:4.5.6"
+    implementation "org.json:json:20180813"
+    
+    testImplementation "com.exadatum.xsuite.xmaven:bash-maven-plugin:1.0.7"
     testImplementation "org.junit.jupiter:junit-jupiter-engine:5.2.0"
     testImplementation "org.mockito:mockito-core:2.18.3"
 }

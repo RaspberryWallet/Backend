@@ -23,7 +23,6 @@ And now it can be loaded on startup
 
 There is also helper script in `Scripts/modules/compileJarSignAndCopyModules.py` that automate everything
 
-```
 It will be automatically loaded and verified on startup
 ```
 ℹ[INFO][23:45:55][] Successfully verified module io.raspberrywallet.manager.modules.pin.PinModule

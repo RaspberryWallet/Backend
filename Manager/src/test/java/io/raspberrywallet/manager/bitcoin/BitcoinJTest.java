@@ -1,8 +1,6 @@
 package io.raspberrywallet.manager.bitcoin;
 
-import com.stasbar.Logger;
 import org.bitcoinj.core.*;
-import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStoreException;
@@ -22,7 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class BitcoinJTest {
     private File rootDirectory = new File(".");
@@ -30,24 +27,6 @@ public class BitcoinJTest {
     private String walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
     private File walletFile = new File(rootDirectory, walletFileName + ".wallet");
     private File blockstoreFile = new File(rootDirectory, walletFileName + ".spvchain");
-
-    @Test
-    void testWalletAppKit() {
-
-        if (walletFile.exists()) walletFile.delete();
-        assertFalse(walletFile.exists());
-
-        WalletAppKit kit = new WalletAppKit(params, rootDirectory, walletFileName) {
-            @Override
-            protected void onSetupCompleted() {
-                Logger.info("Bitcoin setup complete");
-                assertFalse(walletFile.exists());
-            }
-        };
-
-        kit.setAutoSave(false);
-        kit.startAsync().awaitRunning();
-    }
 
 
     @Test
