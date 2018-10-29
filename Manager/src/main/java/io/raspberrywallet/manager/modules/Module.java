@@ -1,8 +1,8 @@
 package io.raspberrywallet.manager.modules;
 
-import io.raspberrywallet.RequiredInputNotFound;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import org.jetbrains.annotations.NotNull;
+import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,8 +30,8 @@ public abstract class Module {
         return this.getClass().getName();
     }
 
-    public io.raspberrywallet.module.Module asServerModule() {
-        return new io.raspberrywallet.module.Module(getId(), getId(), getDescription(), getHtmlUi()) {
+    public io.raspberrywallet.contract.module.Module asServerModule() {
+        return new io.raspberrywallet.contract.module.Module(getId(), getId(), getDescription(), getHtmlUi()) {
         };
     }
 

@@ -1,7 +1,7 @@
 package io.raspberrywallet.server
 
 import com.stasbar.Logger
-import io.raspberrywallet.Manager
+import io.raspberrywallet.contract.Manager
 import io.raspberrywallet.ktor.PORT
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod

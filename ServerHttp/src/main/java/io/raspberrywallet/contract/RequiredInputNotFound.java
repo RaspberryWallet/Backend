@@ -1,4 +1,4 @@
-package io.raspberrywallet;
+package io.raspberrywallet.contract;
 
 public class RequiredInputNotFound extends Throwable {
     public RequiredInputNotFound(String moduleName, String inputName) {

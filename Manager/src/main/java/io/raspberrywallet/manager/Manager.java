@@ -1,10 +1,11 @@
 package io.raspberrywallet.manager;
 
 import com.stasbar.Logger;
-import io.raspberrywallet.RequiredInputNotFound;
-import io.raspberrywallet.Response;
-import io.raspberrywallet.WalletNotInitialized;
-import io.raspberrywallet.WalletStatus;
+import io.raspberrywallet.contract.RequiredInputNotFound;
+import io.raspberrywallet.contract.Response;
+import io.raspberrywallet.contract.WalletNotInitialized;
+import io.raspberrywallet.contract.WalletStatus;
+import io.raspberrywallet.contract.module.ModuleState;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
@@ -19,7 +20,6 @@ import io.raspberrywallet.manager.linux.WPAConfiguration;
 import io.raspberrywallet.manager.linux.WifiScanner;
 import io.raspberrywallet.manager.linux.WifiStatus;
 import io.raspberrywallet.manager.modules.Module;
-import io.raspberrywallet.module.ModuleState;
 import kotlin.text.Charsets;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.crypto.KeyCrypter;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
-public class Manager implements io.raspberrywallet.Manager {
+public class Manager implements io.raspberrywallet.contract.Manager {
 
     /**
      * Module id -> Module instance
@@ -98,7 +98,7 @@ public class Manager implements io.raspberrywallet.Manager {
      */
 
     @Override
-    public List<io.raspberrywallet.module.Module> getModules() {
+    public List<io.raspberrywallet.contract.module.Module> getModules() {
         return modules.values().stream()
                 .map(Module::asServerModule)
                 .collect(toList());

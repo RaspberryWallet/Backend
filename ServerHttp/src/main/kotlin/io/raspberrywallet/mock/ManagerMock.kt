@@ -1,11 +1,11 @@
 package io.raspberrywallet.mock
 
-import io.raspberrywallet.Manager
-import io.raspberrywallet.Response
-import io.raspberrywallet.WalletStatus
-import io.raspberrywallet.module.Module
-import io.raspberrywallet.module.ModuleState
-import io.raspberrywallet.step.SimpleStep
+import io.raspberrywallet.contract.Manager
+import io.raspberrywallet.contract.Response
+import io.raspberrywallet.contract.WalletStatus
+import io.raspberrywallet.contract.module.Module
+import io.raspberrywallet.contract.module.ModuleState
+import io.raspberrywallet.contract.step.SimpleStep
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {

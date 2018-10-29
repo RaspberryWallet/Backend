@@ -1,3 +1,17 @@
+buildscript {
+    repositories {
+        jcenter() // or Maven central, required for Lombok dependency
+    }
+}
+
+plugins {
+    id 'io.franzbecker.gradle-lombok' version '1.14'
+}
+
+lombok { // optional: values below are the defaults
+    version = "1.18.0"
+}
+
 mainClassName = "io.raspberrywallet.manager.Main"
 
 dependencies {

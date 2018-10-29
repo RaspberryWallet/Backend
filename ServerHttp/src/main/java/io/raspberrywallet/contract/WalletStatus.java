@@ -1,4 +1,4 @@
-package io.raspberrywallet;
+package io.raspberrywallet.contract;
 
 public enum WalletStatus {
     UNSET, ENCRYPTED, DECRYPTED
