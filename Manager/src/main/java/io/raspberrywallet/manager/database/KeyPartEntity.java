@@ -3,11 +3,14 @@ package io.raspberrywallet.manager.database;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.raspberrywallet.manager.common.interfaces.Destroyable;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Arrays;
 
+@NoArgsConstructor
 public class KeyPartEntity implements Destroyable {
+  
     @Getter
     @Setter
     @JsonProperty("payload")
@@ -18,10 +21,6 @@ public class KeyPartEntity implements Destroyable {
     @JsonProperty("module")
     public String module;
 
-    public KeyPartEntity() {
-
-    }
-    
     public KeyPartEntity(byte[] payload, String module) {
         this.payload = payload;
         this.module = module;
@@ -35,11 +34,13 @@ public class KeyPartEntity implements Destroyable {
                 payload[i] = (byte) (i % 120);
         }
     }
-
-    /*
+    
+    /**
      * Needed to override this so `WalletEntity` can be compared with ease.
      * Two `KeyPartEntity` with different pointer can be equal now.
-     * */
+     * @param obj
+     * @return
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof KeyPartEntity) {

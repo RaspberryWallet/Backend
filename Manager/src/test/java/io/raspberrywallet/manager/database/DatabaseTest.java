@@ -1,6 +1,7 @@
 package io.raspberrywallet.manager.database;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ class DatabaseTest {
     private static byte[] encrypted = null;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws DecryptionException, EncryptionException {
         try {
             db = new Database(true);
             walletEntity1 = new WalletEntity();
@@ -51,22 +52,13 @@ class DatabaseTest {
 
     @Test
     void serialize() {
-
         serializedData = null;
-
-        try {
-            serializedData = db.getSerialized();
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        } finally {
-            assertNotNull(serializedData);
-        }
+        serializedData = db.getSerialized();
+        assertNotNull(serializedData);
     }
 
     @Test
     void deserialize() {
-        serialize();
-
         WalletEntity newWallet = null;
         assertNotNull(serializedData);
         try {
@@ -77,10 +69,6 @@ class DatabaseTest {
             assertNotNull(newWallet);
         }
 
-        /*
-         * `List::containsAll` uses `Object::equals` to determine whether a collection contains another.
-         * This condition checks if `List`s are equal using overridden `Object::equal`.
-         * */
         assertEquals(newWallet, walletEntity1);
     }
 
