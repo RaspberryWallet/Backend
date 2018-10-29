@@ -26,16 +26,8 @@ dependencies {
     implementation "io.ktor:ktor-jackson:$ktorVersion"
     implementation "io.ktor:ktor-html-builder:$ktorVersion"
 
-    def vertxVersion = "3.5.3"
-    implementation "io.vertx:vertx-core:$vertxVersion"
-    implementation "io.vertx:vertx-web:$vertxVersion"
-    implementation "io.vertx:vertx-web-client:$vertxVersion"
-    implementation "io.vertx:vertx-jdbc-client:$vertxVersion"
-    implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
-    implementation "io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion"
     implementation "com.github.stasbar:easy-logger:1.2"
-
-    testImplementation "io.vertx:vertx-unit:$vertxVersion"
+    
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.2.0"
     testImplementation "org.junit.jupiter:junit-jupiter-engine:5.2.0"
 }
