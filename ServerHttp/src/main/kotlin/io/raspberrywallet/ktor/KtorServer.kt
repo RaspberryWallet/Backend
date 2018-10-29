@@ -24,7 +24,7 @@ import io.ktor.routing.post
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.raspberrywallet.Manager
+import io.raspberrywallet.contract.Manager
 import io.raspberrywallet.ktor.Paths.Bitcoin.availableBalance
 import io.raspberrywallet.ktor.Paths.Bitcoin.currentAddress
 import io.raspberrywallet.ktor.Paths.Bitcoin.estimatedBalance

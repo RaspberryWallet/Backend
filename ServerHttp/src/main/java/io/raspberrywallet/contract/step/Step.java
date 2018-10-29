@@ -1,4 +1,4 @@
-package io.raspberrywallet.step;
+package io.raspberrywallet.contract.step;
 
 public abstract class Step {
     private final String instruction;

@@ -1,7 +1,7 @@
 package io.raspberrywallet.manager;
 
 import com.stasbar.Logger;
-import io.raspberrywallet.WalletNotInitialized;
+import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cli.Opts;
 import io.raspberrywallet.manager.database.Database;
@@ -29,6 +29,7 @@ public class Main {
 
         File modulesDir = new File(Opts.MODULES.getValue(cmd));
         List<Module> modules = ModuleClassLoader.getModulesFrom(modulesDir);
+        modules.forEach(Module::register);
 
         TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
 

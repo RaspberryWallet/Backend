@@ -15,8 +15,8 @@ class DatabaseTest {
 
     private static final byte[] KEYPART_1_1 = new byte[]{11, 22, 33, 44};
     private static final byte[] KEYPART_1_2 = "#$#$^$^!#".getBytes();
-    private static final String KEYPART_1_1_MODULE = "io.raspberrywallet.manager.modules.ExampleModule";
-    private static final String KEYPART_1_2_MODULE = "io.raspberrywallet.manager.modules.PushButtonModule";
+    private static final String KEYPART_1_1_MODULE = "io.raspberrywallet.manager.modules.example.ExampleModule";
+    private static final String KEYPART_1_2_MODULE = "io.raspberrywallet.manager.modules.pushbutton.PushButtonModule";
 
     private static WalletEntity walletEntity1 = null;
     private static KeyPartEntity keyPartEntity1_1 = new KeyPartEntity();

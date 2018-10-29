@@ -56,10 +56,21 @@ public class ModuleClassLoader {
                 {
                     try {
                         if (verifyJarSignature(file)) {
-                            String className = "io.raspberrywallet.manager.modules."
-                                    + file.getName().substring(0, file.getName().indexOf("."));
-                            return classLoader.loadClass(className);
+
+                            String fileName = file.getName();
+
+                            String packageName = "io.raspberrywallet.manager.modules." +
+                                    fileName.substring(0, fileName.indexOf("Module")) // PinModule.class/.jar -> Pin
+                                            .toLowerCase();
+
+                            String className = fileName.substring(0, fileName.indexOf("."));
+                            String fullClassName = packageName + "." + className;
+
+                            Logger.info(String.format("Successfully verified module %s", fullClassName));
+
+                            return classLoader.loadClass(fullClassName);
                         } else {
+                            Logger.err(String.format("Failed to verify module %s", file.getName()));
                             return null;
                         }
                     } catch (ClassNotFoundException | IOException e) {

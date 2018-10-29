@@ -7,7 +7,7 @@ public enum Opts {
     SERVER(new Option("server", true, "HTTP Server impl"), "ktor"),
     KTOR(new Option("ktor", "Use Ktor as HTTP Server impl")),
     VERTX(new Option("vertx", "Use VertX as HTTP Server impl")),
-    MODULES(new Option("modules", true, "Modules classes directory path"), "modules"),
+    MODULES(new Option("modules", true, "Modules classes directory path"), "/opt/wallet/modules"),
     SYNC(new Option("sync", "Sync bitcoin blockchain"));
 
     public final Option option;

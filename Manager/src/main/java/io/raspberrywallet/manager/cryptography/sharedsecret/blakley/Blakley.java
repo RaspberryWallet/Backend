@@ -4,7 +4,7 @@ package io.raspberrywallet.manager.cryptography.sharedsecret.blakley;
 import io.raspberrywallet.manager.cryptography.sharedsecret.blakley.JLinAlg.*;
 
 import java.math.BigInteger;
-import java.util.Random;
+import java.security.SecureRandom;
 
 /**
  * <p> Calculate Bakley scheme. You need t keys of n for resolve the secret </p>
@@ -23,7 +23,7 @@ public class Blakley {
         BigInteger equation[] = new BigInteger[cords.length+1];
         BigInteger sum = new BigInteger("0");
         for(int i = 0; i < cords.length; i++){
-            equation[i] = new BigInteger(bits, new Random());
+            equation[i] = new BigInteger(bits, new SecureRandom());
             sum = sum.add(cords[i].multiply(equation[i]));
             //System.out.println(cords[i] + " * " + equation[i]);
         }

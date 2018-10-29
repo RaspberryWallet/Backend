@@ -1,6 +1,7 @@
-package io.raspberrywallet.manager.modules;
+package io.raspberrywallet.manager.modules.pin;
 
-import io.raspberrywallet.RequiredInputNotFound;
+import io.raspberrywallet.contract.RequiredInputNotFound;
+import io.raspberrywallet.manager.modules.Module;
 
 import java.math.BigInteger;
 
