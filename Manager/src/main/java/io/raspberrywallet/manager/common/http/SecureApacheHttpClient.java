@@ -6,7 +6,7 @@ import org.apache.http.client.fluent.Form;
 
 import java.io.IOException;
 
-public class SecureApacheApacheHttpClient extends ApacheHttpClient {
+public class SecureApacheHttpClient extends ApacheHttpClient {
     
     @Override
     public HttpResponse sendPOSTRequest(Form body, String endpoint) throws IOException {

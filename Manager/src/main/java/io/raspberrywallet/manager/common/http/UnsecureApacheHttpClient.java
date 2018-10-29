@@ -15,11 +15,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UnsecureApacheApacheHttpClient extends ApacheHttpClient {
+public class UnsecureApacheHttpClient extends ApacheHttpClient {
     
     private Header[] defaultHeaders;
     
-    public UnsecureApacheApacheHttpClient(Form defaultHeaders) {
+    public UnsecureApacheHttpClient(Form defaultHeaders) {
         this.defaultHeaders = toHeadersArray(defaultHeaders);
     }
     
