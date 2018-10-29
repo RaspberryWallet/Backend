@@ -1,12 +1,13 @@
 package io.raspberrywallet.manager.database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.raspberrywallet.manager.common.interfaces.Destroyable;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Arrays;
 
-public class KeyPartEntity {
+public class KeyPartEntity implements Destroyable {
     @Getter
     @Setter
     @JsonProperty("payload")
@@ -20,17 +21,15 @@ public class KeyPartEntity {
     public KeyPartEntity() {
 
     }
-
+    
     public KeyPartEntity(byte[] payload, String module) {
         this.payload = payload;
         this.module = module;
     }
-
-    /*
-     * Filling everything with zeroes to keep RAM safe
-     * */
-    protected synchronized void clean() {
-
+    
+    @Override
+    public synchronized void destroy() {
+        
         if (payload != null) {
             for (int i = 0; i < payload.length; ++i)
                 payload[i] = (byte) (i % 120);

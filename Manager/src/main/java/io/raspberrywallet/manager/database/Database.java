@@ -5,6 +5,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stasbar.Logger;
+import io.raspberrywallet.manager.common.interfaces.Destroyable;
+import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
+import io.raspberrywallet.manager.cryptography.common.Password;
+import io.raspberrywallet.manager.cryptography.crypto.AESEncryptedObject;
+import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
+import org.apache.commons.lang.SerializationException;
+import org.apache.commons.lang.SerializationUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,11 +24,13 @@ import java.util.Optional;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-public class Database {
+public class Database implements Destroyable {
 
     @JsonProperty("wallet")
     public WalletEntity wallet = null;
 
+    //TODO change this to accept user input as password
+    private Password password = new Password("abcdag".toCharArray());
 
     private File databaseFile;
 
@@ -48,14 +59,12 @@ public class Database {
         this.wallet = wallet;
     }
 
-
-    /**
-     * zerofill everything in RAM
-     */
-    private synchronized void cleanUp() {
+    
+    @Override
+    public synchronized void destroy() {
         if (wallet == null) return;
         for (KeyPartEntity kpe : wallet.getParts())
-            kpe.clean();
+            kpe.destroy();
         wallet.getParts().clear();
         wallet = null;
     }
@@ -80,7 +89,7 @@ public class Database {
      */
     private void loadDatabase(File file) throws IOException {
         if (Files.size(file.toPath()) == 0) return;
-        cleanUp();
+        destroy();
         byte[] data = Files.readAllBytes(file.toPath());
         //todo enable decrypting
         //data = decrypt(data);
@@ -121,24 +130,20 @@ public class Database {
         saveDatabase(databaseFile);
     }
 
-    public byte[] encrypt(byte[] data) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DeflaterOutputStream dos = new DeflaterOutputStream(baos);
-        dos.write(data);
-        dos.flush();
-        dos.close();
-        //TODO encryption
-        return baos.toByteArray();
+    public byte[] encrypt(byte[] data) throws EncryptionException {
+        ByteWrapper wrappedData = new ByteWrapper(data);
+        
+        AESEncryptedObject<ByteWrapper> encryptedData =
+                CryptoObject.encrypt(wrappedData, password);
+        
+        return SerializationUtils.serialize(encryptedData);
     }
 
-    public byte[] decrypt(byte[] data) throws IOException {
-        ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        InflaterInputStream iis = new InflaterInputStream(bais);
-        int len = -1;
-        byte[] buffer = new byte[4096];
-        while ((len = iis.read(buffer)) != -1) ; //TODO join arrays into one blob
-        //TODO decryption
-        return buffer;
+    public byte[] decrypt(byte[] data) throws DecryptionException {
+        AESEncryptedObject<ByteWrapper> encryptedObject =
+                (AESEncryptedObject<ByteWrapper>) SerializationUtils.deserialize(data);
+        
+        return CryptoObject.decrypt(encryptedObject, password).getData();
     }
 
     public void saveWallet(WalletEntity walletEntity) throws IOException {
