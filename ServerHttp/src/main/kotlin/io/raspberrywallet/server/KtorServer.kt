@@ -1,4 +1,4 @@
-package io.raspberrywallet.ktor
+package io.raspberrywallet.server
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -24,7 +24,7 @@ import io.ktor.routing.post
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.raspberrywallet.Manager
+import io.raspberrywallet.contract.Manager
 import io.raspberrywallet.server.Paths.Bitcoin.availableBalance
 import io.raspberrywallet.server.Paths.Bitcoin.currentAddress
 import io.raspberrywallet.server.Paths.Bitcoin.estimatedBalance

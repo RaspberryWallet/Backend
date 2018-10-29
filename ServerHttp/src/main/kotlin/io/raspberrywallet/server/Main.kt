@@ -1,10 +1,7 @@
-package io.raspberrywallet
+package io.raspberrywallet.server
 
 import io.raspberrywallet.mock.ManagerMock
-import io.raspberrywallet.server.startKtorServer
 
 internal fun main(args: Array<String>) {
     startKtorServer(ManagerMock())
 }
-
-
