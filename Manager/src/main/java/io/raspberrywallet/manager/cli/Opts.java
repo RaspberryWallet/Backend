@@ -3,8 +3,11 @@ package io.raspberrywallet.manager.cli;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 
+import java.nio.file.Paths;
+
 public enum Opts {
-    MODULES(new Option("modules", true, "Modules classes directory path"), "modules");
+    MODULES(new Option("modules", true, "Modules classes directory path"),
+            Paths.get("/", "opt", "wallet", "modules").toString());
 
     public final Option option;
     public final String def;
