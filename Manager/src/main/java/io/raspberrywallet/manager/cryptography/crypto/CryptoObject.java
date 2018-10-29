@@ -27,7 +27,7 @@ public class CryptoObject {
      * @throws EncryptionException If there is any error with encryption, then it's caught and thrown as
      *                             EncryptionException, with original or custom error message.
      */
-    public <E extends Serializable> AESEncryptedObject<E> encrypt(E object, Password password) throws EncryptionException {
+    public static <E extends Serializable> AESEncryptedObject<E> encrypt(E object, Password password) throws EncryptionException {
         AESCipherParams aesCipherParams = new AESCipherParams();
         
         try {
@@ -52,7 +52,7 @@ public class CryptoObject {
      * @throws EncryptionException If there is any error with encryption, then it's caught and thrown as
      *                             EncryptionException, with original or custom error message.
      */
-    public <E extends Serializable> RSAEncryptedObject<E> encrypt(E object, PublicKey publicKey) throws EncryptionException {
+    public static <E extends Serializable> RSAEncryptedObject<E> encrypt(E object, PublicKey publicKey) throws EncryptionException {
         RSACipherParams rsaCipherParams = new RSACipherParams();
         try {
             Cipher cipher = rsaCipherParams.getEncryptCipher(publicKey);
@@ -64,7 +64,7 @@ public class CryptoObject {
         }
     }
     
-    private byte[] encrypt(Serializable object, Cipher cipher) throws BadPaddingException, IllegalBlockSizeException {
+    private static byte[] encrypt(Serializable object, Cipher cipher) throws BadPaddingException, IllegalBlockSizeException {
         byte[] serializedObject = SerializationUtils.serialize(object);
         return cipher.doFinal(serializedObject);
     }
@@ -81,7 +81,7 @@ public class CryptoObject {
      * @throws DecryptionException If there is any error in decryption, then it is caught and thrown as
      *                             DecryptionException, with it's original or custom message.
      */
-    public <E extends Serializable> E decrypt(AESEncryptedObject<E> object, Password password) throws DecryptionException {
+    public static <E extends Serializable> E decrypt(AESEncryptedObject<E> object, Password password) throws DecryptionException {
         if (!object.isEncrypted())
             throw new DecryptionException("Given object is not encrypted.");
         
@@ -105,7 +105,7 @@ public class CryptoObject {
      * @throws DecryptionException If there is any error in decryption, then it is caught and thrown as
      *                             DecryptionException, with it's original or custom message.
      */
-    public <E extends Serializable> E decrypt(RSAEncryptedObject<E> object, PrivateKey privateKey) throws DecryptionException {
+    public static <E extends Serializable> E decrypt(RSAEncryptedObject<E> object, PrivateKey privateKey) throws DecryptionException {
         if(!object.isEncrypted())
             throw new DecryptionException("Given object is not encrypted.");
         
@@ -119,7 +119,7 @@ public class CryptoObject {
         }
     }
     
-    private <E extends Serializable> E decrypt(EncryptedObject<E> object, Cipher cipher) throws BadPaddingException, IllegalBlockSizeException {
+    private static <E extends Serializable> E decrypt(EncryptedObject<E> object, Cipher cipher) throws BadPaddingException, IllegalBlockSizeException {
         byte[] decryptedObject = cipher.doFinal(object.getSerializedObject());
         return object.getOriginalObject(decryptedObject);
     }

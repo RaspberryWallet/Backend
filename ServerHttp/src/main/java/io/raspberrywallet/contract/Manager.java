@@ -1,7 +1,8 @@
-package io.raspberrywallet;
+package io.raspberrywallet.contract;
 
-import io.raspberrywallet.module.Module;
-import io.raspberrywallet.module.ModuleState;
+
+import io.raspberrywallet.contract.module.Module;
+import io.raspberrywallet.contract.module.ModuleState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

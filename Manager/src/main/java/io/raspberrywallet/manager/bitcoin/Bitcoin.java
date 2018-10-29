@@ -2,7 +2,7 @@ package io.raspberrywallet.manager.bitcoin;
 
 import com.google.common.util.concurrent.Service;
 import com.stasbar.Logger;
-import io.raspberrywallet.WalletNotInitialized;
+import io.raspberrywallet.contract.WalletNotInitialized;
 import org.bitcoinj.core.*;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.TestNet3Params;

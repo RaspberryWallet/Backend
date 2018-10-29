@@ -1,17 +1,17 @@
 package io.raspberrywallet.manager;
 
-import io.raspberrywallet.RequiredInputNotFound;
-import io.raspberrywallet.WalletNotInitialized;
-import io.raspberrywallet.WalletStatus;
+import io.raspberrywallet.contract.RequiredInputNotFound;
+import io.raspberrywallet.contract.WalletNotInitialized;
+import io.raspberrywallet.contract.WalletStatus;
+import io.raspberrywallet.contract.module.ModuleState;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirKey;
 import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.database.KeyPartEntity;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
-import io.raspberrywallet.manager.modules.ExampleModule;
 import io.raspberrywallet.manager.modules.Module;
-import io.raspberrywallet.manager.modules.PinModule;
-import io.raspberrywallet.module.ModuleState;
+import io.raspberrywallet.manager.modules.example.ExampleModule;
+import io.raspberrywallet.manager.modules.pin.PinModule;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.wallet.DeterministicSeed;
@@ -77,7 +77,7 @@ class ManagerTest {
 
     @Test
     void getModules() {
-        manager.getModules().forEach(module -> assertTrue(module instanceof io.raspberrywallet.module.Module));
+        manager.getModules().forEach(module -> assertTrue(module instanceof io.raspberrywallet.contract.module.Module));
     }
 
     @Test
