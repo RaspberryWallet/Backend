@@ -82,7 +82,7 @@ public abstract class Module {
      *
      * @param status - new status
      */
-    protected void setStatusString(@NotNull String status) {
+    public void setStatusString(@NotNull String status) {
         this.statusString = status;
     }
 
@@ -109,7 +109,7 @@ public abstract class Module {
      * @param key - key of the parameter
      * @return - if key exists
      */
-    protected boolean hasInput(String key) {
+    public boolean hasInput(String key) {
         return input.containsKey(key);
     }
 
@@ -120,7 +120,7 @@ public abstract class Module {
      * @return - value of the parameter
      */
     @Nullable
-    protected String getInput(String key) {
+    public String getInput(String key) {
         return input.get(key);
     }
 
