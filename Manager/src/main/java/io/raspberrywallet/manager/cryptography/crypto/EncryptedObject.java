@@ -9,6 +9,8 @@ import java.io.Serializable;
 
 public abstract class EncryptedObject<E extends Serializable> implements Serializable {
     
+    private static final long serializationUUID = 63465294432588745L;
+    
     private byte[] serializedObject;
     CipherParams cipherParams;
     private boolean isEncrypted;

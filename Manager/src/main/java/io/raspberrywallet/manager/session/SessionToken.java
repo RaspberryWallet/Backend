@@ -2,7 +2,7 @@ package io.raspberrywallet.manager.session;
 
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.common.ArrayDestroyer;
-import io.raspberrywallet.manager.common.Destroyable;
+import io.raspberrywallet.manager.common.interfaces.Destroyable;
 
 import java.security.SecureRandom;
 import java.util.Date;

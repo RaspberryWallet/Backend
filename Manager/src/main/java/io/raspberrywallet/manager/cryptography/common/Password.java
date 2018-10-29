@@ -1,7 +1,7 @@
 package io.raspberrywallet.manager.cryptography.common;
 
 import io.raspberrywallet.manager.common.ArrayDestroyer;
-import io.raspberrywallet.manager.common.Destroyable;
+import io.raspberrywallet.manager.common.interfaces.Destroyable;
 
 public class Password implements Destroyable {
     

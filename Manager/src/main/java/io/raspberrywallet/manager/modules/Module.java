@@ -1,8 +1,9 @@
 package io.raspberrywallet.manager.modules;
 
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
+import org.jetbrains.annotations.NotNull;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -47,7 +48,7 @@ public abstract class Module {
      * @param keyPart - unencrypted key part
      * @return encrypted payload
      */
-    public abstract byte[] encrypt(byte[] keyPart) throws RequiredInputNotFound;
+    public abstract byte[] encrypt(byte[] keyPart) throws RequiredInputNotFound, EncryptionException;
 
     /**
      * @param payload - encrypted payload
@@ -81,7 +82,7 @@ public abstract class Module {
      *
      * @param status - new status
      */
-    void setStatusString(@NotNull String status) {
+    public void setStatusString(@NotNull String status) {
         this.statusString = status;
     }
 
