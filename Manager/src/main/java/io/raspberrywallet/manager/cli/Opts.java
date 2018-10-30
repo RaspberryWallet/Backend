@@ -3,13 +3,11 @@ package io.raspberrywallet.manager.cli;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 
+import java.nio.file.Paths;
+
 public enum Opts {
-    SERVER(new Option("server", true, "HTTP Server impl"), "ktor"),
-    KTOR(new Option("ktor", "Use Ktor as HTTP Server impl")),
-    VERTX(new Option("vertx", "Use VertX as HTTP Server impl")),
-    MODULES(new Option("modules", true, "Modules classes directory path"), "modules"),
-    CONFIG(new Option("config", true, "Config location"), "config.yaml"),
-    SYNC(new Option("sync", "Sync bitcoin blockchain"));
+    MODULES(new Option("modules", true, "Modules classes directory path"),
+            Paths.get("/", "opt", "wallet", "modules").toString());
 
     public final Option option;
     public final String def;

@@ -1,0 +1,6 @@
+rootProject.name = 'Backend'
+include ':Manager'
+include ':ServerHttp'
+
+project(':Manager').projectDir = "$rootDir/Manager" as File
+project(':ServerHttp').projectDir = "$rootDir/ServerHttp" as File

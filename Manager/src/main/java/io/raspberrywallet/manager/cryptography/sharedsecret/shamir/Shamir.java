@@ -1,7 +1,7 @@
 package io.raspberrywallet.manager.cryptography.sharedsecret.shamir;
 
 import java.math.BigInteger;
-import java.util.Random;
+import java.security.SecureRandom;
 /**
  * <p> Calculate Shamir scheme. You need t shares of n for resolve the secret </p>
  */
@@ -12,17 +12,17 @@ public class Shamir {
      * Create a share using Shamir's scheme
      *
      * @param x Shamir's shares
-     * @param k array of ShamirKeys
+     * @param shamirKeys array of ShamirKeys
      * @return true is x is in k
      */
-    public static boolean isRepeat(BigInteger x, ShamirKey[] k) {
-        if (k.length == 0)
+    public static boolean isRepeat(BigInteger x, ShamirKey[] shamirKeys) {
+        if (shamirKeys.length == 0)
             return false;
 
-        for (int i = 0; i < k.length; i++) {
-            if (k[i] == null)
+        for (ShamirKey key : shamirKeys) {
+            if (key == null)
                 break;
-            if (k[i].getX() == x)
+            if (key.getX().equals(x))
                 return true;
         }
 
@@ -37,7 +37,7 @@ public class Shamir {
      * @param p prime number (for calulate mod)
      * @return solution of polynomial
      */
-    public static BigInteger calculatePolynomial(BigInteger s[], BigInteger x, BigInteger p) {
+    private static BigInteger calculatePolynomial(BigInteger s[], BigInteger x, BigInteger p) {
         BigInteger result = BigInteger.ZERO;
         for (int i = 0; i < s.length; i++)
             result = result.add(s[i].multiply(x.pow(i)));
@@ -66,7 +66,7 @@ public class Shamir {
         //System.out.println("s(0) = " + secret + " (secret)" );
 
         for (int i = 1; i < t; i++) {
-            s[i] = new BigInteger(numBits, new Random());
+            s[i] = new BigInteger(numBits, new SecureRandom());
             //System.out.println("s("+i+") = " +s[i]);
         }
 
@@ -118,12 +118,12 @@ public class Shamir {
         if (t > n)
             throw new ShamirException("number of need shares greater than number of shares");
 
-        BigInteger prime = BigInteger.probablePrime(numBits, new Random());
+        BigInteger prime = BigInteger.probablePrime(numBits, new SecureRandom());
 
         BigInteger fx, x;
         for (int i = 1; i <= n; i++) {
             do {
-                x = new BigInteger(numBits, new Random());
+                x = new BigInteger(numBits, new SecureRandom());
             } while (isRepeat(x, keys));
             fx = calculatePolynomial(polynomialParams, x, prime);
             keys[i - 1] = new ShamirKey();

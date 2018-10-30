@@ -1,12 +1,16 @@
 package io.raspberrywallet.manager.modules;
 
 import com.stasbar.Logger;
+import io.raspberrywallet.manager.pki.JarVerifier;
+import io.raspberrywallet.manager.pki.PkiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -22,13 +26,21 @@ public class ModuleClassLoader {
     @NotNull
     public static List<Module> getModulesFrom(File modulesDir) {
         if (!modulesDir.exists()) {
-            System.out.println("Modules folder not found, skipping");
-            return Collections.emptyList();
+            System.out.println("\"" + modulesDir.getPath() + "\" doesn't exist! Defaulting to /opt/wallet/modules");
+
+            modulesDir = new File("/opt/wallet/modules");
+            if (!modulesDir.exists() && !modulesDir.mkdirs()) {
+                System.err.println("Cannot create necessary directories!");
+                return Collections.emptyList();
+            }
         }
+
         File[] files = Objects.requireNonNull(modulesDir.listFiles(), "moduleDir files can not be null");
         try {
             URL url = modulesDir.toURI().toURL();
-            URLClassLoader classLoader = new URLClassLoader(new URL[]{url});
+
+            URLClassLoader classLoader = new URLClassLoader(new URL[]{url}, ModuleClassLoader.class.getClassLoader());
+
             List<Class<?>> classes = getClasses(files, classLoader);
             List<Module> modules = instaniateModulesObjects(classes);
             printLoadedModules(modules);
@@ -43,14 +55,43 @@ public class ModuleClassLoader {
         return Arrays.stream(files).map(file ->
                 {
                     try {
-                        String className = "io.raspberrywallet.manager.modules." + file.getName().replace(".class", "");
-                        return classLoader.loadClass(className);
-                    } catch (ClassNotFoundException e) {
+                        if (verifyJarSignature(file)) {
+
+                            String fileName = file.getName();
+
+                            String packageName = "io.raspberrywallet.manager.modules." +
+                                    fileName.substring(0, fileName.indexOf("Module")) // PinModule.class/.jar -> Pin
+                                            .toLowerCase();
+
+                            String className = fileName.substring(0, fileName.indexOf("."));
+                            String fullClassName = packageName + "." + className;
+
+                            Logger.info(String.format("Successfully verified module %s", fullClassName));
+
+                            return classLoader.loadClass(fullClassName);
+                        } else {
+                            Logger.err(String.format("Failed to verify module %s", file.getName()));
+                            return null;
+                        }
+                    } catch (ClassNotFoundException | IOException e) {
                         e.printStackTrace();
                         return null;
                     }
                 }
         ).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    private static boolean verifyJarSignature(File file) throws MalformedURLException {
+        JarVerifier jarVerifier = new JarVerifier(file.toURI().toURL());
+        try {
+            jarVerifier.verify(PkiUtils.getCert());
+            return true;
+        } catch (SecurityException e) {
+            return false;
+        } catch (CertificateException | IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private static List<Module> instaniateModulesObjects(List<Class<?>> classes) {

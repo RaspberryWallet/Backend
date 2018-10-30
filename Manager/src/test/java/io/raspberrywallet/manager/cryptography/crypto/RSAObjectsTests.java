@@ -20,7 +20,6 @@ public class RSAObjectsTests {
     
     private static final RSACipherParams RSA_CIPHER_PARAMS = new RSACipherParams();
     private static final KeyPair defaultKeyPair = RSA_CIPHER_PARAMS.getKeyPairDefault();
-    private static final CryptoObject cryptoObject = new CryptoObject();
     private static final Random random = new Random();
     private static byte[][] arrayOfRandomData;
     
@@ -43,10 +42,10 @@ public class RSAObjectsTests {
         byte[] serializedData = SerializationUtils.serialize(data);
         
         try {
-             RSAEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(data, defaultKeyPair.getPublic());
+             RSAEncryptedObject<ByteWrapper> encryptedObject = CryptoObject.encrypt(data, defaultKeyPair.getPublic());
              assertFalse(Arrays.equals(encryptedObject.getSerializedObject(), serializedData));
              
-             ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, defaultKeyPair.getPrivate());
+             ByteWrapper decryptedObject = CryptoObject.decrypt(encryptedObject, defaultKeyPair.getPrivate());
              assertEquals(decryptedObject, data);
              
         } catch (EncryptionException e) {
@@ -63,10 +62,10 @@ public class RSAObjectsTests {
             byte[] serializedData = SerializationUtils.serialize(data);
         
             try {
-                RSAEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(data, defaultKeyPair.getPublic());
+                RSAEncryptedObject<ByteWrapper> encryptedObject = CryptoObject.encrypt(data, defaultKeyPair.getPublic());
                 assertFalse(Arrays.equals(encryptedObject.getSerializedObject(), serializedData));
             
-                ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, defaultKeyPair.getPrivate());
+                ByteWrapper decryptedObject = CryptoObject.decrypt(encryptedObject, defaultKeyPair.getPrivate());
                 assertEquals(decryptedObject, data);
             
             } catch (EncryptionException e) {
@@ -83,10 +82,10 @@ public class RSAObjectsTests {
         KeyPair newKeyPair = RSA_CIPHER_PARAMS.getKeyPairDefault();
         
         try {
-            RSAEncryptedObject<ByteWrapper> encryptedObject = cryptoObject.encrypt(data, defaultKeyPair.getPublic());
+            RSAEncryptedObject<ByteWrapper> encryptedObject = CryptoObject.encrypt(data, defaultKeyPair.getPublic());
             
             assertThrows(DecryptionException.class, () -> {
-                ByteWrapper decryptedObject = cryptoObject.decrypt(encryptedObject, newKeyPair.getPrivate());
+                ByteWrapper decryptedObject = CryptoObject.decrypt(encryptedObject, newKeyPair.getPrivate());
             });
             
         } catch (EncryptionException e) {

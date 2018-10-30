@@ -6,10 +6,6 @@ public class CliUtils {
     public static CommandLine parseArgs(String[] args) {
         Options options = new Options() {{
             addOption(Opts.MODULES.option);
-            addOption(Opts.SYNC.option);
-            addOption(Opts.SERVER.option);
-            addOption(Opts.KTOR.option);
-            addOption(Opts.VERTX.option);
         }};
         HelpFormatter helpFormatter = new HelpFormatter();
         DefaultParser parser = new DefaultParser();
