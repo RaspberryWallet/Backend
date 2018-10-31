@@ -19,7 +19,7 @@ class AuthServerTests {
     private AuthorizationServerModule module;
     
     @BeforeEach
-    void initializeModule() {
+    void initializeModule() throws IllegalAccessException, InstantiationException {
         module = new AuthorizationServerModule();
         module.setInput("password", "abadziaba123");
     }

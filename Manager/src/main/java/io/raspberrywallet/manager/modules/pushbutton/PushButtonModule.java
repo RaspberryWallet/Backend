@@ -5,17 +5,22 @@ import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalInput;
 import com.pi4j.io.gpio.RaspiPin;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
+import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.modules.Module;
 
 import static io.raspberrywallet.manager.modules.pushbutton.PushButtonModule.Inputs.PRESSED;
 
-public class PushButtonModule extends Module {
+public class PushButtonModule extends Module<PushButtonConfig> {
 
     private final GpioController gpio = GpioFactory.getInstance();
     private final GpioPinDigitalInput pushButton = gpio.provisionDigitalInputPin(RaspiPin.GPIO_23);
 
-    public PushButtonModule() {
-        super("Press Button");
+    public PushButtonModule() throws InstantiationException, IllegalAccessException {
+        super("Press Button", PushButtonConfig.class);
+    }
+
+    public PushButtonModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException {
+        super("Press Button", modulesConfiguration, PushButtonConfig.class);
     }
 
     @Override

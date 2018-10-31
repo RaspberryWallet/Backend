@@ -1,13 +1,17 @@
 package io.raspberrywallet.manager.modules.example;
 
 
+import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.modules.Module;
 
-public class ExampleModule extends Module {
+public class ExampleModule extends Module<ExampleConfig> {
+    public ExampleModule() throws InstantiationException, IllegalAccessException {
+        super("Do something", ExampleConfig.class);
+    }
 
-    public ExampleModule() {
-        super("Do something");
+    public ExampleModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException {
+        super("Do something", modulesConfiguration, ExampleConfig.class);
     }
 
     @Override

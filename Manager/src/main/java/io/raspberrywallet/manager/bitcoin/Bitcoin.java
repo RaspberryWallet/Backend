@@ -3,6 +3,7 @@ package io.raspberrywallet.manager.bitcoin;
 import com.google.common.util.concurrent.Service;
 import com.stasbar.Logger;
 import io.raspberrywallet.contract.WalletNotInitialized;
+import io.raspberrywallet.manager.Configuration;
 import org.bitcoinj.core.*;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.TestNet3Params;
@@ -20,30 +21,39 @@ import java.util.concurrent.Executors;
  * It uses WalletAppKit object composition pattern in order to hide unimportant functionality and safe extension.
  */
 public class Bitcoin {
-    final File rootDirectory;
     private final String walletFileName;
+    public final File walletFile;
     private final NetworkParameters params;
     @Nullable
     private WalletAppKit kit;
+    private final Configuration configuration;
+    private final File bitcoinDirectory;
 
     public Bitcoin() {
-        this(TestNet3Params.get());
+        this(new Configuration(), TestNet3Params.get());
     }
 
-    Bitcoin(NetworkParameters params) {
-        this(new File("."), params);
+    public Bitcoin(NetworkParameters params) {
+        this(new Configuration(), params);
     }
 
-    private Bitcoin(File rootDirectory, NetworkParameters params) {
+    public Bitcoin(Configuration configuration) {
+        this(configuration, TestNet3Params.get());
+    }
+
+    private Bitcoin(Configuration configuration, NetworkParameters params) {
         BriefLogFormatter.init();
         this.params = params;
-        this.rootDirectory = rootDirectory;
+        this.configuration = configuration;
         this.walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
+        this.bitcoinDirectory = new File(configuration.getBasePathPrefix(), "bitcoin");
+        this.walletFile = new File(bitcoinDirectory, walletFileName + ".wallet");
     }
 
     private void setupWalletKit(@Nullable DeterministicSeed seed) {
+
         // If seed is non-null it means we are restoring from backup.
-        kit = new WalletAppKit(params, rootDirectory, walletFileName) {
+        kit = new WalletAppKit(params, bitcoinDirectory, walletFileName) {
             @Override
             protected void onSetupCompleted() {
                 Logger.info("Bitcoin setup complete");
@@ -153,9 +163,5 @@ public class Bitcoin {
             e.printStackTrace();
 
         }
-    }
-
-    public File getWalletFile() {
-        return new File(rootDirectory, walletFileName + ".wallet");
     }
 }

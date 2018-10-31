@@ -187,7 +187,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         try {
             Wallet wallet = bitcoin.getWallet();
             wallet.encrypt(keyCrypter, key);
-            wallet.saveToFile(bitcoin.getWalletFile());
+            wallet.saveToFile(bitcoin.walletFile);
             return true;
         } catch (KeyCrypterException | IOException e) {
             Logger.err(e.getMessage());

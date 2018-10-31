@@ -24,10 +24,15 @@ public class Main {
     public static void main(String... args) throws IOException {
         CommandLine cmd = parseArgs(args);
 
-        Bitcoin bitcoin = new Bitcoin();
+        File yamlConfigFile = new File(Opts.CONFIG.getValue(cmd));
+        Configuration configuration = Configuration.fromYamlFile(yamlConfigFile);
+
+        Bitcoin bitcoin = new Bitcoin(configuration);
 
         File modulesDir = new File(Opts.MODULES.getValue(cmd));
-        List<Module> modules = ModuleClassLoader.getModulesFrom(modulesDir);
+        List<Module> modules = ModuleClassLoader.getModulesFrom(modulesDir, configuration.getModules());
+
+
         modules.forEach(Module::register);
 
         TemperatureMonitor temperatureMonitor = new TemperatureMonitor();

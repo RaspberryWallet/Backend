@@ -1,33 +1,73 @@
 package io.raspberrywallet.manager.modules;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stasbar.Logger;
+import io.raspberrywallet.contract.RequiredInputNotFound;
+import io.raspberrywallet.manager.Configuration;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import org.jetbrains.annotations.NotNull;
-import io.raspberrywallet.contract.RequiredInputNotFound;
-import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class Module {
+public abstract class Module<Config extends ModuleConfig> {
     @NotNull
     private String statusString;
 
     @NotNull
     private HashMap<String, String> input = new HashMap<>();
 
+    protected Config configuration;
+
     /**
-     * This constructor enforce that the state is always present
+     * This constructor enforce that the state and configuration is always present
      *
      * @param initialStatusString - initial module status string
      */
-    public Module(@NotNull String initialStatusString) {
+    public Module(@NotNull String initialStatusString, Class<Config> configClass)
+            throws IllegalAccessException, InstantiationException {
+
         statusString = initialStatusString;
+        configuration = configClass.newInstance();
     }
 
+    /**
+     * This constructor tries to parse configuration from yaml file else initialize with default one
+     * This constructor is required for dynamic instantiation
+     *
+     * @param initialStatusString - initial module status string
+     */
+    public Module(@NotNull String initialStatusString, Configuration.ModulesConfiguration modulesConfiguration,
+                  Class<Config> configClass) throws IllegalAccessException, InstantiationException {
+
+        statusString = initialStatusString;
+        Config newConfiguration = parseConfigurationFrom(modulesConfiguration, configClass);
+        if (newConfiguration == null) newConfiguration = configClass.newInstance();
+
+        configuration = newConfiguration;
+    }
+
+    private Config parseConfigurationFrom(Configuration.ModulesConfiguration moduleConfiguration,
+                                          Class<Config> configClass) {
+
+        String configId = getId();
+        JsonNode jsonNode = moduleConfiguration.get(configId);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return configuration = mapper.treeToValue(jsonNode, configClass);
+        } catch (IOException e) {
+            Logger.err("Failed to parse configuration");
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     public String getId() {
-        return this.getClass().getName();
+        return this.getClass().getSimpleName();
     }
 
     public io.raspberrywallet.contract.module.Module asServerModule() {
@@ -139,4 +179,5 @@ public abstract class Module {
     public String toString() {
         return "{\"id\":\"" + getId() + "\", \"status\":\"" + getStatusString() + "\"}";
     }
+
 }

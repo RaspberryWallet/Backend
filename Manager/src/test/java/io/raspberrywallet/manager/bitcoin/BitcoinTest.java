@@ -3,7 +3,6 @@ package io.raspberrywallet.manager.bitcoin;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.TestUtils;
 import org.bitcoinj.crypto.MnemonicException;
-import org.bitcoinj.params.TestNet3Params;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -22,14 +21,6 @@ public class BitcoinTest {
     @BeforeAll
     static void setup() {
         bitcoin = new Bitcoin();
-    }
-
-    @Test
-    void should_setup_test_net() throws WalletNotInitialized {
-        Bitcoin bitcoin = new Bitcoin(TestNet3Params.get());
-
-        assertEquals(bitcoin.getKit().params(), TestNet3Params.get());
-        assertEquals(bitcoin.getKit().directory(), bitcoin.rootDirectory);
     }
 
 
