@@ -11,6 +11,9 @@ import java.util.Arrays;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * These tests needs running authorization server to pass!
+ */
 class AuthServerTests {
     
     private byte[] encryptionData = "secret data".getBytes();

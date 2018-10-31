@@ -6,20 +6,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 @NoArgsConstructor
-public class KeyPartEntity implements Destroyable {
+public class KeyPartEntity implements Destroyable, Serializable {
   
     @Getter
     @Setter
     @JsonProperty("payload")
-    public byte[] payload;
+    private byte[] payload;
 
     @Getter
     @Setter
     @JsonProperty("module")
-    public String module;
+    private String module;
 
     public KeyPartEntity(byte[] payload, String module) {
         this.payload = payload;
@@ -52,4 +53,13 @@ public class KeyPartEntity implements Destroyable {
         }
         return super.equals(obj);
     }
+    
+    @Override
+    public int hashCode() {
+        int result = 17;
+        result = 31 * result + module.hashCode();
+        result = 31 * result + Arrays.hashCode(payload);
+        return result;
+    }
+    
 }

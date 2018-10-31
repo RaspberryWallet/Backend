@@ -7,48 +7,33 @@ import io.raspberrywallet.manager.cryptography.crypto.AESEncryptedObject;
 import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang.SerializationUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.Optional;
 
 public class Database implements Destroyable {
     
-    //TODO change this to load from configuration
-    private final static String DATABASE_FILE_PATH = "./database.bin";
+    private final static String DATABASE_FILE_PATH = "/opt/wallet/database.bin";
     
+    @Getter
+    @Setter
     @JsonProperty("wallet")
-    public WalletEntity wallet = null;
+    private WalletEntity wallet = null;
     
-    //TODO change this to accept user input as password
-    private Password password = new Password("changeme".toCharArray());
-
+    private Password password;
     private File databaseFile;
 
-    public Database() throws IOException, DecryptionException, EncryptionException {
-        this(false);
+    public Database(Password password) throws IOException, DecryptionException, EncryptionException {
+        this.password = password;
+        loadDatabase();
     }
 
-    public Database(boolean mock) throws IOException, DecryptionException, EncryptionException {
-        if (mock)
-            return;
-
-        databaseFile = new File(DATABASE_FILE_PATH);
-        if (!databaseFile.exists()) {
-            databaseFile.getParentFile().mkdirs();
-            databaseFile.createNewFile();
-            saveDatabase();
-        } else {
-            loadDatabase(databaseFile);
-        }
-    }
-
-    public void setWallet(WalletEntity wallet) {
-        this.wallet = wallet;
-    }
-    
     @Override
     public synchronized void destroy() {
         if (wallet == null)
@@ -58,20 +43,18 @@ public class Database implements Destroyable {
         wallet.getParts().clear();
         wallet = null;
     }
-
-    /**
-     * Return all wallets serialized as JSON
-     * @return - JSON
-     */
-    public byte[] getSerialized() {
-        return SerializationUtils.serialize(wallet);
+    
+    public void loadDatabase() throws IOException, DecryptionException, EncryptionException {
+        databaseFile = new File(DATABASE_FILE_PATH);
+        if (!databaseFile.exists()) {
+            databaseFile.getParentFile().mkdirs();
+            databaseFile.createNewFile();
+            saveDatabase();
+        } else {
+            loadDatabase(databaseFile);
+        }
     }
-
-    /**
-     * Loading database from encrypted file
-     * @param file - encrypted JSON file
-     * @throws IOException - filesystem problem
-     */
+    
     private void loadDatabase(File file) throws IOException, DecryptionException {
         if (Files.size(file.toPath()) == 0)
             return;
@@ -80,15 +63,16 @@ public class Database implements Destroyable {
         byte[] encryptedDatabase = Files.readAllBytes(file.toPath());
         setWallet(decrypt(encryptedDatabase));
     }
-
-    /**
-     * Save encrypted database to file
-     * @throws IOException - filesystem problem
-     */
-    private void saveDatabase() throws IOException, EncryptionException {
-        Files.write(databaseFile.toPath(), encrypt(wallet));
+    
+    public byte[] encrypt() throws EncryptionException {
+        return encrypt(wallet);
     }
-
+    
+    /**
+     * Use encrypt() instead.
+     * This method will become private.
+     */
+    @Deprecated
     public byte[] encrypt(WalletEntity wallet) throws EncryptionException {
         
         AESEncryptedObject<WalletEntity> encryptedData =
@@ -96,20 +80,48 @@ public class Database implements Destroyable {
         
         return SerializationUtils.serialize(encryptedData);
     }
-
+    
+    /**
+     * Use decrypt() instead.
+     * This method will become private.
+     */
+    @Deprecated
     public WalletEntity decrypt(byte[] data) throws DecryptionException {
         AESEncryptedObject<WalletEntity> encryptedObject =
                 (AESEncryptedObject<WalletEntity>) SerializationUtils.deserialize(data);
         
         return CryptoObject.decrypt(encryptedObject, password);
     }
-
+    
+    public void saveWallet() throws IOException, EncryptionException {
+        saveWallet(wallet);
+    }
+    
+    /**
+     * Use saveWallet() instead.
+     */
+    @Deprecated
     public void saveWallet(WalletEntity walletEntity) throws IOException, EncryptionException {
         setWallet(walletEntity);
         saveDatabase();
     }
-
+    
+    private void saveDatabase() throws IOException, EncryptionException {
+        if (wallet == null)
+            wallet = new WalletEntity();
+        
+        Files.write(databaseFile.toPath(), encrypt());
+    }
+    
     public Optional<KeyPartEntity> getKeypartForModuleId(String id) {
         return wallet.getParts().stream().filter(keyPart -> keyPart.getModule().equals(id)).findFirst();
+    }
+    
+    public boolean addKeyPart(KeyPartEntity keyPartEntity) {
+        return wallet.getParts().add(keyPartEntity);
+    }
+    
+    public boolean addAllKeyParts(Collection<KeyPartEntity> keyPartEntities) {
+        return wallet.getParts().addAll(keyPartEntities);
     }
 }
