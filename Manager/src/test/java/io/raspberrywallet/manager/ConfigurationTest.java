@@ -20,10 +20,9 @@ class ConfigurationTest {
                 "version: " + version + "\n" +
                 "session-length: " + sessionLength + "\n" +
                 "base-path-prefix: " + basePrefixDir + "\n" +
+                "autolock-time: 1800\n" +
                 "bitcoin:\n" +
-                "  autolock-time: 1800\n" +
-                "  wallet-filepath: 1800\n" +
-                "  blockchain-filepath: 1800\n" +
+                "  network: testnet\n" +
                 "\n" +
                 "\n" +
                 "modules:\n" +

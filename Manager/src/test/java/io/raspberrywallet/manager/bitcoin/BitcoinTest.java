@@ -1,6 +1,7 @@
 package io.raspberrywallet.manager.bitcoin;
 
 import io.raspberrywallet.contract.WalletNotInitialized;
+import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.TestUtils;
 import org.bitcoinj.crypto.MnemonicException;
 import org.junit.jupiter.api.BeforeAll;
@@ -20,12 +21,13 @@ public class BitcoinTest {
 
     @BeforeAll
     static void setup() {
-        bitcoin = new Bitcoin();
+        Configuration configuration = new Configuration();
+        bitcoin = new Bitcoin(configuration);
     }
 
 
     @Test
-    void should_restore_randomly_generated_mnemonic_words() throws NoSuchAlgorithmException, MnemonicException, WalletNotInitialized {
+    void should_restore_randomly_generated_mnemonic_words() throws NoSuchAlgorithmException, MnemonicException {
         List<String> mnemonicCode = TestUtils.generateRandomDeterministicMnemonicCode();
         mnemonicCode.forEach(System.out::println);
 

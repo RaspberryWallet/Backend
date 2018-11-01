@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.database;
 
+import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.cryptography.common.Password;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
@@ -21,14 +22,15 @@ class DatabaseTest {
     @BeforeEach
     void setUp() throws DecryptionException, EncryptionException {
         try {
-            database = new Database(password);
-            
+            Configuration configuration = new Configuration();
+            database = new Database(configuration, password);
+
             exampleModuleKeypart.setModule("io.raspberrywallet.manager.modules.example.ExampleModule");
             exampleModuleKeypart.setPayload("BGF$#Y%34".getBytes());
-            
+
             pushButtonModuleKeypart.setModule("io.raspberrywallet.manager.modules.pushbutton.PushButtonModule");
             pushButtonModuleKeypart.setPayload("$TN$@C54B".getBytes());
-            
+
             database.addKeyPart(exampleModuleKeypart);
             database.addKeyPart(pushButtonModuleKeypart);
 
@@ -44,15 +46,15 @@ class DatabaseTest {
         try {
             int walletHash = database.getWallet().hashCode();
             database.saveWallet();
-            
+
             // encrypted copy should still exists in file
             database.destroy();
-            
+
             database.loadDatabase();
             int decryptedWalletHash = database.getWallet().hashCode();
-    
+
             assertEquals(walletHash, decryptedWalletHash);
-            
+
         } catch (EncryptionException | DecryptionException | IOException e) {
             fail(e.getMessage());
         }

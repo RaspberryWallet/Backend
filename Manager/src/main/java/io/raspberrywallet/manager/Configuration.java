@@ -42,6 +42,12 @@ final public class Configuration {
     private String version = Configuration.class.getPackage().getImplementationVersion();
 
     /**
+     * AutoLock idle time in millis
+     */
+    @JsonProperty("autolock-time")
+    private long autoLockTime = 10000;
+
+    /**
      * Modules configuration object, hides HashMap<String, JsonNode>
      * TODO unwrap from ModulesConfiguration and provide custom accessors
      */
@@ -52,27 +58,27 @@ final public class Configuration {
      * Bitcoin configuration object
      */
     @JsonProperty("bitcoin")
-    private BitcoinConfiguration bitcoinConfig;
+    private BitcoinConfig bitcoinConfig;
 
     public Configuration() {
-        this(new ModulesConfiguration(), new BitcoinConfiguration());
+        this(new ModulesConfiguration(), new BitcoinConfig());
     }
 
     public Configuration(ModulesConfiguration modulesConfig) {
-        this(modulesConfig, new BitcoinConfiguration());
+        this(modulesConfig, new BitcoinConfig());
     }
 
-    public Configuration(BitcoinConfiguration bitcoinConfig) {
+    public Configuration(BitcoinConfig bitcoinConfig) {
         this(new ModulesConfiguration(), bitcoinConfig);
     }
 
-    public Configuration(ModulesConfiguration modulesConfig, BitcoinConfiguration bitcoinConfig) {
+    public Configuration(ModulesConfiguration modulesConfig, BitcoinConfig bitcoinConfig) {
         this.modulesConfig = modulesConfig;
         this.bitcoinConfig = bitcoinConfig;
         println(ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE));
     }
 
-    public Configuration(ModulesConfiguration modulesConfig, BitcoinConfiguration bitcoinConfig, long sessionLength,
+    public Configuration(ModulesConfiguration modulesConfig, BitcoinConfig bitcoinConfig, long sessionLength,
                          String basePathPrefix, String version) {
         this(modulesConfig, bitcoinConfig);
         this.sessionLength = sessionLength;
@@ -114,12 +120,8 @@ final public class Configuration {
     @NoArgsConstructor
     @Setter
     @Getter
-    static class BitcoinConfiguration {
-        @JsonProperty("autolock-time")
-        private long autoLockTime = 10000;
-        @JsonProperty("wallet-filepath")
-        public String walletFilePath;
-        @JsonProperty("blockchain-filepath")
-        private String blockChainFilePath;
+    public static class BitcoinConfig {
+        @JsonProperty("network")
+        public String networkName = "testnet";
     }
 }

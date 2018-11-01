@@ -1,12 +1,9 @@
 version: 0.5.0
 session-length: 3600000
 base-path-prefix: /opt/wallet/
+autolock-time: 1800
 bitcoin:
-  autolock-time: 1800
-  wallet-filepath: 1800
-  blockchain-filepath: 1800
-
-
+  network: testnet
 modules:
   PinModule:
     max-retry: 5

@@ -39,7 +39,8 @@ public class Main {
 
         //TODO change this to read from user
         Password password = new Password("changeme".toCharArray());
-        Database db = new Database(password);
+
+        Database db = new Database(configuration, password);
 
         Manager manager = new Manager(db, modules, bitcoin, temperatureMonitor);
 

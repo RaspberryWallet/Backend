@@ -6,6 +6,7 @@ import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.Configuration;
 import org.bitcoinj.core.*;
 import org.bitcoinj.kits.WalletAppKit;
+import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.utils.BriefLogFormatter;
 import org.bitcoinj.wallet.DeterministicSeed;
@@ -21,34 +22,35 @@ import java.util.concurrent.Executors;
  * It uses WalletAppKit object composition pattern in order to hide unimportant functionality and safe extension.
  */
 public class Bitcoin {
+    private final static String DIRECTORY_NAME = "bitcoin";
+
     private final String walletFileName;
     public final File walletFile;
     private final NetworkParameters params;
     @Nullable
     private WalletAppKit kit;
-    private final Configuration configuration;
     private final File bitcoinDirectory;
-
-    public Bitcoin() {
-        this(new Configuration(), TestNet3Params.get());
-    }
-
-    public Bitcoin(NetworkParameters params) {
-        this(new Configuration(), params);
-    }
+    private final Configuration.BitcoinConfig bitcoinConfig;
 
     public Bitcoin(Configuration configuration) {
-        this(configuration, TestNet3Params.get());
-    }
-
-    private Bitcoin(Configuration configuration, NetworkParameters params) {
         BriefLogFormatter.init();
-        this.params = params;
-        this.configuration = configuration;
+        this.bitcoinConfig = configuration.getBitcoinConfig();
+        this.params = parseNetworkFrom(configuration.getBitcoinConfig());
         this.walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
-        this.bitcoinDirectory = new File(configuration.getBasePathPrefix(), "bitcoin");
+        this.bitcoinDirectory = new File(configuration.getBasePathPrefix(), DIRECTORY_NAME);
         this.walletFile = new File(bitcoinDirectory, walletFileName + ".wallet");
     }
+
+    private NetworkParameters parseNetworkFrom(Configuration.BitcoinConfig bitcoinConfig) {
+        switch (bitcoinConfig.networkName) {
+            case "mainnet":
+                return MainNetParams.get();
+            case "testnet":
+            default:
+                return TestNet3Params.get();
+        }
+    }
+
 
     private void setupWalletKit(@Nullable DeterministicSeed seed) {
 
@@ -161,7 +163,6 @@ public class Bitcoin {
         } catch (InsufficientMoneyException e) {
             Logger.err(e.getMessage());
             e.printStackTrace();
-
         }
     }
 }
