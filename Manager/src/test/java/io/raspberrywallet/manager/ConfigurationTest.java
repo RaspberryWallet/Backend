@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,49 +13,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class ConfigurationTest {
 
     @Test
-    void fromYamlFile() throws IOException {
-        String version = "0.5.0";
-        long sessionLength = 3600000;
-        String basePrefixDir = "/opt/wallet";
-        String configYamlContent = "" +
-                "version: " + version + "\n" +
-                "session-length: " + sessionLength + "\n" +
-                "base-path-prefix: " + basePrefixDir + "\n" +
-                "autolock-time: 1800\n" +
-                "bitcoin:\n" +
-                "  network: testnet\n" +
-                "\n" +
-                "\n" +
-                "modules:\n" +
-                "  PinModule:\n" +
-                "    max-retry: 5\n" +
-                "\n" +
-                "  AuthorizationServerModule:\n" +
-                "    host: 89.89.89.89\n" +
-                "    port: 8080\n" +
-                "    endpoints:\n" +
-                "      set-secret: /authorization/secret/set\n" +
-                "      overwritte-secret: /authorization/secret/overwritte\n" +
-                "    https: true\n" +
-                "\n" +
-                "  PushButtonModule:\n" +
-                "    some: configuration\n" +
-                "\n" +
-                "  ExampleModule:\n" +
-                "    example: example\n" +
-                "    name: name\n";
-        File tmpConfig = new File("tempConfig.yaml");
-        try {
-            Files.write(tmpConfig.toPath(), configYamlContent.getBytes());
-            Configuration configuration = Configuration.fromYamlFile(tmpConfig);
-            assertEquals(configuration.getVersion(), version);
-            assertEquals(configuration.getSessionLength(), sessionLength);
-            assertEquals(configuration.getBasePathPrefix(), basePrefixDir);
-            assertEquals(configuration.getModulesConfig().size(), 4);
-            assertNotNull(configuration.getBitcoinConfig());
-        } finally {
-            tmpConfig.delete();
-        }
+    void fromYamlFile() {
+        URL configUrl = getClass().getClassLoader().getResource("files/exampleConfig.yaml");
+        File exampleConfigFile = new File(configUrl.getPath());
+        Configuration configuration = Configuration.fromYamlFile(exampleConfigFile);
+        
+        assertEquals(configuration.getVersion(), "0.5.0");
+        assertEquals(configuration.getSessionLength(), 3600000);
+        assertEquals(configuration.getBasePathPrefix(), "/opt/wallet/");
+        assertEquals(configuration.getModulesConfig().size(), 4);
+        assertNotNull(configuration.getBitcoinConfig());
     }
 
     @Test
