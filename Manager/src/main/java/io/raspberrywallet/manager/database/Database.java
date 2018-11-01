@@ -1,152 +1,127 @@
 package io.raspberrywallet.manager.database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.stasbar.Logger;
+import io.raspberrywallet.manager.common.interfaces.Destroyable;
+import io.raspberrywallet.manager.cryptography.common.Password;
+import io.raspberrywallet.manager.cryptography.crypto.AESEncryptedObject;
+import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang.SerializationUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.Optional;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
 
-public class Database {
-
+public class Database implements Destroyable {
+    
+    private final static String DATABASE_FILE_PATH = "/opt/wallet/database.bin";
+    
+    @Getter
+    @Setter
     @JsonProperty("wallet")
-    public WalletEntity wallet = null;
-
-
+    private WalletEntity wallet = null;
+    
+    private Password password;
     private File databaseFile;
 
-    public Database() throws IOException {
-        this(false);
+    public Database(Password password) throws IOException, DecryptionException, EncryptionException {
+        this.password = password;
+        loadDatabase();
     }
 
-
-    public Database(boolean mock) throws IOException {
-
-        if (mock) {
+    @Override
+    public synchronized void destroy() {
+        if (wallet == null)
             return;
-        }
-
-        databaseFile = new File("./database.bin");
+        
+        wallet.getParts().forEach(KeyPartEntity::destroy);
+        wallet.getParts().clear();
+        wallet = null;
+    }
+    
+    public void loadDatabase() throws IOException, DecryptionException, EncryptionException {
+        databaseFile = new File(DATABASE_FILE_PATH);
         if (!databaseFile.exists()) {
             databaseFile.getParentFile().mkdirs();
             databaseFile.createNewFile();
-            saveDatabase(databaseFile);
+            saveDatabase();
         } else {
             loadDatabase(databaseFile);
         }
     }
-
-    public void setWallet(WalletEntity wallet) {
-        this.wallet = wallet;
+    
+    private void loadDatabase(File file) throws IOException, DecryptionException {
+        if (Files.size(file.toPath()) == 0)
+            return;
+        
+        destroy();
+        byte[] encryptedDatabase = Files.readAllBytes(file.toPath());
+        setWallet(decrypt(encryptedDatabase));
     }
-
-
+    
+    public byte[] encrypt() throws EncryptionException {
+        return encrypt(wallet);
+    }
+    
     /**
-     * zerofill everything in RAM
+     * Use encrypt() instead.
+     * This method will become private.
      */
-    private synchronized void cleanUp() {
-        if (wallet == null) return;
-        for (KeyPartEntity kpe : wallet.getParts())
-            kpe.clean();
-        wallet.getParts().clear();
-        wallet = null;
+    @Deprecated
+    public byte[] encrypt(WalletEntity wallet) throws EncryptionException {
+        
+        AESEncryptedObject<WalletEntity> encryptedData =
+                CryptoObject.encrypt(wallet, password);
+        
+        return SerializationUtils.serialize(encryptedData);
     }
-
+    
     /**
-     * Return all wallets serialized as JSON
-     *
-     * @return - JSON
+     * Use decrypt() instead.
+     * This method will become private.
      */
-    public byte[] getSerialized() throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        byte[] data = mapper.writeValueAsBytes(wallet);
-        System.out.println(new String(data));
-        return data;
+    @Deprecated
+    public WalletEntity decrypt(byte[] data) throws DecryptionException {
+        AESEncryptedObject<WalletEntity> encryptedObject =
+                (AESEncryptedObject<WalletEntity>) SerializationUtils.deserialize(data);
+        
+        return CryptoObject.decrypt(encryptedObject, password);
     }
-
+    
+    public void saveWallet() throws IOException, EncryptionException {
+        saveWallet(wallet);
+    }
+    
     /**
-     * Loading database from encrypted file
-     *
-     * @param file - encrypted JSON file
-     * @throws IOException - filesystem problem
+     * Use saveWallet() instead.
      */
-    private void loadDatabase(File file) throws IOException {
-        if (Files.size(file.toPath()) == 0) return;
-        cleanUp();
-        byte[] data = Files.readAllBytes(file.toPath());
-        //todo enable decrypting
-        //data = decrypt(data);
-
-        setWallet(deserialize(data));
-    }
-
-    /**
-     * JSON deserialization
-     *
-     * @param data - decrypted JSON data
-     * @return - wallet list
-     */
-    public WalletEntity deserialize(byte[] data) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        //TODO jak tego sie uzywa xdd
-        Logger.d("deserialize: " + new String(data));
-        WalletEntity wallet = mapper.readValue(data, new TypeReference<WalletEntity>() {
-        });
-
-        return wallet;
-    }
-
-    /**
-     * Save encrypted database to file
-     *
-     * @param file - destination file
-     * @throws IOException - filesystem problem
-     */
-    private void saveDatabase(File file) throws IOException {
-        byte[] data = getSerialized();
-        //todo enable encrypting
-        //data = encrypt(data);
-        Files.write(file.toPath(), data);
-    }
-
-    private void saveDatabaseToFile() throws IOException {
-        saveDatabase(databaseFile);
-    }
-
-    public byte[] encrypt(byte[] data) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DeflaterOutputStream dos = new DeflaterOutputStream(baos);
-        dos.write(data);
-        dos.flush();
-        dos.close();
-        //TODO encryption
-        return baos.toByteArray();
-    }
-
-    public byte[] decrypt(byte[] data) throws IOException {
-        ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        InflaterInputStream iis = new InflaterInputStream(bais);
-        int len = -1;
-        byte[] buffer = new byte[4096];
-        while ((len = iis.read(buffer)) != -1) ; //TODO join arrays into one blob
-        //TODO decryption
-        return buffer;
-    }
-
-    public void saveWallet(WalletEntity walletEntity) throws IOException {
+    @Deprecated
+    public void saveWallet(WalletEntity walletEntity) throws IOException, EncryptionException {
         setWallet(walletEntity);
-        saveDatabaseToFile();
+        saveDatabase();
     }
-
+    
+    private void saveDatabase() throws IOException, EncryptionException {
+        if (wallet == null)
+            wallet = new WalletEntity();
+        
+        Files.write(databaseFile.toPath(), encrypt());
+    }
+    
     public Optional<KeyPartEntity> getKeypartForModuleId(String id) {
         return wallet.getParts().stream().filter(keyPart -> keyPart.getModule().equals(id)).findFirst();
+    }
+    
+    public boolean addKeyPart(KeyPartEntity keyPartEntity) {
+        return wallet.getParts().add(keyPartEntity);
+    }
+    
+    public boolean addAllKeyParts(Collection<KeyPartEntity> keyPartEntities) {
+        return wallet.getParts().addAll(keyPartEntities);
     }
 }

@@ -4,6 +4,9 @@ import com.stasbar.Logger;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cli.Opts;
+import io.raspberrywallet.manager.cryptography.common.Password;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
@@ -21,7 +24,7 @@ import static io.raspberrywallet.server.KtorServerKt.startKtorServer;
 
 public class Main {
 
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) throws IOException, DecryptionException, EncryptionException {
         CommandLine cmd = parseArgs(args);
 
         Bitcoin bitcoin = new Bitcoin();
@@ -32,7 +35,9 @@ public class Main {
 
         TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
 
-        Database db = new Database();
+        //TODO change this to read from user
+        Password password = new Password("changeme".toCharArray());
+        Database db = new Database(password);
 
         Manager manager = new Manager(db, modules, bitcoin, temperatureMonitor);
 
