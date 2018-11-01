@@ -22,29 +22,24 @@ import java.util.stream.Collectors;
 public class ModuleClassLoader {
 
     /**
-     * @param modulesDir - directory where module classes are located
      * @return objects of instantiated Modules {@link Module}
      */
     @NotNull
-    public static List<Module> getModulesFrom(File modulesDir, Configuration.ModulesConfiguration modulesConfiguration) {
-        if (!modulesDir.exists()) {
-            System.out.println("\"" + modulesDir.getPath() + "\" doesn't exist! Defaulting to /opt/wallet/modules");
-
-            modulesDir = new File("/opt/wallet/modules");
-            if (!modulesDir.exists() && !modulesDir.mkdirs()) {
-                System.err.println("Cannot create necessary directories!");
-                return Collections.emptyList();
-            }
+    public static List<Module> getModules(Configuration configuration) {
+        File modulesDir = new File(configuration.getBasePathPrefix(), "modules");
+        if (!modulesDir.exists() && !modulesDir.mkdirs()) {
+            System.err.println("Cannot create necessary directories!");
+            return Collections.emptyList();
         }
-
         File[] files = Objects.requireNonNull(modulesDir.listFiles(), "moduleDir files can not be null");
+
         try {
             URL url = modulesDir.toURI().toURL();
 
             URLClassLoader classLoader = new URLClassLoader(new URL[]{url}, ModuleClassLoader.class.getClassLoader());
 
             List<Class<?>> classes = getClasses(files, classLoader);
-            List<Module> modules = instantiateModulesObjects(classes, modulesConfiguration);
+            List<Module> modules = instantiateModulesObjects(classes, configuration.getModulesConfig());
             printLoadedModules(modules);
             return modules;
         } catch (MalformedURLException e) {

@@ -29,8 +29,7 @@ public class Main {
 
         Bitcoin bitcoin = new Bitcoin(configuration);
 
-        File modulesDir = new File(Opts.MODULES.getValue(cmd));
-        List<Module> modules = ModuleClassLoader.getModulesFrom(modulesDir, configuration.getModules());
+        List<Module> modules = ModuleClassLoader.getModules(configuration);
 
 
         modules.forEach(Module::register);

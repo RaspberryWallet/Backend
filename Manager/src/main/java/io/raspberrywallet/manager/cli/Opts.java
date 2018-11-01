@@ -4,11 +4,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 
 import java.io.File;
-import java.nio.file.Paths;
 
 public enum Opts {
-    MODULES(new Option("modules", true, "Modules classes directory path"),
-            Paths.get("/", "opt", "wallet", "modules").toString()),
     CONFIG(new Option("config", true, "Config file path"),
             new File("config.yaml").toString());
 

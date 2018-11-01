@@ -17,7 +17,6 @@ import java.util.HashMap;
 
 import static io.raspberrywallet.manager.Utils.println;
 
-@NoArgsConstructor
 @Getter
 @Setter(AccessLevel.PRIVATE)
 final public class Configuration {
@@ -29,14 +28,51 @@ final public class Configuration {
     private String basePathPrefix = "/opt/wallet";
 
     private String version = Configuration.class.getPackage().getImplementationVersion();
-    private ModulesConfiguration modules;
-    private WalletConfiguration wallet;
+
+    @JsonProperty("modules")
+    private ModulesConfiguration modulesConfig;
+
+    @JsonProperty("wallet")
+    private WalletConfiguration walletConfig;
+
+    public Configuration() {
+        this(new ModulesConfiguration(), new WalletConfiguration());
+    }
+
+    public Configuration(ModulesConfiguration modulesConfig) {
+        this(modulesConfig, new WalletConfiguration());
+    }
+
+    public Configuration(WalletConfiguration walletConfig) {
+        this(new ModulesConfiguration(), walletConfig);
+    }
+
+    public Configuration(ModulesConfiguration modulesConfig, WalletConfiguration walletConfig) {
+        this.modulesConfig = modulesConfig;
+        this.walletConfig = walletConfig;
+        println(ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE));
+    }
+
+    public Configuration(ModulesConfiguration modulesConfig, WalletConfiguration walletConfig, long sessionLength,
+                         String basePathPrefix, String version) {
+        this(modulesConfig, walletConfig);
+        this.sessionLength = sessionLength;
+        this.basePathPrefix = basePathPrefix;
+        this.version = version;
+        println(ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE));
+    }
+
+    public Configuration(long sessionLength, String basePathPrefix, String version) {
+        this();
+        this.sessionLength = sessionLength;
+        this.basePathPrefix = basePathPrefix;
+        this.version = version;
+        println(ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE));
+    }
 
     public static Configuration fromYamlFile(File yamlFile) {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-
         Configuration config;
-
         try {
             config = objectMapper.readValue(yamlFile, Configuration.class);
         } catch (IOException e) {
@@ -53,11 +89,11 @@ final public class Configuration {
     }
 
     @NoArgsConstructor
-    @Setter(AccessLevel.PRIVATE)
-    @Getter(AccessLevel.PUBLIC)
+    @Setter
+    @Getter
     static class WalletConfiguration {
         @JsonProperty("autolock-time")
-        private int autoLockTime;
+        private long autoLockTime;
         @JsonProperty("wallet-filepath")
         public String walletFilePath;
         @JsonProperty("blockchain-filepath")
