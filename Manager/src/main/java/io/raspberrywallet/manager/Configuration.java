@@ -32,30 +32,30 @@ final public class Configuration {
     @JsonProperty("modules")
     private ModulesConfiguration modulesConfig;
 
-    @JsonProperty("wallet")
-    private WalletConfiguration walletConfig;
+    @JsonProperty("bitcoin")
+    private BitcoinConfiguration bitcoinConfig;
 
     public Configuration() {
-        this(new ModulesConfiguration(), new WalletConfiguration());
+        this(new ModulesConfiguration(), new BitcoinConfiguration());
     }
 
     public Configuration(ModulesConfiguration modulesConfig) {
-        this(modulesConfig, new WalletConfiguration());
+        this(modulesConfig, new BitcoinConfiguration());
     }
 
-    public Configuration(WalletConfiguration walletConfig) {
-        this(new ModulesConfiguration(), walletConfig);
+    public Configuration(BitcoinConfiguration bitcoinConfig) {
+        this(new ModulesConfiguration(), bitcoinConfig);
     }
 
-    public Configuration(ModulesConfiguration modulesConfig, WalletConfiguration walletConfig) {
+    public Configuration(ModulesConfiguration modulesConfig, BitcoinConfiguration bitcoinConfig) {
         this.modulesConfig = modulesConfig;
-        this.walletConfig = walletConfig;
+        this.bitcoinConfig = bitcoinConfig;
         println(ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE));
     }
 
-    public Configuration(ModulesConfiguration modulesConfig, WalletConfiguration walletConfig, long sessionLength,
+    public Configuration(ModulesConfiguration modulesConfig, BitcoinConfiguration bitcoinConfig, long sessionLength,
                          String basePathPrefix, String version) {
-        this(modulesConfig, walletConfig);
+        this(modulesConfig, bitcoinConfig);
         this.sessionLength = sessionLength;
         this.basePathPrefix = basePathPrefix;
         this.version = version;
@@ -91,7 +91,7 @@ final public class Configuration {
     @NoArgsConstructor
     @Setter
     @Getter
-    static class WalletConfiguration {
+    static class BitcoinConfiguration {
         @JsonProperty("autolock-time")
         private long autoLockTime;
         @JsonProperty("wallet-filepath")
