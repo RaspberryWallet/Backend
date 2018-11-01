@@ -17,21 +17,40 @@ import java.util.HashMap;
 
 import static io.raspberrywallet.manager.Utils.println;
 
+/**
+ * Global configuration
+ */
 @Getter
 @Setter(AccessLevel.PRIVATE)
 final public class Configuration {
 
+    /**
+     * Session length in millis
+     */
     @JsonProperty("session-length")
     private long sessionLength = 3600000;
 
+    /**
+     * Base path to all wallet specific files, by default equals to $HOME
+     */
     @JsonProperty("base-path-prefix")
     private String basePathPrefix = "/opt/wallet";
 
+    /**
+     * Current version
+     */
     private String version = Configuration.class.getPackage().getImplementationVersion();
 
+    /**
+     * Modules configuration object, hides HashMap<String, JsonNode>
+     * TODO unwrap from ModulesConfiguration and provide custom accessors
+     */
     @JsonProperty("modules")
     private ModulesConfiguration modulesConfig;
 
+    /**
+     * Bitcoin configuration object
+     */
     @JsonProperty("bitcoin")
     private BitcoinConfiguration bitcoinConfig;
 
@@ -70,6 +89,10 @@ final public class Configuration {
         println(ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE));
     }
 
+    /**
+     * @param yamlFile configuration file encoded in YAML structure
+     * @return YAML config parsed into Configuration object
+     */
     public static Configuration fromYamlFile(File yamlFile) {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         Configuration config;
@@ -93,7 +116,7 @@ final public class Configuration {
     @Getter
     static class BitcoinConfiguration {
         @JsonProperty("autolock-time")
-        private long autoLockTime;
+        private long autoLockTime = 10000;
         @JsonProperty("wallet-filepath")
         public String walletFilePath;
         @JsonProperty("blockchain-filepath")

@@ -14,6 +14,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Module base class
+ *
+ * @param <Config> type of module specific configuration class implementing ModuleConfig base interface
+ */
 public abstract class Module<Config extends ModuleConfig> {
     @NotNull
     private String statusString;
@@ -21,12 +26,18 @@ public abstract class Module<Config extends ModuleConfig> {
     @NotNull
     private HashMap<String, String> input = new HashMap<>();
 
+    /**
+     * Configuration object available for every module
+     * This object should hold every customizable module specific property
+     */
     protected Config configuration;
 
     /**
      * This constructor enforce that the state and configuration is always present
      *
      * @param initialStatusString - initial module status string
+     * @param configClass - class representation of module specific Config type,
+     *                    required for dynamic Config class initialization, either from file and default value
      */
     public Module(@NotNull String initialStatusString, Class<Config> configClass)
             throws IllegalAccessException, InstantiationException {
@@ -51,6 +62,12 @@ public abstract class Module<Config extends ModuleConfig> {
         configuration = newConfiguration;
     }
 
+    /**
+     * Parses config yaml file representation to module specific Config object
+     * @param moduleConfiguration whole `modules` node of yaml file
+     * @param configClass class representation of module specific Config type
+     * @return module specific config object
+     */
     private Config parseConfigurationFrom(Configuration.ModulesConfiguration moduleConfiguration,
                                           Class<Config> configClass) {
 
@@ -66,6 +83,11 @@ public abstract class Module<Config extends ModuleConfig> {
         }
     }
 
+    /**
+     * Used in all sort of identifications like config.yaml, internal module mapping and UI naming.
+     * For now, it's just simplified SimpleClassName
+     * @return module identifier.
+     */
     public String getId() {
         return this.getClass().getSimpleName();
     }
