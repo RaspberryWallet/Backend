@@ -1,9 +1,6 @@
 package io.raspberrywallet.manager.modules.pushbutton;
 
-import com.pi4j.io.gpio.GpioController;
-import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.GpioPinDigitalInput;
-import com.pi4j.io.gpio.RaspiPin;
+import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.modules.Module;
