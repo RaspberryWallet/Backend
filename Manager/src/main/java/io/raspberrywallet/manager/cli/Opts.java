@@ -3,11 +3,11 @@ package io.raspberrywallet.manager.cli;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 
-import java.io.File;
+import java.nio.file.Paths;
 
 public enum Opts {
     CONFIG(new Option("config", true, "Config file path"),
-            new File("config.yaml").toString());
+            Paths.get("config.yaml").toAbsolutePath().toString());
 
     public final Option option;
     public final String def;

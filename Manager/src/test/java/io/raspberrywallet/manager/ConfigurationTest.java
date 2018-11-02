@@ -20,7 +20,7 @@ class ConfigurationTest {
                 "version: " + version + "\n" +
                 "session-length: " + sessionLength + "\n" +
                 "base-path-prefix: " + basePrefixDir + "\n" +
-                "autolock-time: 1800\n" +
+                "autolock-seconds: 1800\n" +
                 "bitcoin:\n" +
                 "  network: testnet\n" +
                 "\n" +

@@ -42,10 +42,10 @@ final public class Configuration {
     private String version = Configuration.class.getPackage().getImplementationVersion();
 
     /**
-     * AutoLock idle time in millis
+     * AutoLock idle time in seconds
      */
-    @JsonProperty("autolock-time")
-    private long autoLockTime = 10000;
+    @JsonProperty("autolock-seconds")
+    private long autoLockSeconds = 60 * 5;
 
     /**
      * Modules configuration object, hides HashMap<String, JsonNode>

@@ -12,6 +12,8 @@ import static io.raspberrywallet.manager.modules.pushbutton.PushButtonModule.Inp
 
 public class PushButtonModule extends Module<PushButtonConfig> {
 
+    private final static Pin BUTTON_GPIO_PINS = RaspiPin.GPIO_23;
+
     private final GpioController gpio;
     private final GpioPinDigitalInput pushButton;
 
@@ -19,19 +21,19 @@ public class PushButtonModule extends Module<PushButtonConfig> {
     public PushButtonModule(GpioController gpio) throws InstantiationException, IllegalAccessException {
         super("Press Button", PushButtonConfig.class);
         this.gpio = gpio;
-        pushButton = gpio.provisionDigitalInputPin(RaspiPin.GPIO_23);
+        pushButton = gpio.provisionDigitalInputPin(BUTTON_GPIO_PINS);
     }
 
     public PushButtonModule() throws InstantiationException, IllegalAccessException {
         super("Press Button", PushButtonConfig.class);
         gpio = GpioFactory.getInstance();
-        pushButton = gpio.provisionDigitalInputPin(RaspiPin.GPIO_23);
+        pushButton = gpio.provisionDigitalInputPin(BUTTON_GPIO_PINS);
     }
 
     public PushButtonModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException {
         super("Press Button", modulesConfiguration, PushButtonConfig.class);
         gpio = GpioFactory.getInstance();
-        pushButton = gpio.provisionDigitalInputPin(RaspiPin.GPIO_23);
+        pushButton = gpio.provisionDigitalInputPin(BUTTON_GPIO_PINS);
     }
 
     @Override
