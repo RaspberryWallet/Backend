@@ -5,16 +5,11 @@ import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
 import io.raspberrywallet.manager.cryptography.common.Password;
 import io.raspberrywallet.manager.cryptography.crypto.AESEncryptedObject;
 import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
-import io.raspberrywallet.manager.cryptography.crypto.CryptoStream;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.modules.Module;
 import org.apache.commons.lang.SerializationUtils;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 public class PinModule extends Module<PinConfig> {
     
@@ -28,7 +23,7 @@ public class PinModule extends Module<PinConfig> {
 
     @Override
     public String getDescription() {
-        return "Module that require enter 4 digits code";
+        return "Module that require enter a digit code to unlock.";
     }
 
     @Override
@@ -69,7 +64,8 @@ public class PinModule extends Module<PinConfig> {
     private String getPin() throws RequiredInputNotFound {
         String pin = getInput("pin");
         
-        if (pin == null)
+        //validation of user's input
+        if (pin == null || pin.length() < configuration.minLength || pin.length() > configuration.maxLength)
             throw new RequiredInputNotFound(getId(), "pin");
         
         return pin;
