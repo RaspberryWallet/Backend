@@ -5,6 +5,7 @@ import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.contract.WalletStatus;
 import io.raspberrywallet.contract.module.ModuleState;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
+import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirKey;
 import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.database.KeyPartEntity;
@@ -119,7 +120,7 @@ class ManagerTest {
     }
 
     @Test
-    void unlockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound {
+    void unlockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
 
         pinModule.setInput(PinModule.Inputs.PIN, "1234");
@@ -135,7 +136,7 @@ class ManagerTest {
     }
 
     @Test
-    void lockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound {
+    void lockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
 
         pinModule.setInput(PinModule.Inputs.PIN, "1234");
@@ -157,7 +158,7 @@ class ManagerTest {
     }
 
     @Test
-    void unlockWalletWhenLocked() throws WalletNotInitialized, RequiredInputNotFound {
+    void unlockWalletWhenLocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
         lockWalletWhenUnlocked();
 
         pinModule.setInput(PinModule.Inputs.PIN, "1234");
