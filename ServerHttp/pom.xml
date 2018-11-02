@@ -83,7 +83,6 @@
         </dependency>
         <!--Ktor-->
 
-        <!--Kotlin-->
         <dependency>
             <groupId>com.github.stasbar</groupId>
             <artifactId>easy-logger</artifactId>

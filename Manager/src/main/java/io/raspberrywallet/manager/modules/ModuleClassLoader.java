@@ -1,12 +1,14 @@
 package io.raspberrywallet.manager.modules;
 
 import com.stasbar.Logger;
+import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.pki.JarVerifier;
 import io.raspberrywallet.manager.pki.PkiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -20,29 +22,24 @@ import java.util.stream.Collectors;
 public class ModuleClassLoader {
 
     /**
-     * @param modulesDir - directory where module classes are located
      * @return objects of instantiated Modules {@link Module}
      */
     @NotNull
-    public static List<Module> getModulesFrom(File modulesDir) {
-        if (!modulesDir.exists()) {
-            System.out.println("\"" + modulesDir.getPath() + "\" doesn't exist! Defaulting to /opt/wallet/modules");
-
-            modulesDir = new File("/opt/wallet/modules");
-            if (!modulesDir.exists() && !modulesDir.mkdirs()) {
-                System.err.println("Cannot create necessary directories!");
-                return Collections.emptyList();
-            }
+    public static List<Module> getModules(Configuration configuration) {
+        File modulesDir = new File(configuration.getBasePathPrefix(), "modules");
+        if (!modulesDir.exists() && !modulesDir.mkdirs()) {
+            System.err.println("Cannot create necessary directories!");
+            return Collections.emptyList();
         }
-
         File[] files = Objects.requireNonNull(modulesDir.listFiles(), "moduleDir files can not be null");
+
         try {
             URL url = modulesDir.toURI().toURL();
 
             URLClassLoader classLoader = new URLClassLoader(new URL[]{url}, ModuleClassLoader.class.getClassLoader());
 
             List<Class<?>> classes = getClasses(files, classLoader);
-            List<Module> modules = instaniateModulesObjects(classes);
+            List<Module> modules = instantiateModulesObjects(classes, configuration.getModulesConfig());
             printLoadedModules(modules);
             return modules;
         } catch (MalformedURLException e) {
@@ -94,12 +91,18 @@ public class ModuleClassLoader {
         }
     }
 
-    private static List<Module> instaniateModulesObjects(List<Class<?>> classes) {
+    private static List<Module> instantiateModulesObjects(List<Class<?>> classes, Configuration.ModulesConfiguration modulesConfiguration) {
         return classes.stream().map(clazz -> {
             try {
-                return (Module) clazz.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
+                Module module = (Module) clazz.getConstructor(modulesConfiguration.getClass()).newInstance(modulesConfiguration);
+                Logger.info("Successfully instantiated " + module.getClass().getSimpleName());
+                return module;
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException e) {
                 e.printStackTrace();
+                return null;
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+                Logger.err("Could not find constructor with ModulesConfiguration constructor parameter in class " + clazz.getName());
                 return null;
             }
         }).filter(Objects::nonNull).collect(Collectors.toList());

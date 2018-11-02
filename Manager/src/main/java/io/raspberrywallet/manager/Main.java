@@ -27,17 +27,20 @@ public class Main {
     public static void main(String... args) throws IOException, DecryptionException, EncryptionException {
         CommandLine cmd = parseArgs(args);
 
-        Bitcoin bitcoin = new Bitcoin();
+        File yamlConfigFile = new File(Opts.CONFIG.getValue(cmd));
+        Configuration configuration = Configuration.fromYamlFile(yamlConfigFile);
 
-        File modulesDir = new File(Opts.MODULES.getValue(cmd));
-        List<Module> modules = ModuleClassLoader.getModulesFrom(modulesDir);
+        Bitcoin bitcoin = new Bitcoin(configuration);
+
+        List<Module> modules = ModuleClassLoader.getModules(configuration);
         modules.forEach(Module::register);
 
         TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
 
         //TODO change this to read from user
         Password password = new Password("changeme".toCharArray());
-        Database db = new Database(password);
+
+        Database db = new Database(configuration, password);
 
         Manager manager = new Manager(db, modules, bitcoin, temperatureMonitor);
 

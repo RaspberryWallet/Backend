@@ -52,7 +52,7 @@ class ManagerTest {
     private static File walletFile = new File("test_wallet.wallet");
 
     @BeforeEach
-    void setup() {
+    void setup() throws IllegalAccessException, InstantiationException {
         bitcoin = mock(Bitcoin.class);
         temperatureMonitor = mock(TemperatureMonitor.class);
         database = mock(Database.class);
@@ -147,7 +147,7 @@ class ManagerTest {
         when(database.getKeypartForModuleId(exampleModule.getId())).thenReturn(Optional.of(exampleKeyPart));
         when(database.getKeypartForModuleId(pinModule.getId())).thenReturn(Optional.of(pinKeyPart));
 
-        when(bitcoin.getWalletFile()).thenReturn(walletFile);
+        when(bitcoin.walletFile).thenReturn(walletFile);
 
         manager.lockWallet();
 

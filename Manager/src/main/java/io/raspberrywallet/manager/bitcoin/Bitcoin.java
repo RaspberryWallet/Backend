@@ -3,8 +3,10 @@ package io.raspberrywallet.manager.bitcoin;
 import com.google.common.util.concurrent.Service;
 import com.stasbar.Logger;
 import io.raspberrywallet.contract.WalletNotInitialized;
+import io.raspberrywallet.manager.Configuration;
 import org.bitcoinj.core.*;
 import org.bitcoinj.kits.WalletAppKit;
+import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.utils.BriefLogFormatter;
 import org.bitcoinj.wallet.DeterministicSeed;
@@ -20,30 +22,40 @@ import java.util.concurrent.Executors;
  * It uses WalletAppKit object composition pattern in order to hide unimportant functionality and safe extension.
  */
 public class Bitcoin {
-    final File rootDirectory;
+    private final static String DIRECTORY_NAME = "bitcoin";
+
     private final String walletFileName;
+    public final File walletFile;
     private final NetworkParameters params;
     @Nullable
     private WalletAppKit kit;
+    private final File bitcoinDirectory;
+    private final Configuration.BitcoinConfig bitcoinConfig;
 
-    public Bitcoin() {
-        this(TestNet3Params.get());
-    }
-
-    Bitcoin(NetworkParameters params) {
-        this(new File("."), params);
-    }
-
-    private Bitcoin(File rootDirectory, NetworkParameters params) {
+    public Bitcoin(Configuration configuration) {
         BriefLogFormatter.init();
-        this.params = params;
-        this.rootDirectory = rootDirectory;
+        this.bitcoinConfig = configuration.getBitcoinConfig();
+        this.params = parseNetworkFrom(configuration.getBitcoinConfig());
         this.walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
+        this.bitcoinDirectory = new File(configuration.getBasePathPrefix(), DIRECTORY_NAME);
+        this.walletFile = new File(bitcoinDirectory, walletFileName + ".wallet");
     }
+
+    private NetworkParameters parseNetworkFrom(Configuration.BitcoinConfig bitcoinConfig) {
+        switch (bitcoinConfig.networkName) {
+            case "mainnet":
+                return MainNetParams.get();
+            case "testnet":
+            default:
+                return TestNet3Params.get();
+        }
+    }
+
 
     private void setupWalletKit(@Nullable DeterministicSeed seed) {
+
         // If seed is non-null it means we are restoring from backup.
-        kit = new WalletAppKit(params, rootDirectory, walletFileName) {
+        kit = new WalletAppKit(params, bitcoinDirectory, walletFileName) {
             @Override
             protected void onSetupCompleted() {
                 Logger.info("Bitcoin setup complete");
@@ -151,11 +163,6 @@ public class Bitcoin {
         } catch (InsufficientMoneyException e) {
             Logger.err(e.getMessage());
             e.printStackTrace();
-
         }
-    }
-
-    public File getWalletFile() {
-        return new File(rootDirectory, walletFileName + ".wallet");
     }
 }

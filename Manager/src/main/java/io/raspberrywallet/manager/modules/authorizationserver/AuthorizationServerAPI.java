@@ -1,29 +1,30 @@
 package io.raspberrywallet.manager.modules.authorizationserver;
 
+import io.raspberrywallet.manager.common.http.ApacheHttpClient;
+import io.raspberrywallet.manager.common.http.UnsecureApacheHttpClient;
 import io.raspberrywallet.manager.common.wrappers.Credentials;
 import io.raspberrywallet.manager.common.wrappers.Secret;
 import io.raspberrywallet.manager.common.wrappers.Token;
-import io.raspberrywallet.manager.common.http.UnsecureApacheHttpClient;
-import io.raspberrywallet.manager.common.http.ApacheHttpClient;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.util.EntityUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
 class AuthorizationServerAPI {
-    
-    private AuthorizationServerConf configuration;
+
+    private AuthorizationServerConfig configuration;
 
     private ApacheHttpClient httpClient;
     
     private Token token;
     private Boolean isRegisteredFlag, isLoggedInFlag;
-    
-    AuthorizationServerAPI(AuthorizationServerConf configuration) {
+
+    AuthorizationServerAPI(@NotNull AuthorizationServerConfig configuration) {
         this.configuration = configuration;
         Form defaultHeaders = Form.form()
                 .add(HttpHeaders.CONTENT_TYPE, "application/json")
@@ -47,7 +48,7 @@ class AuthorizationServerAPI {
     
     private void login(Form requestBody, int sessionLength) throws RequestException {
         try {
-            HttpResponse httpResponse = executeRequest(requestBody, configuration.getLoginEndpoint());
+            HttpResponse httpResponse = executeRequest(requestBody, configuration.getEndpoints().getLogin());
             int statusCode = httpResponse.getStatusLine().getStatusCode();
             if (statusCode != HttpStatus.SC_OK)
                 throw new RequestException("Request failed with error code: " + statusCode);
@@ -63,8 +64,8 @@ class AuthorizationServerAPI {
         Form body = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
                 .add(APIKeys.TOKEN.val, token.getData());
-        
-        HttpResponse response = executeRequest(body, configuration.getLogoutEndpoint());
+
+        HttpResponse response = executeRequest(body, configuration.getEndpoints().getLogout());
         isLoggedInFlag = !handleResponse(response);
         return isLoggedInFlag;
     }
@@ -73,8 +74,8 @@ class AuthorizationServerAPI {
         Form body = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
                 .add(APIKeys.PASSWORD.val, credentials.getPasswordBase64());
-        
-        HttpResponse response = executeRequest(body, configuration.getRegisterEndpoint());
+
+        HttpResponse response = executeRequest(body, configuration.getEndpoints().getRegister());
         return handleResponse(response);
     }
     
@@ -84,8 +85,8 @@ class AuthorizationServerAPI {
         
         Form requestBody = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName());
-        
-        HttpResponse response = executeRequest(requestBody, configuration.getWalletExistsEndpoint());
+
+        HttpResponse response = executeRequest(requestBody, configuration.getEndpoints().getWalletExists());
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == HttpStatus.SC_OK) {
             isRegisteredFlag = true;
@@ -109,7 +110,7 @@ class AuthorizationServerAPI {
                 .add(APIKeys.TOKEN.val, token.getData());
         
         try {
-            HttpResponse httpResponse = executeRequest(requestBody, configuration.getGetSecretEndpoint());
+            HttpResponse httpResponse = executeRequest(requestBody, configuration.getEndpoints().getGetSecret());
             return EntityUtils.toString(httpResponse.getEntity());
         } catch (IOException e) {
             throw new RequestException(e);
@@ -130,8 +131,8 @@ class AuthorizationServerAPI {
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
                 .add(APIKeys.TOKEN.val, token.getData())
                 .add(APIKeys.SECRET.val, secret);
-        
-        HttpResponse response = executeRequest(requestBody, configuration.getOverwriteEndpoint());
+
+        HttpResponse response = executeRequest(requestBody, configuration.getEndpoints().getOverwrite());
         handleResponse(response);
     }
     
@@ -139,8 +140,8 @@ class AuthorizationServerAPI {
         Form requestBody = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName())
                 .add(APIKeys.TOKEN.val, token.getData());
-        
-        HttpResponse response = executeRequest(requestBody, configuration.getIsSecretSetEndpoint());
+
+        HttpResponse response = executeRequest(requestBody, configuration.getEndpoints().getIsSecretSet());
         
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == HttpStatus.SC_OK)
