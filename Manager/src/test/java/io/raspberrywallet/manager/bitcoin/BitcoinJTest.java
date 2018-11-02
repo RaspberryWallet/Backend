@@ -1,16 +1,24 @@
 package io.raspberrywallet.manager.bitcoin;
 
-import org.bitcoinj.core.*;
+import com.stasbar.Logger;
+import org.bitcoinj.core.BlockChain;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.PeerAddress;
+import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.SPVBlockStore;
-import org.bitcoinj.wallet.*;
+import org.bitcoinj.wallet.DeterministicSeed;
+import org.bitcoinj.wallet.KeyChainGroup;
+import org.bitcoinj.wallet.UnreadableWalletException;
+import org.bitcoinj.wallet.Wallet;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,31 +27,49 @@ public class BitcoinJTest {
     private NetworkParameters params = TestNet3Params.get();
     private String walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
     private File walletFile = new File(rootDirectory, walletFileName + ".wallet");
-    private File blockstoreFile = new File(rootDirectory, walletFileName + ".spvchain");
+    private File blockStoreFile = new File(rootDirectory, walletFileName + ".spvchain");
+    private String password = "password";
 
     @Test
     void initWalletFromSeed() throws Exception {
-        NetworkParameters params = TestNet3Params.get();
         List<String> mnemonicCode = Arrays.asList(
                 "farm hospital shadow common raw neither pond access suggest army prefer expire".split(" "));
 
         DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 1539388800);
+
         KeyChainGroup keyChainGroup = new KeyChainGroup(params, seed);
 
-        Wallet wallet = new Wallet(params, keyChainGroup);
-        wallet.saveToFile(walletFile);
-        boolean chainFileExists = blockstoreFile.exists();
-        boolean shouldReplayWallet = (walletFile.exists() && !chainFileExists) || mnemonicCode != null;
-        wallet = loadWallet();
-        // Find the transactions that involve those coins.
-        //final MemoryBlockStore blockStore = new MemoryBlockStore(params);
-        final SPVBlockStore blockStore = new SPVBlockStore(params, blockstoreFile);
-        InputStream checkpoints = null;
-        if (checkpoints == null) {
-            checkpoints = CheckpointManager.openStream(params);
-        }
+        Wallet wallet = new Wallet(params, keyChainGroup); //Wallet.fromSeed(params, seed);
 
-        CheckpointManager.checkpoint(params, checkpoints, blockStore, seed.getCreationTimeSeconds());
+        synchronizeWalletBlocking(wallet);
+        wallet.encrypt("password");
+        wallet.saveToFile(walletFile);
+
+        System.out.println("Wallet balance" + wallet.getBalance().toFriendlyString());
+    }
+
+    @Test
+    void restoreWalletFromFile() throws UnreadableWalletException, BlockStoreException, IOException {
+        Wallet wallet = Wallet.loadFromFile(walletFile);
+
+        if (!wallet.isEncrypted())
+            throw new SecurityException("Decrypted wallet on disk detected");
+        else
+            wallet.decrypt(password);
+
+        synchronizeWalletBlocking(wallet);
+
+        wallet.encrypt(password);
+        wallet.saveToFile(walletFile);
+
+        System.out.println("Wallet balance" + wallet.getBalance().toFriendlyString());
+    }
+
+
+    void synchronizeWalletBlocking(Wallet wallet) throws BlockStoreException, UnknownHostException {
+        long start = System.currentTimeMillis();
+        final SPVBlockStore blockStore = new SPVBlockStore(params, blockStoreFile);
+        //TODO checkpoints
         BlockChain chain = new BlockChain(params, wallet, blockStore);
 
         PeerGroup peerGroup = new PeerGroup(params, chain);
@@ -55,29 +81,7 @@ public class BitcoinJTest {
         peerGroup.start();
         peerGroup.downloadBlockChain();
         peerGroup.stopAsync();
-
-        // And take them!
-        System.out.println("Wallet balance" + wallet.getBalance().toFriendlyString());
-    }
-
-
-    private Wallet loadWallet() throws Exception {
-        Wallet wallet;
-        FileInputStream walletStream = new FileInputStream(walletFile);
-        try {
-            WalletExtension[] extArray = new WalletExtension[]{};
-            Protos.Wallet proto = WalletProtobufSerializer.parseToProto(walletStream);
-            final WalletProtobufSerializer serializer;
-            serializer = new WalletProtobufSerializer();
-            wallet = serializer.readWallet(params, extArray, proto);
-        } finally {
-            walletStream.close();
-        }
-        return wallet;
-    }
-
-    @Test
-    void restoreWalletFromFile() throws UnreadableWalletException {
-        Wallet wallet = Wallet.loadFromFile(walletFile);
+        long total = System.currentTimeMillis() - start;
+        Logger.info(String.format("Synchronization took %.2f secs", (double) total / 1000.0));
     }
 }

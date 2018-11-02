@@ -39,10 +39,12 @@ public class Bitcoin {
         this.walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
         this.bitcoinDirectory = new File(configuration.getBasePathPrefix(), DIRECTORY_NAME);
         this.walletFile = new File(bitcoinDirectory, walletFileName + ".wallet");
+        if (walletFile.exists())
+            setupWalletFromFile(walletFile);
     }
 
     private NetworkParameters parseNetworkFrom(Configuration.BitcoinConfig bitcoinConfig) {
-        switch (bitcoinConfig.networkName) {
+        switch (bitcoinConfig.getNetworkName()) {
             case "mainnet":
                 return MainNetParams.get();
             case "testnet":
@@ -51,6 +53,9 @@ public class Bitcoin {
         }
     }
 
+    private void setupWalletFromFile(File walletFile) {
+
+    }
 
     private void setupWalletKit(@Nullable DeterministicSeed seed) {
 

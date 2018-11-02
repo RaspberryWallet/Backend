@@ -122,6 +122,8 @@ final public class Configuration {
     @Getter
     public static class BitcoinConfig {
         @JsonProperty("network")
-        public String networkName = "testnet";
+        private String networkName = "testnet";
+        @JsonProperty("user-agent")
+        private String userAgent = "RaspberryWallet";
     }
 }
