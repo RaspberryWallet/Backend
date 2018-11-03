@@ -1,10 +1,7 @@
 package io.raspberrywallet.manager.bitcoin;
 
 import com.stasbar.Logger;
-import org.bitcoinj.core.BlockChain;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.PeerAddress;
-import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.*;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStoreException;
@@ -17,8 +14,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -62,14 +59,17 @@ public class BitcoinJTest {
         wallet.encrypt(password);
         wallet.saveToFile(walletFile);
 
-        System.out.println("Wallet balance" + wallet.getBalance().toFriendlyString());
+        Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
     }
 
 
-    void synchronizeWalletBlocking(Wallet wallet) throws BlockStoreException, UnknownHostException {
+    void synchronizeWalletBlocking(Wallet wallet) throws BlockStoreException, IOException {
         long start = System.currentTimeMillis();
         final SPVBlockStore blockStore = new SPVBlockStore(params, blockStoreFile);
-        //TODO checkpoints
+
+        InputStream checkpoints = CheckpointManager.openStream(params);
+        CheckpointManager.checkpoint(params, checkpoints, blockStore, wallet.getEarliestKeyCreationTime());
+
         BlockChain chain = new BlockChain(params, wallet, blockStore);
 
         PeerGroup peerGroup = new PeerGroup(params, chain);

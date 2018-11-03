@@ -1,20 +1,34 @@
 package io.raspberrywallet.manager.bitcoin;
 
-import com.google.common.util.concurrent.Service;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.stasbar.Logger;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.Configuration;
+import lombok.Getter;
 import org.bitcoinj.core.*;
-import org.bitcoinj.kits.WalletAppKit;
+import org.bitcoinj.crypto.KeyCrypter;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.store.BlockStoreException;
+import org.bitcoinj.store.SPVBlockStore;
 import org.bitcoinj.utils.BriefLogFormatter;
 import org.bitcoinj.wallet.DeterministicSeed;
+import org.bitcoinj.wallet.KeyChainGroup;
+import org.bitcoinj.wallet.UnreadableWalletException;
 import org.bitcoinj.wallet.Wallet;
+import org.jetbrains.annotations.NotNull;
+import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 
 /**
@@ -24,23 +38,32 @@ import java.util.concurrent.Executors;
 public class Bitcoin {
     private final static String DIRECTORY_NAME = "bitcoin";
 
+    private final File bitcoinRootDirectory;
     private final String walletFileName;
-    public final File walletFile;
+    @Getter
+    private final File walletFile;
+    @Getter
+    private final File blockStoreFile;
+
     private final NetworkParameters params;
-    @Nullable
-    private WalletAppKit kit;
-    private final File bitcoinDirectory;
     private final Configuration.BitcoinConfig bitcoinConfig;
+
+    @Nullable
+    @Getter
+    private PeerGroup peerGroup;
+    @Nullable
+    private Wallet wallet;
 
     public Bitcoin(Configuration configuration) {
         BriefLogFormatter.init();
         this.bitcoinConfig = configuration.getBitcoinConfig();
         this.params = parseNetworkFrom(configuration.getBitcoinConfig());
+        this.bitcoinRootDirectory = new File(configuration.getBasePathPrefix(), DIRECTORY_NAME);
+
         this.walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
-        this.bitcoinDirectory = new File(configuration.getBasePathPrefix(), DIRECTORY_NAME);
-        this.walletFile = new File(bitcoinDirectory, walletFileName + ".wallet");
-        if (walletFile.exists())
-            setupWalletFromFile(walletFile);
+
+        this.walletFile = Paths.get(bitcoinRootDirectory.getAbsolutePath(), walletFileName + ".wallet").toFile();
+        this.blockStoreFile = Paths.get(bitcoinRootDirectory.getAbsolutePath(), walletFileName + ".spvchain").toFile();
     }
 
     private NetworkParameters parseNetworkFrom(Configuration.BitcoinConfig bitcoinConfig) {
@@ -53,61 +76,90 @@ public class Bitcoin {
         }
     }
 
-    private void setupWalletFromFile(File walletFile) {
+    public void setupWalletFromMnemonic(List<String> mnemonicCode, @Nullable KeyParameter key) {
+        DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 1539388800);
+        // Shut down synchronization and restart it with the new seed.
+        Runnable setupWalletFromBackup = () -> {
+            try {
+                KeyChainGroup keyChainGroup = new KeyChainGroup(params, seed);
 
-    }
+                wallet = new Wallet(params, keyChainGroup); //Wallet.fromSeed(params, seed);
 
-    private void setupWalletKit(@Nullable DeterministicSeed seed) {
+                synchronizeWalletBlocking(wallet);
 
-        // If seed is non-null it means we are restoring from backup.
-        kit = new WalletAppKit(params, bitcoinDirectory, walletFileName) {
-            @Override
-            protected void onSetupCompleted() {
-                Logger.info("Bitcoin setup complete");
-                // Don't make the user wait for confirmations for now, as the intention is they're sending it
-                // their own money!
-                try {
-                    getWallet().allowSpendingUnconfirmedTransactions();
-                } catch (WalletNotInitialized walletNotInitialized) {
-                    walletNotInitialized.printStackTrace();
-                    throw new IllegalStateException("Wallet must be initialized at this point");
-                }
+                if (key != null)
+                    saveEncryptedWallet(key);
+
+                System.out.println("Wallet balance" + wallet.getBalance().toFriendlyString());
+            } catch (IOException | BlockStoreException | WalletNotInitialized walletNotInitialized) {
+                walletNotInitialized.printStackTrace();
             }
         };
-        // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
-        // or progress widget to keep the user engaged whilst we initialise, but we don't.
-        kit.setAutoSave(false)
-                .setBlockingStartup(false)
-                .setUserAgent("RaspberryWallet", "1.0");
 
-        if (seed != null)
-            kit.restoreWalletFromSeed(seed);
+        if (peerGroup != null) {
+            ListenableFuture future = peerGroup.stopAsync();
+            future.addListener(setupWalletFromBackup, Executors.newSingleThreadExecutor());
+        } else
+            setupWalletFromBackup.run();
     }
 
-    public WalletAppKit getKit() throws WalletNotInitialized {
-        if (kit == null) throw new WalletNotInitialized();
-        return kit;
+    private void setupWalletFromFile(File walletFile, KeyParameter key) {
+        // Shut down synchronization and restart it with the new seed.
+        Runnable setupWalletFromBackup = () -> {
+            try {
+                wallet = Wallet.loadFromFile(walletFile);
+
+                if (!wallet.isEncrypted()) {
+                    saveEncryptedWallet(key);
+                    throw new SecurityException("Decrypted wallet on disk detected");
+                } else
+                    decryptWallet(key);
+
+                synchronizeWalletBlocking(wallet);
+
+                saveEncryptedWallet(key);
+
+                Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
+            } catch (IOException | BlockStoreException | UnreadableWalletException | WalletNotInitialized walletNotInitialized) {
+                walletNotInitialized.printStackTrace();
+            }
+        };
+
+        if (peerGroup != null) {
+            ListenableFuture future = peerGroup.stopAsync();
+            future.addListener(setupWalletFromBackup, Executors.newSingleThreadExecutor());
+        } else
+            setupWalletFromBackup.run();
     }
 
+
+    private void synchronizeWalletBlocking(Wallet wallet) throws BlockStoreException, IOException {
+        long start = System.currentTimeMillis();
+        final SPVBlockStore blockStore = new SPVBlockStore(params, blockStoreFile);
+
+        InputStream checkpoints = CheckpointManager.openStream(params);
+        CheckpointManager.checkpoint(params, checkpoints, blockStore, wallet.getEarliestKeyCreationTime());
+
+        BlockChain chain = new BlockChain(params, wallet, blockStore);
+
+        PeerGroup peerGroup = new PeerGroup(params, chain);
+
+        peerGroup.setUserAgent("RaspberryWallet", "1.0");
+        peerGroup.addPeerDiscovery(new DnsDiscovery(params));
+        peerGroup.addWallet(wallet);
+        peerGroup.addAddress(new PeerAddress(params, InetAddress.getLocalHost()));
+        peerGroup.start();
+        peerGroup.downloadBlockChain();
+
+        long total = System.currentTimeMillis() - start;
+        Logger.info(String.format("Synchronization took %.2f secs", (double) total / 1000.0));
+    }
+
+    @NotNull
     public Wallet getWallet() throws WalletNotInitialized {
-        if (kit == null) throw new WalletNotInitialized();
-        return kit.wallet();
-    }
-
-    void importKey(byte[] keyBytes) throws WalletNotInitialized {
-        importKey(ECKey.fromPrivate(keyBytes));
-    }
-
-    private void importKey(ECKey key) throws WalletNotInitialized {
-        getWallet().importKey(key);
-    }
-
-    void removeKey(byte[] keyBytes) throws WalletNotInitialized {
-        removeKey(ECKey.fromPrivate(keyBytes));
-    }
-
-    private void removeKey(ECKey key) throws WalletNotInitialized {
-        getWallet().removeKey(key);
+        Wallet _wallet = wallet;
+        if (_wallet == null) throw new WalletNotInitialized();
+        return _wallet;
     }
 
     public String getFreshReceiveAddress() throws WalletNotInitialized {
@@ -136,38 +188,38 @@ public class Bitcoin {
         return getWallet().getBalance(Wallet.BalanceType.AVAILABLE).toFriendlyString();
     }
 
-    public void restoreFromSeed(List<String> mnemonicCode) {
-        DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 1539388800);
-        // Shut down synchronization and restart it with the new seed.
-        Runnable setupWalletFromBackup = () -> {
-            setupWalletKit(seed);
-            try {
-                getKit().startAsync();
-            } catch (WalletNotInitialized walletNotInitialized) {
-                walletNotInitialized.printStackTrace();
-            }
-        };
-        try {
-            getKit().addListener(new Service.Listener() {
-                @Override
-                public void terminated(Service.State from) {
-                    setupWalletFromBackup.run();
-                }
-            }, Executors.newSingleThreadExecutor());
-            getKit().stopAsync();
-        } catch (WalletNotInitialized e) {
-            setupWalletFromBackup.run();
-        }
-    }
-
     public void sendCoins(String amount, String recipient) throws WalletNotInitialized {
         Coin coinsAmount = Coin.parseCoin(amount);
         Address recipientAddress = Address.fromBase58(params, recipient);
         try {
-            getWallet().sendCoins(getKit().peerGroup(), recipientAddress, coinsAmount);
+            if (peerGroup == null) throw new WalletNotInitialized();
+            getWallet().sendCoins(peerGroup, recipientAddress, coinsAmount);
         } catch (InsufficientMoneyException e) {
             Logger.err(e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public void saveEncryptedWallet(KeyParameter key) throws IOException, WalletNotInitialized {
+        Wallet _wallet = wallet;
+        if (_wallet == null) throw new WalletNotInitialized();
+        encryptWallet(key);
+        _wallet.saveToFile(walletFile);
+        decryptWallet(key);
+    }
+
+
+    public void decryptWallet(KeyParameter key) throws WalletNotInitialized {
+        Logger.d("Decrypt wallet with:" + new String(key.getKey()));
+        getWallet().decrypt(key);
+    }
+
+    public void encryptWallet(KeyParameter key) throws WalletNotInitialized {
+        Logger.d("Encrypt wallet with:" + new String(key.getKey()));
+        Wallet wallet = getWallet();
+        KeyCrypter keyCrypter = Optional
+                .ofNullable(wallet.getKeyCrypter())
+                .orElseGet(KeyCrypterScrypt::new);
+        wallet.encrypt(keyCrypter, key);
     }
 }

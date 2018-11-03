@@ -34,7 +34,8 @@ public class BitcoinJ2Test {
         wallet.saveToFile(walletFile);
         boolean chainFileExists = blockstoreFile.exists();
         boolean shouldReplayWallet = (walletFile.exists() && !chainFileExists) || mnemonicCode != null;
-        wallet = loadWallet();
+        //wallet = loadWallet();
+
         // Find the transactions that involve those coins.
         //final MemoryBlockStore blockStore = new MemoryBlockStore(params);
         final SPVBlockStore blockStore = new SPVBlockStore(params, blockstoreFile);

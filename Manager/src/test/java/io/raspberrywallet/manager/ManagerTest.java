@@ -116,7 +116,7 @@ class ManagerTest {
         selectedModulesWithInputs.put(exampleModule.getId(), new HashMap<>());
 
         manager.restoreFromBackupPhrase(mnemonicCode, selectedModulesWithInputs, 2);
-        Mockito.verify(bitcoin).restoreFromSeed(mnemonicCode);
+        Mockito.verify(bitcoin).setupWalletFromMnemonic(mnemonicCode, null);
     }
 
     @Test
@@ -148,7 +148,7 @@ class ManagerTest {
         when(database.getKeypartForModuleId(exampleModule.getId())).thenReturn(Optional.of(exampleKeyPart));
         when(database.getKeypartForModuleId(pinModule.getId())).thenReturn(Optional.of(pinKeyPart));
 
-        when(bitcoin.walletFile).thenReturn(walletFile);
+        when(bitcoin.getWalletFile()).thenReturn(walletFile);
 
         manager.lockWallet();
 

@@ -8,12 +8,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.List;
 
 import static io.raspberrywallet.manager.Utils.println;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class BitcoinTest {
     static private Bitcoin bitcoin;
@@ -31,18 +30,7 @@ public class BitcoinTest {
         List<String> mnemonicCode = TestUtils.generateRandomDeterministicMnemonicCode();
         mnemonicCode.forEach(System.out::println);
 
-        bitcoin.restoreFromSeed(mnemonicCode);
-    }
-
-    @Test
-    void should_restore_private_key_bytes() throws NoSuchAlgorithmException, WalletNotInitialized {
-        byte[] seed = SecureRandom.getInstanceStrong().generateSeed(32);
-
-        // Importing keys is available only with blockchain synced
-
-        bitcoin.importKey(seed);
-        assertTrue(Arrays.equals(bitcoin.getWallet().getImportedKeys().get(0).getPrivKeyBytes(), seed));
-        bitcoin.removeKey(seed);
+        bitcoin.setupWalletFromMnemonic(mnemonicCode, null);
     }
 
 

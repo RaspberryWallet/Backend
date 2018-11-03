@@ -14,7 +14,6 @@ import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirExcepti
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirKey;
 import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.database.KeyPartEntity;
-import io.raspberrywallet.manager.database.WalletEntity;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.linux.WPAConfiguration;
 import io.raspberrywallet.manager.linux.WifiScanner;
@@ -22,10 +21,6 @@ import io.raspberrywallet.manager.linux.WifiStatus;
 import io.raspberrywallet.manager.modules.Module;
 import kotlin.text.Charsets;
 import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.crypto.KeyCrypter;
-import org.bitcoinj.crypto.KeyCrypterException;
-import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
 import org.spongycastle.crypto.params.KeyParameter;
 
@@ -117,22 +112,22 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     }
 
     @Override
-    public void restoreFromBackupPhrase(@NotNull List<String> mnemonicCode, Map<String, Map<String,
-            String>> selectedModulesWithInputs, int required) throws RequiredInputNotFound {
+    public void restoreFromBackupPhrase(@NotNull List<String> mnemonicCode,
+                                        Map<String, Map<String, String>> selectedModulesWithInputs,
+                                        int required) throws RequiredInputNotFound {
 
         List<Module> modulesToDecrypt = selectedModulesWithInputs.keySet().stream()
                 .map(modules::get)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        bitcoin.restoreFromSeed(mnemonicCode);
+
         byte[] seed = String.join(" ", mnemonicCode).getBytes(Charsets.UTF_8);
         int numBits = seed.length * 8; //We need bits not bytes
         try {
             BigInteger[] params = Shamir.generateParams(required, numBits, seed);
             ShamirKey[] keys = Shamir.generateKeys(modulesToDecrypt.size(), required, numBits, params);
 
-            WalletEntity walletEntity = new WalletEntity();
             List<KeyPartEntity> keyPartEntities = new ArrayList<>();
             for (int i = 0; i < keys.length; i++) {
                 Module module = modulesToDecrypt.get(i);
@@ -140,15 +135,15 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                 KeyPartEntity keyPartEntity = new KeyPartEntity();
                 keyPartEntity.setPayload(module.encrypt(keys[i].toByteArray()));
                 keyPartEntity.setModule(module.getId());
-                
                 keyPartEntities.add(keyPartEntity);
             }
             database.addAllKeyParts(keyPartEntities);
 
+            bitcoin.setupWalletFromMnemonic(mnemonicCode, getWalletCipherKey());
+
         } catch (ShamirException | EncryptionException e) {
             e.printStackTrace();
         }
-    
     }
 
     @Override
@@ -161,15 +156,16 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         }
     }
 
+    private KeyParameter getWalletCipherKey() {
+        byte[] privateKeyHash = Sha256Hash.hash(getPrivateKeyFromModules());
+        return new KeyParameter(privateKeyHash);
+    }
+
     @Override
     public void unlockWallet() throws WalletNotInitialized {
-        byte[] privateKeyHash = Sha256Hash.hash(getPrivateKeyFromModules());
-        KeyParameter key = new KeyParameter(privateKeyHash);
+        KeyParameter key = getWalletCipherKey();
         try {
-            bitcoin.getWallet().decrypt(key);
-        } catch (KeyCrypterException | WalletNotInitialized e) {
-            e.printStackTrace();
-            throw e;
+            bitcoin.decryptWallet(key);
         } finally {
             Arrays.fill(key.getKey(), (byte) 0);
         }
@@ -177,26 +173,19 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
     @Override
     public boolean lockWallet() throws WalletNotInitialized {
-        KeyCrypter keyCrypter = Optional
-                .ofNullable(bitcoin.getWallet().getKeyCrypter())
-                .orElseGet(KeyCrypterScrypt::new);
-
-        byte[] privateKeyHash = Sha256Hash.hash(getPrivateKeyFromModules());
-        KeyParameter key = new KeyParameter(privateKeyHash);
+        KeyParameter key = getWalletCipherKey();
 
         try {
-            Wallet wallet = bitcoin.getWallet();
-            wallet.encrypt(keyCrypter, key);
-            wallet.saveToFile(bitcoin.walletFile);
+            bitcoin.saveEncryptedWallet(key);
+            bitcoin.encryptWallet(key);
             return true;
-        } catch (KeyCrypterException | IOException e) {
-            Logger.err(e.getMessage());
+        } catch (IOException e) {
             e.printStackTrace();
-            return false;
         } finally {
             Arrays.fill(key.getKey(), (byte) 0);
             clearModules();
         }
+        return false;
     }
 
     private void clearModules() {
@@ -272,14 +261,22 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     /* Network */
 
     @Override
-    public String[] getNetworkList() { return new WifiScanner().call(); }
+    public String[] getNetworkList() {
+        return new WifiScanner().call();
+    }
 
     @Override
-    public Map<String, String> getWifiStatus() { return new WifiStatus().call(); }
+    public Map<String, String> getWifiStatus() {
+        return new WifiStatus().call();
+    }
 
     @Override
-    public Map<String, String> getWifiConfig() { return this.wpaConfiguration.getAsMap(); }
+    public Map<String, String> getWifiConfig() {
+        return this.wpaConfiguration.getAsMap();
+    }
 
     @Override
-    public int setWifiConfig(Map<String, String> config) { return this.wpaConfiguration.setFromMap(config); }
+    public int setWifiConfig(Map<String, String> config) {
+        return this.wpaConfiguration.setFromMap(config);
+    }
 }
