@@ -156,16 +156,28 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         }
     }
 
+
     private KeyParameter getWalletCipherKey() {
         byte[] privateKeyHash = Sha256Hash.hash(getPrivateKeyFromModules());
         return new KeyParameter(privateKeyHash);
     }
 
     @Override
-    public void unlockWallet() throws WalletNotInitialized {
+    public void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) {
+        moduleToInputsMap.forEach((moduleId, inputs) -> {
+            Module module = modules.get(moduleId);
+            Logger.d("Setting inputs for " + module.getId());
+            inputs.forEach((name, value) -> {
+                Logger.d(name + ": " + value);
+            });
+            inputs.forEach(module::setInput);
+
+        });
         KeyParameter key = getWalletCipherKey();
         try {
             bitcoin.decryptWallet(key);
+        } catch (WalletNotInitialized walletNotInitialized) {
+            walletNotInitialized.printStackTrace();
         } finally {
             Arrays.fill(key.getKey(), (byte) 0);
         }
@@ -183,12 +195,12 @@ public class Manager implements io.raspberrywallet.contract.Manager {
             e.printStackTrace();
         } finally {
             Arrays.fill(key.getKey(), (byte) 0);
-            clearModules();
+            clearModuleInputs();
         }
         return false;
     }
 
-    private void clearModules() {
+    private void clearModuleInputs() {
         modules.values().forEach(Module::clearInputs);
     }
 

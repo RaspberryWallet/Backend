@@ -51,19 +51,23 @@ public class Bitcoin {
     @Nullable
     @Getter
     private PeerGroup peerGroup;
+    private final SPVBlockStore blockStore;
     @Nullable
     private Wallet wallet;
 
-    public Bitcoin(Configuration configuration) {
+    public Bitcoin(Configuration configuration) throws BlockStoreException {
         BriefLogFormatter.init();
         this.bitcoinConfig = configuration.getBitcoinConfig();
         this.params = parseNetworkFrom(configuration.getBitcoinConfig());
-        this.bitcoinRootDirectory = new File(configuration.getBasePathPrefix(), DIRECTORY_NAME);
+        this.bitcoinRootDirectory = Paths.get(configuration.getBasePathPrefix(), DIRECTORY_NAME).toFile();
+        bitcoinRootDirectory.mkdirs();
 
         this.walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
 
         this.walletFile = Paths.get(bitcoinRootDirectory.getAbsolutePath(), walletFileName + ".wallet").toFile();
         this.blockStoreFile = Paths.get(bitcoinRootDirectory.getAbsolutePath(), walletFileName + ".spvchain").toFile();
+
+        this.blockStore = new SPVBlockStore(params, blockStoreFile);
     }
 
     private NetworkParameters parseNetworkFrom(Configuration.BitcoinConfig bitcoinConfig) {
@@ -103,7 +107,7 @@ public class Bitcoin {
             setupWalletFromBackup.run();
     }
 
-    private void setupWalletFromFile(File walletFile, KeyParameter key) {
+    public void setupWalletFromFile(KeyParameter key) {
         // Shut down synchronization and restart it with the new seed.
         Runnable setupWalletFromBackup = () -> {
             try {
@@ -125,7 +129,7 @@ public class Bitcoin {
             }
         };
 
-        if (peerGroup != null) {
+        if (peerGroup != null && peerGroup.isRunning()) {
             ListenableFuture future = peerGroup.stopAsync();
             future.addListener(setupWalletFromBackup, Executors.newSingleThreadExecutor());
         } else
@@ -135,18 +139,17 @@ public class Bitcoin {
 
     private void synchronizeWalletBlocking(Wallet wallet) throws BlockStoreException, IOException {
         long start = System.currentTimeMillis();
-        final SPVBlockStore blockStore = new SPVBlockStore(params, blockStoreFile);
 
         InputStream checkpoints = CheckpointManager.openStream(params);
         CheckpointManager.checkpoint(params, checkpoints, blockStore, wallet.getEarliestKeyCreationTime());
 
         BlockChain chain = new BlockChain(params, wallet, blockStore);
 
-        PeerGroup peerGroup = new PeerGroup(params, chain);
+        peerGroup = new PeerGroup(params, chain);
+
 
         peerGroup.setUserAgent("RaspberryWallet", "1.0");
         peerGroup.addPeerDiscovery(new DnsDiscovery(params));
-        peerGroup.addWallet(wallet);
         peerGroup.addAddress(new PeerAddress(params, InetAddress.getLocalHost()));
         peerGroup.start();
         peerGroup.downloadBlockChain();
@@ -200,22 +203,31 @@ public class Bitcoin {
         }
     }
 
+    /**
+     * This method encrypt wallet, saves it onto disk and decrypt it back so it become again usable
+     *
+     * @param key key used to encrypt wallet before saving onto disk
+     * @throws IOException          when the problem with saving wallet occurs
+     * @throws WalletNotInitialized when you try to save not initialized wallet
+     */
     public void saveEncryptedWallet(KeyParameter key) throws IOException, WalletNotInitialized {
-        Wallet _wallet = wallet;
-        if (_wallet == null) throw new WalletNotInitialized();
+        getWallet(); // ensure that wallet is initialized
+
         encryptWallet(key);
-        _wallet.saveToFile(walletFile);
+
+        getWallet().saveToFile(walletFile);
+        Logger.d("Saved wallet to: " + walletFile.getAbsolutePath());
+
         decryptWallet(key);
     }
 
-
     public void decryptWallet(KeyParameter key) throws WalletNotInitialized {
-        Logger.d("Decrypt wallet with:" + new String(key.getKey()));
+        Logger.d("Decrypting wallet with:" + new String(key.getKey()));
         getWallet().decrypt(key);
     }
 
     public void encryptWallet(KeyParameter key) throws WalletNotInitialized {
-        Logger.d("Encrypt wallet with:" + new String(key.getKey()));
+        Logger.d("Encrypting wallet with:" + new String(key.getKey()));
         Wallet wallet = getWallet();
         KeyCrypter keyCrypter = Optional
                 .ofNullable(wallet.getKeyCrypter())

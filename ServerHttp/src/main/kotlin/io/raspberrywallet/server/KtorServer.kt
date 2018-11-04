@@ -182,9 +182,10 @@ fun Application.mainModule() {
             manager.tap()
             call.respond(mapOf("walletStatus" to manager.walletStatus))
         }
-        get(unlockWallet) {
+        post(unlockWallet) {
             manager.tap()
-            call.respond(manager.unlockWallet())
+            val moduleToInputsMap = call.receive<Map<String, Map<String, String>>>()
+            call.respond(manager.unlockWallet(moduleToInputsMap))
         }
         get(lockWallet) {
             call.respond(manager.lockWallet())
@@ -297,8 +298,8 @@ val setNetwork = HtmlContent {
     head {
         title { +"Change Wi-Fi settings" }
         link(rel = "Stylesheet", type = "text/css", href = "/style.css")
-        script { src="/scripts.js"; type = "text/javascript" }
-        script { src="/jquery.min.js"; type = "text/javascript" }
+        script { src = "/scripts.js"; type = "text/javascript" }
+        script { src = "/jquery.min.js"; type = "text/javascript" }
     }
     body {
         h1 { a(href = "/index/") { +"<- Back" } }
@@ -306,7 +307,7 @@ val setNetwork = HtmlContent {
         h3 { +"ESSID:" }
         form(method = FormMethod.post, action = setWifi) {
             select {
-                id="ssid"
+                id = "ssid"
                 name = "ssid"
                 for (network in manager.networkList) {
                     option {
@@ -318,7 +319,7 @@ val setNetwork = HtmlContent {
             span {
                 onClick = "refreshNetworks()"
                 style = "cursor: pointer, link, hand"
-                + "Refresh"
+                +"Refresh"
             }
             h3 { +"Pre shared key:" }
             input(type = InputType.password, name = "psk") {}

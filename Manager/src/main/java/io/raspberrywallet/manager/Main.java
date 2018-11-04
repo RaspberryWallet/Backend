@@ -12,6 +12,7 @@ import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.manager.modules.ModuleClassLoader;
 import org.apache.commons.cli.CommandLine;
+import org.bitcoinj.store.BlockStoreException;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +23,7 @@ import static io.raspberrywallet.server.KtorServerKt.startKtorServer;
 
 public class Main {
 
-    public static void main(String... args) throws IOException, DecryptionException, EncryptionException {
+    public static void main(String... args) throws IOException, DecryptionException, EncryptionException, BlockStoreException {
         CommandLine cmd = parseArgs(args);
 
         File yamlConfigFile = new File(Opts.CONFIG.getValue(cmd));

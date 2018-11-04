@@ -123,8 +123,6 @@ class ManagerTest {
     void unlockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
 
-        pinModule.setInput(PinModule.Inputs.PIN, "1234");
-
         ShamirKey exampleKey = new ShamirKey(BigInteger.ONE, BigInteger.TEN, BigInteger.ONE);
         ShamirKey pinKey = new ShamirKey(BigInteger.TEN, BigInteger.ONE, BigInteger.TEN);
         final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encrypt(exampleKey.toByteArray()), exampleModule.getId());
@@ -132,7 +130,12 @@ class ManagerTest {
         when(database.getKeypartForModuleId(exampleModule.getId())).thenReturn(Optional.of(exampleKeyPart));
         when(database.getKeypartForModuleId(pinModule.getId())).thenReturn(Optional.of(pinKeyPart));
 
-        assertThrows(IllegalStateException.class, () -> manager.unlockWallet());
+        Map<String, Map<String, String>> moduleToInputsMap = new HashMap<>();
+        HashMap<String, String> pinInputs = new HashMap<>();
+        pinInputs.put(PinModule.Inputs.PIN, "1234");
+        moduleToInputsMap.put(pinModule.getId(), pinInputs);
+
+        assertThrows(IllegalStateException.class, () -> manager.unlockWallet(moduleToInputsMap));
     }
 
     @Test
@@ -161,9 +164,15 @@ class ManagerTest {
     void unlockWalletWhenLocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
         lockWalletWhenUnlocked();
 
-        pinModule.setInput(PinModule.Inputs.PIN, "1234");
+        Map<String, Map<String, String>> moduleToInputsMap = new HashMap<>();
+        HashMap<String, String> pinInputs = new HashMap<>();
+        pinInputs.put(PinModule.Inputs.PIN, "1234");
+        moduleToInputsMap.put(pinModule.getId(), pinInputs);
 
-        manager.unlockWallet();
+
+        manager.unlockWallet(moduleToInputsMap);
+
+
         assertEquals(manager.getWalletStatus(), WalletStatus.DECRYPTED);
     }
 

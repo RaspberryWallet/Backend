@@ -39,10 +39,11 @@ public class BitcoinJTest {
         Wallet wallet = new Wallet(params, keyChainGroup); //Wallet.fromSeed(params, seed);
 
         synchronizeWalletBlocking(wallet);
-        wallet.encrypt("password");
+        wallet.encrypt(password);
         wallet.saveToFile(walletFile);
 
         System.out.println("Wallet balance" + wallet.getBalance().toFriendlyString());
+        restoreWalletFromFile();
     }
 
     @Test
@@ -81,6 +82,8 @@ public class BitcoinJTest {
         peerGroup.start();
         peerGroup.downloadBlockChain();
         peerGroup.stopAsync();
+        blockStore.close();
+
         long total = System.currentTimeMillis() - start;
         Logger.info(String.format("Synchronization took %.2f secs", (double) total / 1000.0));
     }
