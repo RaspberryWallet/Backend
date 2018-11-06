@@ -165,6 +165,10 @@ public class Bitcoin {
         return _wallet;
     }
 
+    public void ensureWalletInitialized() throws WalletNotInitialized {
+        if (wallet == null) throw new WalletNotInitialized();
+    }
+
     public String getFreshReceiveAddress() throws WalletNotInitialized {
         return getWallet().freshReceiveAddress().toBase58();
     }

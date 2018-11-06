@@ -109,7 +109,7 @@ fun Application.mainModule() {
     install(DefaultHeaders)
     install(StatusPages) {
         exception<WalletNotInitialized> { cause ->
-            call.respond(HttpStatusCode.MethodNotAllowed, "Wallet not initialized")
+            call.respond(HttpStatusCode.MethodNotAllowed, mapOf("message" to "Wallet not initialized"))
         }
     }
 

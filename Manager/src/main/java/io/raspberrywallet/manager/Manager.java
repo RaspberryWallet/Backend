@@ -163,7 +163,8 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     }
 
     @Override
-    public void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) {
+    public void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) throws WalletNotInitialized {
+        bitcoin.ensureWalletInitialized();
         moduleToInputsMap.forEach((moduleId, inputs) -> {
             Module module = modules.get(moduleId);
             Logger.d("Setting inputs for " + module.getId());
@@ -173,11 +174,10 @@ public class Manager implements io.raspberrywallet.contract.Manager {
             inputs.forEach(module::setInput);
 
         });
+
         KeyParameter key = getWalletCipherKey();
         try {
             bitcoin.decryptWallet(key);
-        } catch (WalletNotInitialized walletNotInitialized) {
-            walletNotInitialized.printStackTrace();
         } finally {
             Arrays.fill(key.getKey(), (byte) 0);
         }
@@ -185,6 +185,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
     @Override
     public boolean lockWallet() throws WalletNotInitialized {
+        bitcoin.ensureWalletInitialized();
         KeyParameter key = getWalletCipherKey();
 
         try {

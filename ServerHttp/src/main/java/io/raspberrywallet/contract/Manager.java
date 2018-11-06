@@ -56,7 +56,7 @@ public interface Manager {
      * @param moduleToInputsMap map of moduleId => [inputName => inputValue]
      * @return true if unlocking succeeded
      */
-    void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap);
+    void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) throws WalletNotInitialized;
 
     /**
      * lock wallet remove key from bitcoinJ, fill zeros on modules decryptedValue props
