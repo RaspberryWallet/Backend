@@ -10,11 +10,11 @@ modules:
     max-retry: 5
 
   AuthorizationServerModule:
-    host: 89.89.89.89
+    host: 127.0.0.1
     port: 8080
     endpoints:
       set-secret: /authorization/secret/set
-      overwritte-secret: /authorization/secret/overwritte
+      overwrite: /authorization/secret/overwritte
     https: true
 
   PushButtonModule:
