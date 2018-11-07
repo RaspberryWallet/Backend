@@ -82,25 +82,21 @@ public class Bitcoin {
 
     public void setupWalletFromMnemonic(List<String> mnemonicCode, @Nullable KeyParameter key) {
         DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 1539388800);
-        // Shut down synchronization and restart it with the new seed.
         Runnable setupWalletFromBackup = () -> {
             try {
                 KeyChainGroup keyChainGroup = new KeyChainGroup(params, seed);
-
                 wallet = new Wallet(params, keyChainGroup); //Wallet.fromSeed(params, seed);
-
                 synchronizeWalletBlocking(wallet);
-
                 if (key != null)
                     saveEncryptedWallet(key);
-
-                System.out.println("Wallet balance" + wallet.getBalance().toFriendlyString());
+                Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
             } catch (IOException | BlockStoreException | WalletNotInitialized walletNotInitialized) {
                 walletNotInitialized.printStackTrace();
             }
         };
 
         if (peerGroup != null) {
+            // Shut down synchronization before setting up new wallet
             ListenableFuture future = peerGroup.stopAsync();
             future.addListener(setupWalletFromBackup, Executors.newSingleThreadExecutor());
         } else
@@ -108,7 +104,6 @@ public class Bitcoin {
     }
 
     public void setupWalletFromFile(KeyParameter key) {
-        // Shut down synchronization and restart it with the new seed.
         Runnable setupWalletFromBackup = () -> {
             try {
                 wallet = Wallet.loadFromFile(walletFile);
@@ -120,16 +115,14 @@ public class Bitcoin {
                     decryptWallet(key);
 
                 synchronizeWalletBlocking(wallet);
-
                 saveEncryptedWallet(key);
-
                 Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
             } catch (IOException | BlockStoreException | UnreadableWalletException | WalletNotInitialized walletNotInitialized) {
                 walletNotInitialized.printStackTrace();
             }
         };
-
         if (peerGroup != null && peerGroup.isRunning()) {
+            // Shut down synchronization before setting up new wallet
             ListenableFuture future = peerGroup.stopAsync();
             future.addListener(setupWalletFromBackup, Executors.newSingleThreadExecutor());
         } else
@@ -137,6 +130,11 @@ public class Bitcoin {
     }
 
 
+    /**
+     * Download blockchain from PeerGroup discovered by DnsDiscovery on the NetworkParams
+     *
+     * @param wallet wallet to index transactions for
+     */
     private void synchronizeWalletBlocking(Wallet wallet) throws BlockStoreException, IOException {
         long start = System.currentTimeMillis();
 
@@ -146,8 +144,6 @@ public class Bitcoin {
         BlockChain chain = new BlockChain(params, wallet, blockStore);
 
         peerGroup = new PeerGroup(params, chain);
-
-
         peerGroup.setUserAgent("RaspberryWallet", "1.0");
         peerGroup.addPeerDiscovery(new DnsDiscovery(params));
         peerGroup.addAddress(new PeerAddress(params, InetAddress.getLocalHost()));
@@ -167,6 +163,36 @@ public class Bitcoin {
 
     public void ensureWalletInitialized() throws WalletNotInitialized {
         if (wallet == null) throw new WalletNotInitialized();
+    }
+
+    /**
+     * This method encrypt wallet, saves it onto disk and decrypt it back so it become again usable
+     *
+     * @param key key used to encrypt wallet before saving onto disk
+     * @throws IOException          when the problem with saving wallet occurs
+     * @throws WalletNotInitialized when you try to save not initialized wallet
+     */
+    public void saveEncryptedWallet(KeyParameter key) throws IOException, WalletNotInitialized {
+        ensureWalletInitialized();
+
+        encryptWallet(key);
+        getWallet().saveToFile(walletFile);
+        Logger.d("Saved wallet to: " + walletFile.getAbsolutePath());
+        decryptWallet(key);
+    }
+
+    public void decryptWallet(KeyParameter key) throws WalletNotInitialized {
+        Logger.d("Decrypting wallet with:" + new String(key.getKey()));
+        getWallet().decrypt(key);
+    }
+
+    public void encryptWallet(KeyParameter key) throws WalletNotInitialized {
+        Logger.d("Encrypting wallet with:" + new String(key.getKey()));
+        Wallet wallet = getWallet();
+        KeyCrypter keyCrypter = Optional
+                .ofNullable(wallet.getKeyCrypter())
+                .orElseGet(KeyCrypterScrypt::new);
+        wallet.encrypt(keyCrypter, key);
     }
 
     public String getFreshReceiveAddress() throws WalletNotInitialized {
@@ -205,37 +231,5 @@ public class Bitcoin {
             Logger.err(e.getMessage());
             e.printStackTrace();
         }
-    }
-
-    /**
-     * This method encrypt wallet, saves it onto disk and decrypt it back so it become again usable
-     *
-     * @param key key used to encrypt wallet before saving onto disk
-     * @throws IOException          when the problem with saving wallet occurs
-     * @throws WalletNotInitialized when you try to save not initialized wallet
-     */
-    public void saveEncryptedWallet(KeyParameter key) throws IOException, WalletNotInitialized {
-        getWallet(); // ensure that wallet is initialized
-
-        encryptWallet(key);
-
-        getWallet().saveToFile(walletFile);
-        Logger.d("Saved wallet to: " + walletFile.getAbsolutePath());
-
-        decryptWallet(key);
-    }
-
-    public void decryptWallet(KeyParameter key) throws WalletNotInitialized {
-        Logger.d("Decrypting wallet with:" + new String(key.getKey()));
-        getWallet().decrypt(key);
-    }
-
-    public void encryptWallet(KeyParameter key) throws WalletNotInitialized {
-        Logger.d("Encrypting wallet with:" + new String(key.getKey()));
-        Wallet wallet = getWallet();
-        KeyCrypter keyCrypter = Optional
-                .ofNullable(wallet.getKeyCrypter())
-                .orElseGet(KeyCrypterScrypt::new);
-        wallet.encrypt(keyCrypter, key);
     }
 }
