@@ -23,6 +23,7 @@ class ConfigurationTest {
                 "autolock-seconds: 1800\n" +
                 "bitcoin:\n" +
                 "  network: testnet\n" +
+                "  userAgent: RaspberryWallet\n" +
                 "\n" +
                 "\n" +
                 "modules:\n" +

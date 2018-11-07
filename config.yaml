@@ -4,6 +4,7 @@ base-path-prefix: /opt/wallet/
 autolock-seconds: 1800
 bitcoin:
   network: testnet
+  user-agent: RaspberryWallet
 modules:
   PinModule:
     max-retry: 5

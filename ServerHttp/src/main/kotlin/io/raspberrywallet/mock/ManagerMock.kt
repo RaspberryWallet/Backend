@@ -48,7 +48,7 @@ class ManagerMock : Manager {
     override fun nextStep(moduleId: String, input: Map<String, String>): Response =
         Response(SimpleStep("Do something"), Response.Status.OK)
 
-    override fun unlockWallet() {}
+    override fun unlockWallet(moduleToInputsMap: MutableMap<String, out MutableMap<String, String>>) {}
 
     override fun getCurrentReceiveAddress() = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
 

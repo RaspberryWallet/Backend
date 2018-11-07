@@ -2,47 +2,56 @@ package io.raspberrywallet.manager.bitcoin;
 
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.Configuration;
-import io.raspberrywallet.manager.TestUtils;
-import org.bitcoinj.crypto.MnemonicException;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.store.BlockStoreException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.spongycastle.crypto.params.KeyParameter;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
 import static io.raspberrywallet.manager.Utils.println;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class BitcoinTest {
     static private Bitcoin bitcoin;
-
+    static private List<String> mnemonicCode;
+    static private KeyParameter key;
 
     @BeforeAll
-    static void setup() {
-        Configuration configuration = new Configuration();
+    static void setup() throws BlockStoreException, IOException {
+        mnemonicCode = Arrays.asList("member", "team", "romance", "alarm", "antique", "legal",
+                "captain", "dutch", "matter", "dinner", "loan", "orange");
+        println("Using mnemonic:" + mnemonicCode.stream().reduce("", (acc, word) -> acc + " " + word));
+
+        key = new KeyParameter(Sha256Hash.hash("rasperrywallet is the best bitcoin wallet ever".getBytes()));
+
+        Paths.get("/", "tmp", "wallet").toFile().mkdirs();
+        Configuration configuration = new Configuration(360000, "/tmp/wallet", "1.0");
         bitcoin = new Bitcoin(configuration);
     }
 
+    @Test
+    void use_case_restore_from_mnemonic_save_encrypted_and_restore_from_file() {
+        should_restore_from_mnemonic_words();
+        should_restore_from_file();
+    }
+
 
     @Test
-    void should_restore_randomly_generated_mnemonic_words() throws NoSuchAlgorithmException, MnemonicException {
-        List<String> mnemonicCode = TestUtils.generateRandomDeterministicMnemonicCode();
-        mnemonicCode.forEach(System.out::println);
-
-        bitcoin.restoreFromSeed(mnemonicCode);
+    void should_restore_from_mnemonic_words() {
+        bitcoin.setupWalletFromMnemonic(mnemonicCode, key);
+        bitcoin.getPeerGroup().stop();
     }
 
     @Test
-    void should_restore_private_key_bytes() throws NoSuchAlgorithmException, WalletNotInitialized {
-        byte[] seed = SecureRandom.getInstanceStrong().generateSeed(32);
-
-        // Importing keys is available only with blockchain synced
-
-        bitcoin.importKey(seed);
-        assertTrue(Arrays.equals(bitcoin.getWallet().getImportedKeys().get(0).getPrivKeyBytes(), seed));
-        bitcoin.removeKey(seed);
+    void should_restore_from_file() {
+        bitcoin.setupWalletFromFile(key);
+        bitcoin.getPeerGroup().stop();
     }
 
 

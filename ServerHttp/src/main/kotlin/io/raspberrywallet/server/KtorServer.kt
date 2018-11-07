@@ -9,6 +9,7 @@ import io.ktor.application.install
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
+import io.ktor.features.StatusPages
 import io.ktor.html.HtmlContent
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.resources
@@ -25,6 +26,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.raspberrywallet.contract.Manager
+import io.raspberrywallet.contract.WalletNotInitialized
 import io.raspberrywallet.server.Paths.Bitcoin.availableBalance
 import io.raspberrywallet.server.Paths.Bitcoin.currentAddress
 import io.raspberrywallet.server.Paths.Bitcoin.estimatedBalance
@@ -105,6 +107,11 @@ fun Application.mainModule() {
         level = Level.INFO
     }
     install(DefaultHeaders)
+    install(StatusPages) {
+        exception<WalletNotInitialized> { cause ->
+            call.respond(HttpStatusCode.MethodNotAllowed, mapOf("message" to "Wallet not initialized"))
+        }
+    }
 
     routing {
         /* Index */
@@ -182,9 +189,10 @@ fun Application.mainModule() {
             manager.tap()
             call.respond(mapOf("walletStatus" to manager.walletStatus))
         }
-        get(unlockWallet) {
+        post(unlockWallet) {
             manager.tap()
-            call.respond(manager.unlockWallet())
+            val moduleToInputsMap = call.receive<Map<String, Map<String, String>>>()
+            call.respond(manager.unlockWallet(moduleToInputsMap))
         }
         get(lockWallet) {
             call.respond(manager.lockWallet())
@@ -297,8 +305,8 @@ val setNetwork = HtmlContent {
     head {
         title { +"Change Wi-Fi settings" }
         link(rel = "Stylesheet", type = "text/css", href = "/style.css")
-        script { src="/scripts.js"; type = "text/javascript" }
-        script { src="/jquery.min.js"; type = "text/javascript" }
+        script { src = "/scripts.js"; type = "text/javascript" }
+        script { src = "/jquery.min.js"; type = "text/javascript" }
     }
     body {
         h1 { a(href = "/index/") { +"<- Back" } }
@@ -306,7 +314,7 @@ val setNetwork = HtmlContent {
         h3 { +"ESSID:" }
         form(method = FormMethod.post, action = setWifi) {
             select {
-                id="ssid"
+                id = "ssid"
                 name = "ssid"
                 for (network in manager.networkList) {
                     option {
@@ -318,7 +326,7 @@ val setNetwork = HtmlContent {
             span {
                 onClick = "refreshNetworks()"
                 style = "cursor: pointer, link, hand"
-                + "Refresh"
+                +"Refresh"
             }
             h3 { +"Pre shared key:" }
             input(type = InputType.password, name = "psk") {}

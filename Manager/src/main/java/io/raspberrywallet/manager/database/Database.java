@@ -99,7 +99,7 @@ public class Database implements Destroyable {
     }
 
     /**
-     * Use saveWallet() instead.
+     * Use saveEncryptedWallet() instead.
      */
     @Deprecated
     public void saveWallet(WalletEntity walletEntity) throws IOException, EncryptionException {
