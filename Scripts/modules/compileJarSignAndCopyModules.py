@@ -5,7 +5,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-modules = ['PinModule', 'ExampleModule']
+modules = ['PinModule', 'ExampleModule', 'AuthorizationServerModule']
 
 # Abs path normalization
 projectRoot = Path().absolute()
@@ -26,7 +26,7 @@ if not Path(systemModulesDir).exists():
 # Copy .class files
 for moduleName in modules:
     shutil.copy(
-        str(projectRoot / 'Manager/out/production/classes/io/raspberrywallet/manager/modules'
+        str(projectRoot / 'Manager/target/classes/io/raspberrywallet/manager/modules'
             / moduleName.replace("Module", "").lower() / str(moduleName + '.class'))
         , systemModulesDir)
 
