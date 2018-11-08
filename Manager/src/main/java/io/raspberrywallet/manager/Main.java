@@ -12,6 +12,7 @@ import org.apache.commons.cli.CommandLine;
 import org.bitcoinj.store.BlockStoreException;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static io.raspberrywallet.manager.cli.CliUtils.parseArgs;
@@ -19,7 +20,7 @@ import static io.raspberrywallet.server.KtorServerKt.startKtorServer;
 
 public class Main {
 
-    public static void main(String... args) throws BlockStoreException {
+    public static void main(String... args) throws BlockStoreException, IOException {
         CommandLine cmd = parseArgs(args);
 
         File yamlConfigFile = new File(Opts.CONFIG.getValue(cmd));

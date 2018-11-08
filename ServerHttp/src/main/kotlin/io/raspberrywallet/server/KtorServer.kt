@@ -197,7 +197,7 @@ fun Application.mainModule() {
         /*Modules*/
         get(modules) {
             manager.tap()
-            call.respond(manager.modules)
+            call.respond(manager.serverModules)
         }
         get(moduleState) {
             manager.tap()

@@ -19,7 +19,7 @@ public interface Manager {
      * @return all available modules
      */
     @NotNull
-    List<Module> getModules();
+    List<Module> getServerModules();
 
     /**
      * @return state of specified module

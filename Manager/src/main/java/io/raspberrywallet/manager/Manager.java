@@ -20,6 +20,7 @@ import io.raspberrywallet.manager.linux.WifiScanner;
 import io.raspberrywallet.manager.linux.WifiStatus;
 import io.raspberrywallet.manager.modules.Module;
 import kotlin.text.Charsets;
+import lombok.Getter;
 import org.bitcoinj.core.Sha256Hash;
 import org.jetbrains.annotations.NotNull;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -38,6 +39,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
      * Module id -> Module instance
      */
     @NotNull
+    @Getter
     private final ConcurrentHashMap<String, Module> modules = new ConcurrentHashMap<>();
     @NotNull
     private final Bitcoin bitcoin;
@@ -93,7 +95,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
      */
 
     @Override
-    public List<io.raspberrywallet.contract.module.Module> getModules() {
+    public List<io.raspberrywallet.contract.module.Module> getServerModules() {
         return modules.values().stream()
                 .map(Module::asServerModule)
                 .collect(toList());
@@ -149,7 +151,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public WalletStatus getWalletStatus() {
         try {
-            if (!bitcoin.isFirstTime()) return WalletStatus.FIRST_TIME;
+            if (bitcoin.isFirstTime()) return WalletStatus.FIRST_TIME;
             return bitcoin.getWallet().isEncrypted() ?
                     WalletStatus.ENCRYPTED : WalletStatus.DECRYPTED;
         } catch (IllegalStateException | WalletNotInitialized e) {

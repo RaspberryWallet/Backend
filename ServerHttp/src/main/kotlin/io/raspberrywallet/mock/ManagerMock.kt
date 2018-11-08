@@ -44,7 +44,7 @@ class ManagerMock : Manager {
 
     override fun ping() = "pong"
 
-    override fun getModules() = _modules.values.toList()
+    override fun getServerModules() = _modules.values.toList()
 
     override fun getModuleState(moduleId: String): ModuleState {
         val randomModuleState = ModuleState.READY

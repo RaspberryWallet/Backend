@@ -78,7 +78,7 @@ class ManagerTest {
 
     @Test
     void getModules() {
-        manager.getModules().forEach(module -> assertTrue(module instanceof io.raspberrywallet.contract.module.Module));
+        manager.getServerModules().forEach(module -> assertTrue(module instanceof io.raspberrywallet.contract.module.Module));
     }
 
     @Test
@@ -157,7 +157,7 @@ class ManagerTest {
 
         assertTrue(walletFile.exists());
         assertEquals(manager.getWalletStatus(), WalletStatus.ENCRYPTED);
-        //todo assert that inputs are cleared
+        assertFalse(pinModule.hasInput(PinModule.Inputs.PIN));
     }
 
     @Test
@@ -169,9 +169,7 @@ class ManagerTest {
         pinInputs.put(PinModule.Inputs.PIN, "1234");
         moduleToInputsMap.put(pinModule.getId(), pinInputs);
 
-
         manager.unlockWallet(moduleToInputsMap);
-
 
         assertEquals(manager.getWalletStatus(), WalletStatus.DECRYPTED);
     }
