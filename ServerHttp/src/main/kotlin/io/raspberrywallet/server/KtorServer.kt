@@ -36,6 +36,7 @@ import io.raspberrywallet.server.Paths.Modules.lockWallet
 import io.raspberrywallet.server.Paths.Modules.moduleState
 import io.raspberrywallet.server.Paths.Modules.modules
 import io.raspberrywallet.server.Paths.Modules.nextStep
+import io.raspberrywallet.server.Paths.Modules.register
 import io.raspberrywallet.server.Paths.Modules.restoreFromBackupPhrase
 import io.raspberrywallet.server.Paths.Modules.unlockWallet
 import io.raspberrywallet.server.Paths.Modules.walletStatus
@@ -77,6 +78,7 @@ sealed class Paths {
         const val unlockWallet = prefix + "unlockWallet"
         const val lockWallet = prefix + "lockWallet"
         const val walletStatus = prefix + "walletStatus"
+        const val register = "/auth-register"
     }
 
     object Bitcoin : Paths() {
@@ -220,6 +222,10 @@ fun Application.mainModule() {
         get(availableBalance) {
             manager.tap()
             call.respond(mapOf("availableBalance" to manager.availableBalance))
+        }
+
+        get(register) {
+            call.respond(registerForm)
         }
     }
 }
@@ -365,6 +371,48 @@ val status = HtmlContent {
                 tr {
                     td(classes = "param") { +param }
                     td { +value }
+                }
+            }
+        }
+    }
+}
+
+val registerForm = HtmlContent {
+    head {
+        title { +"Create account on Auth Server" }
+        link(rel = "Stylesheet", type="text/css", href = "/style.css")
+        script { src = "/jquery.min.js"; type = "text/javascript" }
+        script { src = "/scripts.js"; type = "text/javascript" }
+    }
+    body {
+        h1 { a(href = "/index/") { +"<- Back" } }
+        div(classes = "register-form") {
+            div {
+                h2 { +"Register form" }
+                form(method = FormMethod.post, action = "/authServer-register") {
+                    id = "register_form"
+                    table {
+                        tr {
+                            td { +"E-mail:" }
+                            td { input(type = InputType.text, name = "email") { id = "register_email" } }
+                        }
+                        tr {
+                            td { +"Password:" }
+                            td { input(type = InputType.password, name = "password") { id = "register_password" } }
+                        }
+                        tr {
+                            td { +"Repeat:" }
+                            td { input(type = InputType.password, name = "password2") { id = "register_password2" } }
+                        }
+                        tr {
+                            td {
+                                colSpan = "2"
+                                button(type = ButtonType.submit) { id = "register_button"; disabled = true; +"Register" }
+                            }
+                        }
+                    }
+
+
                 }
             }
         }
