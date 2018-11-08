@@ -84,7 +84,7 @@ class ManagerTest {
     @Test
     void getWalletStatusUnset() throws WalletNotInitialized {
         when(bitcoin.getWallet()).thenThrow(new WalletNotInitialized());
-        assertEquals(manager.getWalletStatus(), WalletStatus.UNSET);
+        assertEquals(manager.getWalletStatus(), WalletStatus.UNLOADED);
     }
 
     @Test

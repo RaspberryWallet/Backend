@@ -6,6 +6,7 @@ import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.Configuration;
 import lombok.Getter;
 import org.bitcoinj.core.*;
+import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.net.discovery.DnsDiscovery;
@@ -147,8 +148,9 @@ public class Bitcoin {
         peerGroup.setUserAgent("RaspberryWallet", "1.0");
         peerGroup.addPeerDiscovery(new DnsDiscovery(params));
         peerGroup.addAddress(new PeerAddress(params, InetAddress.getLocalHost()));
-        peerGroup.start();
-        peerGroup.downloadBlockChain();
+        peerGroup.startAsync();
+        DownloadProgressTracker listener = new DownloadProgressTracker();
+        peerGroup.startBlockChainDownload(listener);
 
         long total = System.currentTimeMillis() - start;
         Logger.info(String.format("Synchronization took %.2f secs", (double) total / 1000.0));
@@ -231,5 +233,9 @@ public class Bitcoin {
             Logger.err(e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public boolean isFirstTime() {
+        return !walletFile.exists();
     }
 }

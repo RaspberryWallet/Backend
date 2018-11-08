@@ -4,9 +4,6 @@ import com.stasbar.Logger;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cli.Opts;
-import io.raspberrywallet.manager.cryptography.common.Password;
-import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
-import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
@@ -15,7 +12,6 @@ import org.apache.commons.cli.CommandLine;
 import org.bitcoinj.store.BlockStoreException;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import static io.raspberrywallet.manager.cli.CliUtils.parseArgs;
@@ -23,7 +19,7 @@ import static io.raspberrywallet.server.KtorServerKt.startKtorServer;
 
 public class Main {
 
-    public static void main(String... args) throws IOException, DecryptionException, EncryptionException, BlockStoreException {
+    public static void main(String... args) throws BlockStoreException {
         CommandLine cmd = parseArgs(args);
 
         File yamlConfigFile = new File(Opts.CONFIG.getValue(cmd));
@@ -36,14 +32,11 @@ public class Main {
 
         TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
 
-        //TODO change this to read from user
-        Password password = new Password("changeme".toCharArray());
-
-        Database db = new Database(configuration, password);
+        Database db = new Database(configuration);
 
         Manager manager = new Manager(db, modules, bitcoin, temperatureMonitor);
 
-        startKtorServer(manager);
+        startKtorServer(manager, configuration.getBasePathPrefix(), configuration.getServerConfig());
 
         prepareShutdownHook(bitcoin, manager);
     }

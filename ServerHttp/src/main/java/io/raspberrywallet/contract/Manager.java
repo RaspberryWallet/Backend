@@ -54,10 +54,15 @@ public interface Manager {
      * unlock/merge decrypted parts
      *
      * @param moduleToInputsMap map of moduleId => [inputName => inputValue]
-     * @return true if unlocking succeeded
      */
     void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) throws WalletNotInitialized;
 
+    /**
+     * Decrypt and load wallet from disk
+     *
+     * @param moduleToInputsMap map of moduleId => [inputName => inputValue]
+     */
+    void loadWalletFromDisk(@NotNull Map<String, Map<String, String>> moduleToInputsMap);
     /**
      * lock wallet remove key from bitcoinJ, fill zeros on modules decryptedValue props
      *
@@ -133,11 +138,17 @@ public interface Manager {
      */
     void tap();
 
+    /**
+     * Sets database password
+     */
+    void setDatabasePassword(@NotNull String password) throws Exception;
     /*
      * Network
      */
+
     /**
      * Lists nearby wireless networks
+     *
      * @return String array of found networks
      */
     @NotNull
@@ -145,6 +156,7 @@ public interface Manager {
 
     /**
      * Get current status of Wi-Fi
+     *
      * @return map with status parameters, described in io.raspberrywallet.manager.linux.WifiStatus::call
      */
     @NotNull
@@ -152,6 +164,7 @@ public interface Manager {
 
     /**
      * Gets current config of Wi-Fi: saved SSID and encrypted PSK
+     *
      * @return Map with configuration parameters
      */
     @NotNull
@@ -159,5 +172,4 @@ public interface Manager {
 
     @NotNull
     int setWifiConfig(Map<String, String> newConf);
-
 }

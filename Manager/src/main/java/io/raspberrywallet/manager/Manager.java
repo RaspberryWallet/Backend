@@ -149,10 +149,11 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public WalletStatus getWalletStatus() {
         try {
+            if (!bitcoin.isFirstTime()) return WalletStatus.FIRST_TIME;
             return bitcoin.getWallet().isEncrypted() ?
                     WalletStatus.ENCRYPTED : WalletStatus.DECRYPTED;
         } catch (IllegalStateException | WalletNotInitialized e) {
-            return WalletStatus.UNSET;
+            return WalletStatus.UNLOADED;
         }
     }
 
@@ -165,6 +166,28 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) throws WalletNotInitialized {
         bitcoin.ensureWalletInitialized();
+        fillModulesWithInputs(moduleToInputsMap);
+        KeyParameter key = getWalletCipherKey();
+        try {
+            bitcoin.decryptWallet(key);
+        } finally {
+            Arrays.fill(key.getKey(), (byte) 0);
+        }
+    }
+
+    @Override
+    public void loadWalletFromDisk(@NotNull Map<String, Map<String, String>> moduleToInputsMap) {
+        fillModulesWithInputs(moduleToInputsMap);
+        KeyParameter key = getWalletCipherKey();
+        try {
+            bitcoin.setupWalletFromFile(key);
+        } finally {
+            Arrays.fill(key.getKey(), (byte) 0);
+        }
+
+    }
+
+    private void fillModulesWithInputs(@NotNull Map<String, Map<String, String>> moduleToInputsMap) {
         moduleToInputsMap.forEach((moduleId, inputs) -> {
             Module module = modules.get(moduleId);
             Logger.d("Setting inputs for " + module.getId());
@@ -172,15 +195,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                 Logger.d(name + ": " + value);
             });
             inputs.forEach(module::setInput);
-
         });
-
-        KeyParameter key = getWalletCipherKey();
-        try {
-            bitcoin.decryptWallet(key);
-        } finally {
-            Arrays.fill(key.getKey(), (byte) 0);
-        }
     }
 
     @Override
@@ -269,6 +284,16 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public void tap() {
         autoLockRemainingMinutes = 10;
+    }
+
+    @Override
+    public void setDatabasePassword(@NotNull String password) throws SecurityException {
+        try {
+            database.setPassword(password);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new SecurityException(e);
+        }
     }
 
     /* Network */

@@ -9,19 +9,26 @@ import io.raspberrywallet.contract.step.SimpleStep
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
+    override fun loadWalletFromDisk(moduleToInputsMap: MutableMap<String, MutableMap<String, String>>) {
+        TODO("not implemented")
+    }
+
+    override fun setDatabasePassword(password: String) {
+        TODO("not implemented")
+    }
 
     override fun getWalletStatus() = WalletStatus.ENCRYPTED
 
     override fun tap() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") 
     }
 
     override fun lockWallet(): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") 
     }
 
     override fun sendCoins(amount: String, recipientAddress: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") 
     }
 
 

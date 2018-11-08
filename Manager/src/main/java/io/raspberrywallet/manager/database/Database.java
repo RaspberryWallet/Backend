@@ -28,11 +28,14 @@ public class Database implements Destroyable {
     private WalletEntity wallet = null;
 
     private final File databaseFile;
-    private final Password password;
+    private Password password;
 
-    public Database(Configuration config, Password password) throws IOException, DecryptionException, EncryptionException {
-        this.password = password;
+    public Database(Configuration config) {
         databaseFile = new File(config.getBasePathPrefix(), DATABASE_FILE_NAME);
+    }
+
+    public void setPassword(String password) throws EncryptionException, DecryptionException, IOException {
+        this.password = new Password(password);
         loadDatabase();
     }
 

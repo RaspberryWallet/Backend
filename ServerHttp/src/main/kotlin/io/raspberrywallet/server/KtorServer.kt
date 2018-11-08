@@ -23,15 +23,19 @@ import io.ktor.response.respondRedirect
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
+import io.ktor.server.engine.applicationEngineEnvironment
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.engine.sslConnector
 import io.ktor.server.netty.Netty
 import io.raspberrywallet.contract.Manager
+import io.raspberrywallet.contract.ServerConfig
 import io.raspberrywallet.contract.WalletNotInitialized
 import io.raspberrywallet.server.Paths.Bitcoin.availableBalance
 import io.raspberrywallet.server.Paths.Bitcoin.currentAddress
 import io.raspberrywallet.server.Paths.Bitcoin.estimatedBalance
 import io.raspberrywallet.server.Paths.Bitcoin.freshAddress
 import io.raspberrywallet.server.Paths.Bitcoin.sendCoins
+import io.raspberrywallet.server.Paths.Modules.loadWalletFromDisk
 import io.raspberrywallet.server.Paths.Modules.lockWallet
 import io.raspberrywallet.server.Paths.Modules.moduleState
 import io.raspberrywallet.server.Paths.Modules.modules
@@ -46,17 +50,41 @@ import io.raspberrywallet.server.Paths.Network.statusEndpoint
 import io.raspberrywallet.server.Paths.Network.wifiStatus
 import io.raspberrywallet.server.Paths.Utils.cpuTemp
 import io.raspberrywallet.server.Paths.Utils.ping
+import io.raspberrywallet.server.Paths.Utils.setDatabasePassword
 import kotlinx.html.*
 import org.slf4j.event.Level
+import java.io.File
+import java.io.FileInputStream
+import java.security.KeyStore
+
 
 const val PORT = 9090
 private lateinit var manager: Manager
-fun startKtorServer(newManager: Manager) {
+lateinit var serverConfig: ServerConfig
+lateinit var basePath: String
+val keyStoreFile: File by lazy {
+    File(".", serverConfig.keystoreName)
+}
+val keyStore: KeyStore by lazy {
+    KeyStore.getInstance(KeyStore.getDefaultType())
+        .apply { load(FileInputStream(keyStoreFile), serverConfig.keystorePassword) }
+}
+
+fun startKtorServer(newManager: Manager, newBasePath: String, config: ServerConfig) {
     manager = newManager
-    embeddedServer(Netty, configure = {
-        requestQueueLimit = 6
-        runningLimit = 4
-    }, port = PORT, module = Application::mainModule).start(wait = true)
+    basePath = newBasePath
+    serverConfig = config
+
+    val env = applicationEngineEnvironment {
+        module {
+            mainModule()
+        }
+        sslConnector(keyStore, "ssl", { serverConfig.keystorePassword }, { serverConfig.keystorePassword }) {
+            port = PORT
+            keyStorePath = keyStoreFile.absoluteFile
+        }
+    }
+    embeddedServer(Netty, env).start(wait = true)
 }
 
 sealed class Paths {
@@ -67,6 +95,7 @@ sealed class Paths {
     object Utils : Paths() {
         const val ping = prefix + "ping"
         const val cpuTemp = prefix + "cpuTemp"
+        const val setDatabasePassword = prefix + "setDatabasePassword";
     }
 
     object Modules : Paths() {
@@ -76,6 +105,7 @@ sealed class Paths {
         const val restoreFromBackupPhrase = prefix + "restoreFromBackupPhrase"
         const val unlockWallet = prefix + "unlockWallet"
         const val lockWallet = prefix + "lockWallet"
+        const val loadWalletFromDisk = prefix + "loadWalletFromDisk"
         const val walletStatus = prefix + "walletStatus"
     }
 
@@ -110,6 +140,9 @@ fun Application.mainModule() {
     install(StatusPages) {
         exception<WalletNotInitialized> { cause ->
             call.respond(HttpStatusCode.MethodNotAllowed, mapOf("message" to "Wallet not initialized"))
+        }
+        exception<SecurityException> { cause ->
+            call.respond(HttpStatusCode.Forbidden, mapOf("message" to cause))
         }
     }
 
@@ -194,6 +227,16 @@ fun Application.mainModule() {
             val moduleToInputsMap = call.receive<Map<String, Map<String, String>>>()
             call.respond(manager.unlockWallet(moduleToInputsMap))
         }
+        post(loadWalletFromDisk) {
+            manager.tap()
+            val moduleToInputsMap = call.receive<Map<String, Map<String, String>>>()
+            call.respond(manager.loadWalletFromDisk(moduleToInputsMap))
+        }
+        post(setDatabasePassword) {
+            manager.tap()
+            val setDatabasePassword = call.receive<SetDatabasePassword>()
+            call.respond(manager.setDatabasePassword(setDatabasePassword.password))
+        }
         get(lockWallet) {
             call.respond(manager.lockWallet())
         }
@@ -226,6 +269,7 @@ fun Application.mainModule() {
 
 data class RestoreFromBackup(val mnemonicWords: List<String>, val modules: Map<String, Map<String, String>>, val required: Int)
 data class SendCoinBody(val amount: String, val recipient: String)
+data class SetDatabasePassword(val password: String)
 
 val indexPage = HtmlContent {
     head {

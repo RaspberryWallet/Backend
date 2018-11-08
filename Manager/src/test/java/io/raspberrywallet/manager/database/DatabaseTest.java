@@ -1,7 +1,6 @@
 package io.raspberrywallet.manager.database;
 
 import io.raspberrywallet.manager.Configuration;
-import io.raspberrywallet.manager.cryptography.common.Password;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DatabaseTest {
 
     private Database database = null;
-    private Password password = new Password("mock passowrd".toCharArray());
+    private String password = "mock passowrd";
 
     private static KeyPartEntity exampleModuleKeypart = new KeyPartEntity();
     private static KeyPartEntity pushButtonModuleKeypart = new KeyPartEntity();
@@ -23,7 +22,8 @@ class DatabaseTest {
     void setUp() throws DecryptionException, EncryptionException {
         try {
             Configuration configuration = new Configuration();
-            database = new Database(configuration, password);
+            database = new Database(configuration);
+            database.setPassword(password);
 
             exampleModuleKeypart.setModule("io.raspberrywallet.manager.modules.example.ExampleModule");
             exampleModuleKeypart.setPayload("BGF$#Y%34".getBytes());
