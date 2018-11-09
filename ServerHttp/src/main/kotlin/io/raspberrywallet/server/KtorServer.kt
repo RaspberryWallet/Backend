@@ -10,8 +10,8 @@ import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.features.StatusPages
-import io.ktor.html.HtmlContent
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.content.resources
 import io.ktor.http.content.static
 import io.ktor.jackson.jackson
@@ -28,6 +28,8 @@ import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.engine.sslConnector
 import io.ktor.server.netty.Netty
+import io.ktor.websocket.WebSockets
+import io.ktor.websocket.webSocket
 import io.raspberrywallet.contract.Manager
 import io.raspberrywallet.contract.ServerConfig
 import io.raspberrywallet.contract.WalletNotInitialized
@@ -52,16 +54,17 @@ import io.raspberrywallet.server.Paths.Network.wifiStatus
 import io.raspberrywallet.server.Paths.Utils.cpuTemp
 import io.raspberrywallet.server.Paths.Utils.ping
 import io.raspberrywallet.server.Paths.Utils.setDatabasePassword
-import kotlinx.html.*
+import kotlinx.coroutines.delay
 import org.slf4j.event.Level
 import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
+import java.time.Duration
 
 
 const val PORT = 9090
 const val PORT_SSL = 443
-private lateinit var manager: Manager
+lateinit var manager: Manager
 lateinit var serverConfig: ServerConfig
 lateinit var basePath: String
 val keyStoreFile: File by lazy {
@@ -92,46 +95,6 @@ fun startKtorServer(newManager: Manager, newBasePath: String, config: ServerConf
     embeddedServer(Netty, env).start(wait = true)
 }
 
-sealed class Paths {
-    companion object {
-        const val prefix = "/api/"
-    }
-
-    object Utils : Paths() {
-        const val ping = prefix + "ping"
-        const val cpuTemp = prefix + "cpuTemp"
-        const val setDatabasePassword = prefix + "setDatabasePassword";
-    }
-
-    object Modules : Paths() {
-        const val modules = prefix + "modules"
-        const val moduleState = prefix + "moduleState/{id}"
-        const val nextStep = prefix + "nextStep/{id}"
-        const val restoreFromBackupPhrase = prefix + "restoreFromBackupPhrase"
-        const val unlockWallet = prefix + "unlockWallet"
-        const val lockWallet = prefix + "lockWallet"
-        const val loadWalletFromDisk = prefix + "loadWalletFromDisk"
-        const val walletStatus = prefix + "walletStatus"
-    }
-
-    object Bitcoin : Paths() {
-        const val currentAddress = prefix + "currentAddress"
-        const val freshAddress = prefix + "freshAddress"
-        const val estimatedBalance = prefix + "estimatedBalance"
-        const val availableBalance = prefix + "availableBalance"
-        const val sendCoins = prefix + "sendCoins"
-    }
-
-    object Network : Paths() {
-        const val cpuTemp = prefix + "cpuTemp"
-        const val networks = prefix + "networks"
-        const val wifiStatus = prefix + "wifiStatus"
-        const val setupWiFi = "/setupWiFi"
-        const val setWifi = "/setWiFi"
-        const val statusEndpoint = "/status"
-    }
-}
-
 fun Application.mainModule() {
     install(ContentNegotiation) {
         jackson {
@@ -143,12 +106,18 @@ fun Application.mainModule() {
     }
     install(DefaultHeaders)
     install(StatusPages) {
-        exception<WalletNotInitialized> { cause ->
+        exception<WalletNotInitialized> {
             call.respond(HttpStatusCode.MethodNotAllowed, mapOf("message" to "Wallet not initialized"))
         }
         exception<SecurityException> { cause ->
             call.respond(HttpStatusCode.Forbidden, mapOf("message" to cause))
         }
+    }
+    install(WebSockets) {
+        pingPeriod = Duration.ofSeconds(60) // Disabled (null) by default
+        timeout = Duration.ofSeconds(15)
+        maxFrameSize = kotlin.Long.MAX_VALUE // Disabled (max value). The connection will be closed if surpassed this length.
+        masking = false
     }
 
     routing {
@@ -269,153 +238,18 @@ fun Application.mainModule() {
             manager.tap()
             call.respond(mapOf("availableBalance" to manager.availableBalance))
         }
+
+        webSocket("/") {
+            var counter = 0L
+            while (true) {
+                delay(1000)
+                outgoing.send(Frame.Text("$counter"))
+                counter++
+            }
+        }
     }
 }
 
 data class RestoreFromBackup(val mnemonicWords: List<String>, val modules: Map<String, Map<String, String>>, val required: Int)
 data class SendCoinBody(val amount: String, val recipient: String)
 data class SetDatabasePassword(val password: String)
-
-val indexPage = HtmlContent {
-    head {
-        title { +"Raspberry Wallet" }
-        link(rel = "Stylesheet", type = "text/css", href = "/style.css")
-    }
-    body {
-        h1 { a(href = "/index.html") { +"Webapp" } }
-        h2 { +"Utils" }
-        ul {
-            li {
-                a(href = ping) { +Paths.Utils.ping }
-            }
-            li {
-                a(href = cpuTemp) { +cpuTemp }
-            }
-        }
-        h2 { +"Network" }
-        ul {
-            li {
-                a(href = wifiStatus) { +wifiStatus }
-            }
-            li {
-                a(href = networks) { +networks }
-            }
-            li {
-                a(href = setWifi) { +setWifi }
-            }
-            li {
-                a(href = setupWiFi) { +setupWiFi }
-            }
-        }
-        h2 { +"Modules" }
-        ul {
-
-            li {
-                a(href = modules) { +modules }
-            }
-            li {
-                a(href = moduleState) { +moduleState }
-            }
-            li {
-                a(href = nextStep) { +nextStep }
-            }
-            li {
-                a(href = restoreFromBackupPhrase) { +restoreFromBackupPhrase }
-            }
-            li {
-                a(href = walletStatus) { +walletStatus }
-            }
-            li {
-                a(href = unlockWallet) { +unlockWallet }
-            }
-            li {
-                a(href = lockWallet) { +lockWallet }
-            }
-        }
-        h2 { +"Bitcoin" }
-        ul {
-            li {
-                a(href = currentAddress) { +currentAddress }
-            }
-            li {
-                a(href = freshAddress) { +freshAddress }
-            }
-            li {
-                a(href = estimatedBalance) { +estimatedBalance }
-            }
-            li {
-                a(href = availableBalance) { +availableBalance }
-            }
-        }
-    }
-}
-
-val setNetwork = HtmlContent {
-    head {
-        title { +"Change Wi-Fi settings" }
-        link(rel = "Stylesheet", type = "text/css", href = "/style.css")
-        script { src = "/scripts.js"; type = "text/javascript" }
-        script { src = "/jquery.min.js"; type = "text/javascript" }
-    }
-    body {
-        h1 { a(href = "/index/") { +"<- Back" } }
-        h2 { +"New Wi-Fi config" }
-        h3 { +"ESSID:" }
-        form(method = FormMethod.post, action = setWifi) {
-            select {
-                id = "ssid"
-                name = "ssid"
-                for (network in manager.networkList) {
-                    option {
-                        value = network
-                        +network
-                    }
-                }
-            }
-            span {
-                onClick = "refreshNetworks()"
-                style = "cursor: pointer, link, hand"
-                +"Refresh"
-            }
-            h3 { +"Pre shared key:" }
-            input(type = InputType.password, name = "psk") {}
-            input(type = InputType.submit) {}
-        }
-    }
-}
-
-val status = HtmlContent {
-    head {
-        title { +"System status" }
-        link(rel = "Stylesheet", type = "text/css", href = "/style.css")
-    }
-    body {
-        h1 { a(href = "/index/") { +"<- Back" } }
-        h2 { +"System status" }
-        div(classes = "temperature") {
-            +"Temperature: "
-            when {
-                manager.cpuTemperature.toFloat() > 47 -> span(classes = "hot") { +(manager.cpuTemperature + " 'C") }
-                manager.cpuTemperature.toFloat() < 40 -> span(classes = "cold") { +(manager.cpuTemperature + " 'C") }
-                else -> span(classes = "medium") { +(manager.cpuTemperature + " 'C") }
-            }
-        }
-        a(href = setupWiFi) {
-            +"Configure Wi-Fi"
-        }
-        table {
-            for ((param, value) in manager.wifiStatus) {
-                tr {
-                    td(classes = "param") { +param }
-                    td { +value }
-                }
-            }
-            for ((param, value) in manager.wifiConfig) {
-                tr {
-                    td(classes = "param") { +param }
-                    td { +value }
-                }
-            }
-        }
-    }
-}
