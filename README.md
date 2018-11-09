@@ -43,3 +43,6 @@ It will be automatically loaded and verified on startup
 Docs: https://docs.google.com/document/d/1wW5mRy51MvwghFcwk7K07LozbIV1sD53q4ejCQhjzFw/edit?usp=sharing
 
 mnemonic code for tests purposes `farm hospital shadow common raw neither pond access suggest army prefer expire`
+
+ssl key generated with:
+`keytool -genkey -keyalg RSA -alias ssl -keystore RaspberryWallet.keystore -validity 360 -keysize 2048`

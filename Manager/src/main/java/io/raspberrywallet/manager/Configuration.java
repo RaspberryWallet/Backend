@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.raspberrywallet.contract.ServerConfig;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,12 +24,6 @@ import static io.raspberrywallet.manager.Utils.println;
 @Getter
 @Setter(AccessLevel.PRIVATE)
 final public class Configuration {
-
-    /**
-     * Session length in millis
-     */
-    @JsonProperty("session-length")
-    private long sessionLength = 3600000;
 
     /**
      * Base path to all wallet specific files, by default equals to $HOME
@@ -60,6 +55,12 @@ final public class Configuration {
     @JsonProperty("bitcoin")
     private BitcoinConfig bitcoinConfig;
 
+    /**
+     * Bitcoin configuration object
+     */
+    @JsonProperty("server")
+    private ServerConfig serverConfig;
+
     public Configuration() {
         this(new ModulesConfiguration(), new BitcoinConfig());
     }
@@ -78,20 +79,16 @@ final public class Configuration {
         println(ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE));
     }
 
-    public Configuration(ModulesConfiguration modulesConfig, BitcoinConfig bitcoinConfig, long sessionLength,
-                         String basePathPrefix, String version) {
+    public Configuration(ModulesConfiguration modulesConfig, BitcoinConfig bitcoinConfig,
+                         String basePathPrefix) {
         this(modulesConfig, bitcoinConfig);
-        this.sessionLength = sessionLength;
         this.basePathPrefix = basePathPrefix;
-        this.version = version;
         println(ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE));
     }
 
-    public Configuration(long sessionLength, String basePathPrefix, String version) {
+    public Configuration(String basePathPrefix) {
         this();
-        this.sessionLength = sessionLength;
         this.basePathPrefix = basePathPrefix;
-        this.version = version;
         println(ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE));
     }
 
@@ -126,4 +123,5 @@ final public class Configuration {
         @JsonProperty("user-agent")
         private String userAgent = "RaspberryWallet";
     }
+
 }

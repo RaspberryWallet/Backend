@@ -1,5 +1,8 @@
 package io.raspberrywallet.contract;
 
 public enum WalletStatus {
-    UNSET, ENCRYPTED, DECRYPTED
+    FIRST_TIME, // Fresh start
+    UNLOADED, // Persisted on disk, not loaded into RAM
+    ENCRYPTED, // NotOperable - requires unlocking
+    DECRYPTED // Operable
 }

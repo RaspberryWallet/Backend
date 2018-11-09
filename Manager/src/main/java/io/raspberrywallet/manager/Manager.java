@@ -20,6 +20,7 @@ import io.raspberrywallet.manager.linux.WifiScanner;
 import io.raspberrywallet.manager.linux.WifiStatus;
 import io.raspberrywallet.manager.modules.Module;
 import kotlin.text.Charsets;
+import lombok.Getter;
 import org.bitcoinj.core.Sha256Hash;
 import org.jetbrains.annotations.NotNull;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -38,6 +39,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
      * Module id -> Module instance
      */
     @NotNull
+    @Getter
     private final ConcurrentHashMap<String, Module> modules = new ConcurrentHashMap<>();
     @NotNull
     private final Bitcoin bitcoin;
@@ -93,7 +95,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
      */
 
     @Override
-    public List<io.raspberrywallet.contract.module.Module> getModules() {
+    public List<io.raspberrywallet.contract.module.Module> getServerModules() {
         return modules.values().stream()
                 .map(Module::asServerModule)
                 .collect(toList());
@@ -149,10 +151,11 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public WalletStatus getWalletStatus() {
         try {
+            if (bitcoin.isFirstTime() || database.isFirstTime()) return WalletStatus.FIRST_TIME;
             return bitcoin.getWallet().isEncrypted() ?
                     WalletStatus.ENCRYPTED : WalletStatus.DECRYPTED;
-        } catch (IllegalStateException | WalletNotInitialized e) {
-            return WalletStatus.UNSET;
+        } catch (WalletNotInitialized e) {
+            return WalletStatus.UNLOADED;
         }
     }
 
@@ -165,6 +168,28 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) throws WalletNotInitialized {
         bitcoin.ensureWalletInitialized();
+        fillModulesWithInputs(moduleToInputsMap);
+        KeyParameter key = getWalletCipherKey();
+        try {
+            bitcoin.decryptWallet(key);
+        } finally {
+            Arrays.fill(key.getKey(), (byte) 0);
+        }
+    }
+
+    @Override
+    public void loadWalletFromDisk(@NotNull Map<String, Map<String, String>> moduleToInputsMap) {
+        fillModulesWithInputs(moduleToInputsMap);
+        KeyParameter key = getWalletCipherKey();
+        try {
+            bitcoin.setupWalletFromFile(key);
+        } finally {
+            Arrays.fill(key.getKey(), (byte) 0);
+        }
+
+    }
+
+    private void fillModulesWithInputs(@NotNull Map<String, Map<String, String>> moduleToInputsMap) {
         moduleToInputsMap.forEach((moduleId, inputs) -> {
             Module module = modules.get(moduleId);
             Logger.d("Setting inputs for " + module.getId());
@@ -172,15 +197,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                 Logger.d(name + ": " + value);
             });
             inputs.forEach(module::setInput);
-
         });
-
-        KeyParameter key = getWalletCipherKey();
-        try {
-            bitcoin.decryptWallet(key);
-        } finally {
-            Arrays.fill(key.getKey(), (byte) 0);
-        }
     }
 
     @Override
@@ -269,6 +286,16 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public void tap() {
         autoLockRemainingMinutes = 10;
+    }
+
+    @Override
+    public void setDatabasePassword(@NotNull String password) throws SecurityException {
+        try {
+            database.setPassword(password);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new SecurityException(e);
+        }
     }
 
     /* Network */

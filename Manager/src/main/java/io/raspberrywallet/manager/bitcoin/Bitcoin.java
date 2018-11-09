@@ -1,16 +1,21 @@
 package io.raspberrywallet.manager.bitcoin;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.stasbar.Logger;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.Configuration;
 import lombok.Getter;
 import org.bitcoinj.core.*;
+import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.protocols.channels.StoredPaymentChannelClientStates;
+import org.bitcoinj.protocols.channels.StoredPaymentChannelServerStates;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.SPVBlockStore;
 import org.bitcoinj.utils.BriefLogFormatter;
@@ -25,7 +30,8 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileLock;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -49,16 +55,18 @@ public class Bitcoin {
     private final Configuration.BitcoinConfig bitcoinConfig;
 
     @Nullable
+    private Wallet wallet;
+    @Nullable
     @Getter
     private PeerGroup peerGroup;
-    private final SPVBlockStore blockStore;
-    @Nullable
-    private Wallet wallet;
+    private SPVBlockStore blockStore;
+    private InputStream checkpoints;
 
-    public Bitcoin(Configuration configuration) throws BlockStoreException {
+    public Bitcoin(Configuration configuration) throws BlockStoreException, IOException {
         BriefLogFormatter.init();
         this.bitcoinConfig = configuration.getBitcoinConfig();
         this.params = parseNetworkFrom(configuration.getBitcoinConfig());
+
         this.bitcoinRootDirectory = Paths.get(configuration.getBasePathPrefix(), DIRECTORY_NAME).toFile();
         bitcoinRootDirectory.mkdirs();
 
@@ -66,6 +74,8 @@ public class Bitcoin {
 
         this.walletFile = Paths.get(bitcoinRootDirectory.getAbsolutePath(), walletFileName + ".wallet").toFile();
         this.blockStoreFile = Paths.get(bitcoinRootDirectory.getAbsolutePath(), walletFileName + ".spvchain").toFile();
+        if (isChainFileLocked())
+            throw new IllegalStateException("This application is already running and cannot be started twice.");
 
         this.blockStore = new SPVBlockStore(params, blockStoreFile);
     }
@@ -86,12 +96,24 @@ public class Bitcoin {
             try {
                 KeyChainGroup keyChainGroup = new KeyChainGroup(params, seed);
                 wallet = new Wallet(params, keyChainGroup); //Wallet.fromSeed(params, seed);
-                synchronizeWalletBlocking(wallet);
-                if (key != null)
-                    saveEncryptedWallet(key);
-                Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
-            } catch (IOException | BlockStoreException | WalletNotInitialized walletNotInitialized) {
-                walletNotInitialized.printStackTrace();
+                if (checkpoints == null)
+                    checkpoints = CheckpointManager.openStream(params);
+
+                if (checkpoints != null) {
+                    // Initialize the chain file with a checkpoint to speed up first-run sync.
+                    long time = seed.getCreationTimeSeconds();
+                    removeOldBlockStore();
+                    if (time > 0)
+                        CheckpointManager.checkpoint(params, checkpoints, blockStore, wallet.getEarliestKeyCreationTime());
+                    else
+                        Logger.info("Creating a new uncheckpointed block store due to a wallet with a creation time of zero: this will result in a very slow chain sync");
+
+                } else removeOldBlockStore();
+
+                synchronizeWalletNonBlocking(wallet, key);
+
+            } catch (IOException | BlockStoreException e) {
+                e.printStackTrace();
             }
         };
 
@@ -103,22 +125,30 @@ public class Bitcoin {
             setupWalletFromBackup.run();
     }
 
-    public void setupWalletFromFile(KeyParameter key) {
+    private void removeOldBlockStore() throws BlockStoreException, IOException {
+        if (blockStoreFile.exists()) {
+            Logger.info("Deleting the chain file in preparation from restore.");
+            blockStore.close();
+
+            if (!blockStoreFile.delete())
+                throw new IOException("Failed to delete chain file in preparation for restore.");
+            blockStore = new SPVBlockStore(params, blockStoreFile);
+        }
+    }
+
+    public void setupWalletFromFile(@NotNull KeyParameter key) {
         Runnable setupWalletFromBackup = () -> {
             try {
                 wallet = Wallet.loadFromFile(walletFile);
 
                 if (!wallet.isEncrypted()) {
-                    saveEncryptedWallet(key);
                     throw new SecurityException("Decrypted wallet on disk detected");
                 } else
-                    decryptWallet(key);
+                    decryptWallet(wallet, key);
 
-                synchronizeWalletBlocking(wallet);
-                saveEncryptedWallet(key);
-                Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
-            } catch (IOException | BlockStoreException | UnreadableWalletException | WalletNotInitialized walletNotInitialized) {
-                walletNotInitialized.printStackTrace();
+                synchronizeWalletNonBlocking(wallet, key);
+            } catch (IOException | UnreadableWalletException e) {
+                e.printStackTrace();
             }
         };
         if (peerGroup != null && peerGroup.isRunning()) {
@@ -135,24 +165,49 @@ public class Bitcoin {
      *
      * @param wallet wallet to index transactions for
      */
-    private void synchronizeWalletBlocking(Wallet wallet) throws BlockStoreException, IOException {
-        long start = System.currentTimeMillis();
-
-        InputStream checkpoints = CheckpointManager.openStream(params);
-        CheckpointManager.checkpoint(params, checkpoints, blockStore, wallet.getEarliestKeyCreationTime());
-
-        BlockChain chain = new BlockChain(params, wallet, blockStore);
-
+    private void synchronizeWalletNonBlocking(final Wallet wallet, @Nullable KeyParameter key) throws IOException {
+        BlockChain chain;
+        try {
+            chain = new BlockChain(params, blockStore);
+        } catch (BlockStoreException e) {
+            throw new IOException(e);
+        }
         peerGroup = new PeerGroup(params, chain);
         peerGroup.setUserAgent("RaspberryWallet", "1.0");
         peerGroup.addPeerDiscovery(new DnsDiscovery(params));
-        peerGroup.addAddress(new PeerAddress(params, InetAddress.getLocalHost()));
-        peerGroup.start();
-        peerGroup.downloadBlockChain();
+        chain.addWallet(wallet);
+        peerGroup.addWallet(wallet);
+        Futures.addCallback(peerGroup.startAsync(), new FutureCallback<Object>() {
 
-        long total = System.currentTimeMillis() - start;
-        Logger.info(String.format("Synchronization took %.2f secs", (double) total / 1000.0));
+            @Override
+            public void onSuccess(@Nullable Object result) {
+                completeExtensionInitiations(peerGroup, wallet);
+                final long start = System.currentTimeMillis();
+                DownloadProgressTracker listener = new DownloadProgressTracker() {
+                    @Override
+                    protected void doneDownload() {
+                        long total = System.currentTimeMillis() - start;
+                        Logger.info(String.format("Synchronization took %.2f secs", (double) total / 1000.0));
+                        try {
+                            if (key != null)
+                                saveEncryptedWallet(key);
+                            Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
+                        } catch (WalletNotInitialized | IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                peerGroup.startBlockChainDownload(listener);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                throw new RuntimeException(t);
+            }
+        });
+
     }
+
 
     @NotNull
     public Wallet getWallet() throws WalletNotInitialized {
@@ -182,8 +237,12 @@ public class Bitcoin {
     }
 
     public void decryptWallet(KeyParameter key) throws WalletNotInitialized {
+        decryptWallet(getWallet(), key);
+    }
+
+    private void decryptWallet(@NotNull Wallet wallet, KeyParameter key) {
         Logger.d("Decrypting wallet with:" + new String(key.getKey()));
-        getWallet().decrypt(key);
+        wallet.decrypt(key);
     }
 
     public void encryptWallet(KeyParameter key) throws WalletNotInitialized {
@@ -230,6 +289,50 @@ public class Bitcoin {
         } catch (InsufficientMoneyException e) {
             Logger.err(e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    public boolean isFirstTime() {
+        return !walletFile.exists();
+    }
+
+    /**
+     * Tests to see if the spvchain file has an operating system file lock on it. Useful for checking if your app
+     * is already running. If another copy of your app is running and you start the appkit anyway, an exception will
+     * be thrown during the startup process. Returns false if the chain file does not exist or is a directory.
+     */
+    public boolean isChainFileLocked() throws IOException {
+        RandomAccessFile accessFile = null;
+        try {
+            File blockStoreFile = new File(bitcoinRootDirectory, this.blockStoreFile.getName());
+            if (!blockStoreFile.exists() || blockStoreFile.isDirectory())
+                return false;
+            accessFile = new RandomAccessFile(blockStoreFile, "rw");
+            FileLock lock = accessFile.getChannel().tryLock();
+            if (lock == null)
+                return true;
+            lock.release();
+            return false;
+        } finally {
+            if (accessFile != null)
+                accessFile.close();
+        }
+    }
+
+    /**
+     * As soon as the transaction broadcaster han been created we will pass it to the
+     * payment channel extensions
+     */
+    private void completeExtensionInitiations(TransactionBroadcaster transactionBroadcaster, Wallet wallet) {
+        StoredPaymentChannelClientStates clientStoredChannels = (StoredPaymentChannelClientStates)
+                wallet.getExtensions().get(StoredPaymentChannelClientStates.class.getName());
+        if (clientStoredChannels != null) {
+            clientStoredChannels.setTransactionBroadcaster(transactionBroadcaster);
+        }
+        StoredPaymentChannelServerStates serverStoredChannels = (StoredPaymentChannelServerStates)
+                wallet.getExtensions().get(StoredPaymentChannelServerStates.class.getName());
+        if (serverStoredChannels != null) {
+            serverStoredChannels.setTransactionBroadcaster(transactionBroadcaster);
         }
     }
 }

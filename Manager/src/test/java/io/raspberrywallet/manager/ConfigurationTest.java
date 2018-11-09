@@ -18,7 +18,6 @@ class ConfigurationTest {
         String basePrefixDir = "/opt/wallet";
         String configYamlContent = "" +
                 "version: " + version + "\n" +
-                "session-length: " + sessionLength + "\n" +
                 "base-path-prefix: " + basePrefixDir + "\n" +
                 "autolock-seconds: 1800\n" +
                 "bitcoin:\n" +
@@ -49,7 +48,6 @@ class ConfigurationTest {
             Files.write(tmpConfig.toPath(), configYamlContent.getBytes());
             Configuration configuration = Configuration.fromYamlFile(tmpConfig);
             assertEquals(configuration.getVersion(), version);
-            assertEquals(configuration.getSessionLength(), sessionLength);
             assertEquals(configuration.getBasePathPrefix(), basePrefixDir);
             assertEquals(configuration.getModulesConfig().size(), 4);
             assertNotNull(configuration.getBitcoinConfig());
@@ -59,24 +57,16 @@ class ConfigurationTest {
     }
 
     @Test
-    void getSessionLength() {
-        final int sessionLength = 36000;
-        Configuration configuration = new Configuration(sessionLength, "/opt/wallet", "1.0.0");
-        assertEquals(sessionLength, configuration.getSessionLength());
-
-    }
-
-    @Test
     void getBasePathPrefix() {
         final String basePathPrefix = "/opt/wallet";
-        Configuration configuration = new Configuration(36000, basePathPrefix, "1.0.0");
+        Configuration configuration = new Configuration(basePathPrefix);
         assertEquals(basePathPrefix, configuration.getBasePathPrefix());
     }
 
     @Test
     void getVersion() {
         final String version = "1.0.0";
-        Configuration configuration = new Configuration(36000, "/opt/wallet", version);
+        Configuration configuration = new Configuration("/opt/wallet");
         assertEquals(version, configuration.getVersion());
     }
 

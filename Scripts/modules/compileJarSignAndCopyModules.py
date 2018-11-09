@@ -7,13 +7,10 @@ from pathlib import Path
 
 modules = ['PinModule', 'ExampleModule', 'AuthorizationServerModule']
 
-# Abs path normalization
-projectRoot = Path().absolute()
-if '/modules' in str(projectRoot):
-    projectRoot = Path(projectRoot.parents[1])
+while not os.getcwd().lower().endswith("backend"):
+    os.chdir("..")
 
-if '/Scripts' in str(projectRoot):
-    projectRoot = Path(projectRoot.parents[1])
+projectRoot = Path()
 
 systemModulesDir = '/opt/wallet/modules'
 keyStorePath = str(projectRoot / 'RaspberryWallet.keystore')

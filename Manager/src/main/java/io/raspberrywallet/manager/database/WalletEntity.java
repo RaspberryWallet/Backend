@@ -3,12 +3,14 @@ package io.raspberrywallet.manager.database;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@ToString
 public class WalletEntity implements Serializable {
     
     @Getter

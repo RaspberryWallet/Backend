@@ -1,20 +1,21 @@
 package io.raspberrywallet.manager.database;
 
 import io.raspberrywallet.manager.Configuration;
-import io.raspberrywallet.manager.cryptography.common.Password;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class DatabaseTest {
 
     private Database database = null;
-    private Password password = new Password("mock passowrd".toCharArray());
+    private String password = "changeit";
 
     private static KeyPartEntity exampleModuleKeypart = new KeyPartEntity();
     private static KeyPartEntity pushButtonModuleKeypart = new KeyPartEntity();
@@ -22,13 +23,17 @@ class DatabaseTest {
     @BeforeEach
     void setUp() throws DecryptionException, EncryptionException {
         try {
-            Configuration configuration = new Configuration();
-            database = new Database(configuration, password);
+            File tempBaseDir = Paths.get("/", "tmp", "wallet").toFile();
+            tempBaseDir.mkdirs();
+            Configuration configuration = new Configuration(tempBaseDir.getAbsolutePath());
 
-            exampleModuleKeypart.setModule("io.raspberrywallet.manager.modules.example.ExampleModule");
+            database = new Database(configuration);
+            database.setPassword(password);
+
+            exampleModuleKeypart.setModule("ExampleModule");
             exampleModuleKeypart.setPayload("BGF$#Y%34".getBytes());
 
-            pushButtonModuleKeypart.setModule("io.raspberrywallet.manager.modules.pushbutton.PushButtonModule");
+            pushButtonModuleKeypart.setModule("PinModule");
             pushButtonModuleKeypart.setPayload("$TN$@C54B".getBytes());
 
             database.addKeyPart(exampleModuleKeypart);
@@ -50,7 +55,7 @@ class DatabaseTest {
             // encrypted copy should still exists in file
             database.destroy();
 
-            database.loadDatabase();
+            database.initDatabase();
             int decryptedWalletHash = database.getWallet().hashCode();
 
             assertEquals(walletHash, decryptedWalletHash);
