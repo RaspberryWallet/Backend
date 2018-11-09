@@ -66,7 +66,6 @@ public class Bitcoin {
         this.bitcoinConfig = configuration.getBitcoinConfig();
         this.params = parseNetworkFrom(configuration.getBitcoinConfig());
 
-
         this.bitcoinRootDirectory = Paths.get(configuration.getBasePathPrefix(), DIRECTORY_NAME).toFile();
         bitcoinRootDirectory.mkdirs();
 
@@ -110,12 +109,10 @@ public class Bitcoin {
                     else
                         Logger.info("Creating a new uncheckpointed block store due to a wallet with a creation time of zero: this will result in a very slow chain sync");
 
-
                 } else removeOldBlockStore();
 
                 synchronizeWalletBlocking(wallet, key);
 
-                Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
             } catch (IOException | BlockStoreException walletNotInitialized) {
                 walletNotInitialized.printStackTrace();
             }

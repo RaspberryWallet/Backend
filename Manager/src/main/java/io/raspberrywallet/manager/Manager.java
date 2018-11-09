@@ -151,10 +151,10 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public WalletStatus getWalletStatus() {
         try {
-            if (bitcoin.isFirstTime()) return WalletStatus.FIRST_TIME;
+            if (bitcoin.isFirstTime() || database.isFirstTime()) return WalletStatus.FIRST_TIME;
             return bitcoin.getWallet().isEncrypted() ?
                     WalletStatus.ENCRYPTED : WalletStatus.DECRYPTED;
-        } catch (IllegalStateException | WalletNotInitialized e) {
+        } catch (WalletNotInitialized e) {
             return WalletStatus.UNLOADED;
         }
     }

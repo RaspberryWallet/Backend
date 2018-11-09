@@ -1,6 +1,7 @@
 package io.raspberrywallet.manager.database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.stasbar.Logger;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.common.interfaces.Destroyable;
 import io.raspberrywallet.manager.cryptography.common.Password;
@@ -36,20 +37,10 @@ public class Database implements Destroyable {
 
     public void setPassword(String password) throws EncryptionException, DecryptionException, IOException {
         this.password = new Password(password);
-        loadDatabase();
+        initDatabase();
     }
 
-    @Override
-    public synchronized void destroy() {
-        if (wallet == null)
-            return;
-
-        wallet.getParts().forEach(KeyPartEntity::destroy);
-        wallet.getParts().clear();
-        wallet = null;
-    }
-
-    public void loadDatabase() throws IOException, DecryptionException, EncryptionException {
+    void initDatabase() throws IOException, DecryptionException, EncryptionException {
         if (!databaseFile.exists()) {
             databaseFile.getParentFile().mkdirs();
             databaseFile.createNewFile();
@@ -65,7 +56,9 @@ public class Database implements Destroyable {
 
         destroy();
         byte[] encryptedDatabase = Files.readAllBytes(file.toPath());
-        setWallet(decrypt(encryptedDatabase));
+        WalletEntity wallet = decrypt(encryptedDatabase);
+        Logger.info("decrypted wallet " + wallet.toString());
+        setWallet(wallet);
     }
 
     public byte[] encrypt() throws EncryptionException {
@@ -98,21 +91,13 @@ public class Database implements Destroyable {
     }
 
     public void saveWallet() throws IOException, EncryptionException {
-        saveWallet(wallet);
-    }
-
-    /**
-     * Use saveEncryptedWallet() instead.
-     */
-    @Deprecated
-    public void saveWallet(WalletEntity walletEntity) throws IOException, EncryptionException {
-        setWallet(walletEntity);
+        setWallet(getWallet());
         saveDatabase();
     }
 
     private void saveDatabase() throws IOException, EncryptionException {
-        if (wallet == null)
-            wallet = new WalletEntity();
+        if (getWallet() == null)
+            setWallet(new WalletEntity());
 
         Files.write(databaseFile.toPath(), encrypt());
     }
@@ -122,10 +107,45 @@ public class Database implements Destroyable {
     }
 
     public boolean addKeyPart(KeyPartEntity keyPartEntity) {
-        return wallet.getParts().add(keyPartEntity);
+        final boolean success = wallet.getParts().add(keyPartEntity);
+        try {
+            saveDatabase();
+        } catch (IOException | EncryptionException e) {
+            e.printStackTrace();
+        }
+        return success;
     }
 
     public boolean addAllKeyParts(Collection<KeyPartEntity> keyPartEntities) {
-        return wallet.getParts().addAll(keyPartEntities);
+        final boolean success = wallet.getParts().addAll(keyPartEntities);
+        try {
+            saveDatabase();
+        } catch (IOException | EncryptionException e) {
+            e.printStackTrace();
+        }
+        return success;
+    }
+
+    @Override
+    public synchronized void destroy() {
+        if (wallet == null)
+            return;
+
+        wallet.getParts().forEach(KeyPartEntity::destroy);
+        wallet.getParts().clear();
+        wallet = null;
+    }
+
+    public boolean isFirstTime() {
+        try {
+            return !databaseFile.exists()
+                    || Files.size(databaseFile.toPath()) == 0
+                    || wallet == null
+                    || wallet.getParts() == null
+                    || wallet.getParts().size() == 0;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

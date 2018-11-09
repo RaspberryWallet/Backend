@@ -1,7 +1,6 @@
 package io.raspberrywallet.manager;
 
 import com.stasbar.Logger;
-import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cli.Opts;
 import io.raspberrywallet.manager.database.Database;
@@ -14,6 +13,7 @@ import org.bitcoinj.store.BlockStoreException;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import static io.raspberrywallet.manager.cli.CliUtils.parseArgs;
 import static io.raspberrywallet.server.KtorServerKt.startKtorServer;
@@ -39,27 +39,17 @@ public class Main {
 
         startKtorServer(manager, configuration.getBasePathPrefix(), configuration.getServerConfig());
 
-        prepareShutdownHook(bitcoin, manager);
+        prepareShutdownHook(bitcoin);
     }
 
-    private static void prepareShutdownHook(Bitcoin bitcoin, Manager manager) {
+    private static void prepareShutdownHook(Bitcoin bitcoin) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Logger.info("Finishing...");
             try {
-                if (manager.lockWallet())
-                    Logger.info("Wallet Encrypted");
-                else
-                    Logger.err("Failed Wallet Encryption");
-
-                if (bitcoin.getPeerGroup() != null)
-                    bitcoin.getPeerGroup().stop();
-
+                Objects.requireNonNull(bitcoin.getPeerGroup()).stop();
             } catch (NullPointerException e) {
                 Logger.err("Failed Wallet Encryption");
                 e.printStackTrace();
-            } catch (WalletNotInitialized walletNotInitialized) {
-                Logger.d("Wallet was not inited so there is nothing to encrypt");
-                walletNotInitialized.printStackTrace();
             }
             // Forcibly terminate the JVM because Orchid likes to spew non-daemon threads everywhere.
             Runtime.getRuntime().exit(0);

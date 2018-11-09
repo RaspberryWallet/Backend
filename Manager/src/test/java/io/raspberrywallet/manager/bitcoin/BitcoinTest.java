@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.spongycastle.crypto.params.KeyParameter;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -30,8 +31,9 @@ public class BitcoinTest {
 
         key = new KeyParameter(Sha256Hash.hash("rasperrywallet is the best bitcoin wallet ever".getBytes()));
 
-        Paths.get("/", "tmp", "wallet").toFile().mkdirs();
-        Configuration configuration = new Configuration(360000, "/tmp/wallet", "1.0");
+        File tempBaseDir = Paths.get("/", "tmp", "wallet").toFile();
+        tempBaseDir.mkdirs();
+        Configuration configuration = new Configuration(tempBaseDir.getAbsolutePath());
         bitcoin = new Bitcoin(configuration);
     }
 

@@ -6,14 +6,16 @@ import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionExcep
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class DatabaseTest {
 
     private Database database = null;
-    private String password = "mock passowrd";
+    private String password = "changeit";
 
     private static KeyPartEntity exampleModuleKeypart = new KeyPartEntity();
     private static KeyPartEntity pushButtonModuleKeypart = new KeyPartEntity();
@@ -21,14 +23,17 @@ class DatabaseTest {
     @BeforeEach
     void setUp() throws DecryptionException, EncryptionException {
         try {
-            Configuration configuration = new Configuration();
+            File tempBaseDir = Paths.get("/", "tmp", "wallet").toFile();
+            tempBaseDir.mkdirs();
+            Configuration configuration = new Configuration(tempBaseDir.getAbsolutePath());
+
             database = new Database(configuration);
             database.setPassword(password);
 
-            exampleModuleKeypart.setModule("io.raspberrywallet.manager.modules.example.ExampleModule");
+            exampleModuleKeypart.setModule("ExampleModule");
             exampleModuleKeypart.setPayload("BGF$#Y%34".getBytes());
 
-            pushButtonModuleKeypart.setModule("io.raspberrywallet.manager.modules.pushbutton.PushButtonModule");
+            pushButtonModuleKeypart.setModule("PinModule");
             pushButtonModuleKeypart.setPayload("$TN$@C54B".getBytes());
 
             database.addKeyPart(exampleModuleKeypart);
@@ -50,7 +55,7 @@ class DatabaseTest {
             // encrypted copy should still exists in file
             database.destroy();
 
-            database.loadDatabase();
+            database.initDatabase();
             int decryptedWalletHash = database.getWallet().hashCode();
 
             assertEquals(walletHash, decryptedWalletHash);

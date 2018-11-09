@@ -24,6 +24,7 @@ import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
 import io.ktor.server.engine.applicationEngineEnvironment
+import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.engine.sslConnector
 import io.ktor.server.netty.Netty
@@ -59,6 +60,7 @@ import java.security.KeyStore
 
 
 const val PORT = 9090
+const val PORT_SSL = 443
 private lateinit var manager: Manager
 lateinit var serverConfig: ServerConfig
 lateinit var basePath: String
@@ -79,8 +81,11 @@ fun startKtorServer(newManager: Manager, newBasePath: String, config: ServerConf
         module {
             mainModule()
         }
-        sslConnector(keyStore, "ssl", { serverConfig.keystorePassword }, { serverConfig.keystorePassword }) {
+        connector {
             port = PORT
+        }
+        sslConnector(keyStore, "ssl", { serverConfig.keystorePassword }, { serverConfig.keystorePassword }) {
+            port = PORT_SSL
             keyStorePath = keyStoreFile.absoluteFile
         }
     }
