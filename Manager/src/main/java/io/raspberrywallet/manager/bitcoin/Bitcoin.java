@@ -55,11 +55,12 @@ public class Bitcoin {
     private final Configuration.BitcoinConfig bitcoinConfig;
 
     @Nullable
+    private Wallet wallet;
+    @Nullable
     @Getter
     private PeerGroup peerGroup;
     private SPVBlockStore blockStore;
-    @Nullable
-    private Wallet wallet;
+    private InputStream checkpoints;
 
     public Bitcoin(Configuration configuration) throws BlockStoreException, IOException {
         BriefLogFormatter.init();
@@ -88,8 +89,6 @@ public class Bitcoin {
                 return TestNet3Params.get();
         }
     }
-
-    InputStream checkpoints;
 
     public void setupWalletFromMnemonic(List<String> mnemonicCode, @Nullable KeyParameter key) {
         DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 1539388800);
