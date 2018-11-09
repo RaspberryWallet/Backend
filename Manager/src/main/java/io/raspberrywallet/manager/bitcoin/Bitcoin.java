@@ -111,10 +111,10 @@ public class Bitcoin {
 
                 } else removeOldBlockStore();
 
-                synchronizeWalletBlocking(wallet, key);
+                synchronizeWalletNonBlocking(wallet, key);
 
-            } catch (IOException | BlockStoreException walletNotInitialized) {
-                walletNotInitialized.printStackTrace();
+            } catch (IOException | BlockStoreException e) {
+                e.printStackTrace();
             }
         };
 
@@ -143,14 +143,13 @@ public class Bitcoin {
                 wallet = Wallet.loadFromFile(walletFile);
 
                 if (!wallet.isEncrypted()) {
-                    saveEncryptedWallet(key);
                     throw new SecurityException("Decrypted wallet on disk detected");
                 } else
-                    decryptWallet(key);
+                    decryptWallet(wallet, key);
 
-                synchronizeWalletBlocking(wallet, key);
-            } catch (IOException | UnreadableWalletException | WalletNotInitialized walletNotInitialized) {
-                walletNotInitialized.printStackTrace();
+                synchronizeWalletNonBlocking(wallet, key);
+            } catch (IOException | UnreadableWalletException e) {
+                e.printStackTrace();
             }
         };
         if (peerGroup != null && peerGroup.isRunning()) {
@@ -167,15 +166,13 @@ public class Bitcoin {
      *
      * @param wallet wallet to index transactions for
      */
-    private void synchronizeWalletBlocking(final Wallet wallet, @Nullable KeyParameter key) throws IOException {
-
+    private void synchronizeWalletNonBlocking(final Wallet wallet, @Nullable KeyParameter key) throws IOException {
         BlockChain chain;
         try {
             chain = new BlockChain(params, blockStore);
         } catch (BlockStoreException e) {
             throw new IOException(e);
         }
-
         peerGroup = new PeerGroup(params, chain);
         peerGroup.setUserAgent("RaspberryWallet", "1.0");
         peerGroup.addPeerDiscovery(new DnsDiscovery(params));
@@ -196,8 +193,8 @@ public class Bitcoin {
                             if (key != null)
                                 saveEncryptedWallet(key);
                             Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
-                        } catch (WalletNotInitialized | IOException walletNotInitialized) {
-                            walletNotInitialized.printStackTrace();
+                        } catch (WalletNotInitialized | IOException e) {
+                            e.printStackTrace();
                         }
                     }
                 };
@@ -206,12 +203,12 @@ public class Bitcoin {
 
             @Override
             public void onFailure(Throwable t) {
-                throw new RuntimeException();
+                throw new RuntimeException(t);
             }
         });
 
-
     }
+
 
     @NotNull
     public Wallet getWallet() throws WalletNotInitialized {
@@ -241,8 +238,12 @@ public class Bitcoin {
     }
 
     public void decryptWallet(KeyParameter key) throws WalletNotInitialized {
+        decryptWallet(getWallet(), key);
+    }
+
+    private void decryptWallet(@NotNull Wallet wallet, KeyParameter key) {
         Logger.d("Decrypting wallet with:" + new String(key.getKey()));
-        getWallet().decrypt(key);
+        wallet.decrypt(key);
     }
 
     public void encryptWallet(KeyParameter key) throws WalletNotInitialized {
@@ -302,26 +303,24 @@ public class Bitcoin {
      * be thrown during the startup process. Returns false if the chain file does not exist or is a directory.
      */
     public boolean isChainFileLocked() throws IOException {
-        RandomAccessFile file2 = null;
+        RandomAccessFile accessFile = null;
         try {
-            File file = new File(bitcoinRootDirectory, blockStoreFile.getName());
-            if (!file.exists())
+            File blockStoreFile = new File(bitcoinRootDirectory, this.blockStoreFile.getName());
+            if (!blockStoreFile.exists() || blockStoreFile.isDirectory())
                 return false;
-            if (file.isDirectory())
-                return false;
-            file2 = new RandomAccessFile(file, "rw");
-            FileLock lock = file2.getChannel().tryLock();
+            accessFile = new RandomAccessFile(blockStoreFile, "rw");
+            FileLock lock = accessFile.getChannel().tryLock();
             if (lock == null)
                 return true;
             lock.release();
             return false;
         } finally {
-            if (file2 != null)
-                file2.close();
+            if (accessFile != null)
+                accessFile.close();
         }
     }
 
-    /*
+    /**
      * As soon as the transaction broadcaster han been created we will pass it to the
      * payment channel extensions
      */
