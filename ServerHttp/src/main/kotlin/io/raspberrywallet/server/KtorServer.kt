@@ -6,10 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
-import io.ktor.features.CallLogging
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.DefaultHeaders
-import io.ktor.features.StatusPages
+import io.ktor.features.*
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.content.resources
@@ -55,6 +52,8 @@ import io.raspberrywallet.server.Paths.Utils.cpuTemp
 import io.raspberrywallet.server.Paths.Utils.ping
 import io.raspberrywallet.server.Paths.Utils.setDatabasePassword
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.slf4j.event.Level
 import java.io.File
 import java.io.FileInputStream
@@ -67,6 +66,7 @@ const val PORT_SSL = 443
 lateinit var manager: Manager
 lateinit var serverConfig: ServerConfig
 lateinit var basePath: String
+
 val keyStoreFile: File by lazy {
     File(".", serverConfig.keystoreName)
 }
@@ -103,6 +103,10 @@ fun Application.mainModule() {
     }
     install(CallLogging) {
         level = Level.INFO
+    }
+    install(CORS) {
+        anyHost()
+        allowCredentials = true
     }
     install(DefaultHeaders)
     install(StatusPages) {
@@ -239,13 +243,22 @@ fun Application.mainModule() {
             call.respond(mapOf("availableBalance" to manager.availableBalance))
         }
 
-        webSocket("/") {
+        webSocket("/pingCounter") {
             var counter = 0L
             while (true) {
                 delay(1000)
                 outgoing.send(Frame.Text("$counter"))
                 counter++
             }
+        }
+        webSocket("/blockChainSyncProgress") {
+            manager.addBlockChainProgressListener { progress ->
+                launch {
+                    outgoing.send(Frame.Text("$progress"))
+                }
+            }
+
+            while (isActive);
         }
     }
 }

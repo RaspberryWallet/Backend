@@ -6,9 +6,14 @@ import io.raspberrywallet.contract.WalletStatus
 import io.raspberrywallet.contract.module.Module
 import io.raspberrywallet.contract.module.ModuleState
 import io.raspberrywallet.contract.step.SimpleStep
+import java.util.function.DoubleConsumer
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
+    override fun addBlockChainProgressListener(listener: DoubleConsumer) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun loadWalletFromDisk(moduleToInputsMap: MutableMap<String, MutableMap<String, String>>) {
         TODO("not implemented")
     }
