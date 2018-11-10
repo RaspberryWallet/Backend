@@ -33,9 +33,11 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.function.DoubleConsumer;
 
 /**
  * Class representing Bitcoin network, IO, key management API,
@@ -61,6 +63,7 @@ public class Bitcoin {
     private PeerGroup peerGroup;
     private SPVBlockStore blockStore;
     private InputStream checkpoints;
+    DoubleConsumer blockchainProgressListener;
 
     public Bitcoin(Configuration configuration) throws BlockStoreException, IOException {
         BriefLogFormatter.init();
@@ -184,6 +187,16 @@ public class Bitcoin {
                 completeExtensionInitiations(peerGroup, wallet);
                 final long start = System.currentTimeMillis();
                 DownloadProgressTracker listener = new DownloadProgressTracker() {
+                    @Override
+                    protected void progress(double pct, int blocksSoFar, Date date) {
+                        super.progress(pct, blocksSoFar, date);
+                        Logger.d("Progress " + pct + "%");
+                        if (blockchainProgressListener != null) {
+                            blockchainProgressListener.accept(pct);
+                            Logger.d("blockchainProgressListener not null, sending " + pct);
+                        }
+                    }
+
                     @Override
                     protected void doneDownload() {
                         long total = System.currentTimeMillis() - start;
@@ -334,5 +347,9 @@ public class Bitcoin {
         if (serverStoredChannels != null) {
             serverStoredChannels.setTransactionBroadcaster(transactionBroadcaster);
         }
+    }
+
+    public void addBlockChainProgressListener(DoubleConsumer blockchainProgressListener) {
+        this.blockchainProgressListener = blockchainProgressListener;
     }
 }
