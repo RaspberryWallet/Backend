@@ -258,7 +258,7 @@ fun Application.mainModule() {
                 }
             }
 
-            while (isActive);
+            while (isActive) delay(1000)
         }
     }
 }

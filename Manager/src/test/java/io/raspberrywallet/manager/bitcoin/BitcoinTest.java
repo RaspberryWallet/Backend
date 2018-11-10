@@ -6,7 +6,6 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.store.BlockStoreException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.spongycastle.crypto.params.KeyParameter;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class BitcoinTest {
     static private Bitcoin bitcoin;
     static private List<String> mnemonicCode;
-    static private KeyParameter key;
+    static private String privateKeyHash;
 
     @BeforeAll
     static void setup() throws BlockStoreException, IOException {
@@ -29,12 +28,13 @@ public class BitcoinTest {
                 "captain", "dutch", "matter", "dinner", "loan", "orange");
         println("Using mnemonic:" + mnemonicCode.stream().reduce("", (acc, word) -> acc + " " + word));
 
-        key = new KeyParameter(Sha256Hash.hash("rasperrywallet is the best bitcoin wallet ever".getBytes()));
+        privateKeyHash = new String(Sha256Hash.hash("rasperrywallet is the best bitcoin wallet ever".getBytes()));
 
         File tempBaseDir = Paths.get("/", "tmp", "wallet").toFile();
         tempBaseDir.mkdirs();
         Configuration configuration = new Configuration(tempBaseDir.getAbsolutePath());
-        bitcoin = new Bitcoin(configuration);
+        WalletCrypter walletCrypter = new WalletCrypter();
+        bitcoin = new Bitcoin(configuration, walletCrypter);
     }
 
     @Test
@@ -46,13 +46,13 @@ public class BitcoinTest {
 
     @Test
     void should_restore_from_mnemonic_words() {
-        bitcoin.setupWalletFromMnemonic(mnemonicCode, key);
+        bitcoin.setupWalletFromMnemonic(mnemonicCode, privateKeyHash, true);
         bitcoin.getPeerGroup().stop();
     }
 
     @Test
     void should_restore_from_file() {
-        bitcoin.setupWalletFromFile(key);
+        bitcoin.setupWalletFromFile(privateKeyHash, true);
         bitcoin.getPeerGroup().stop();
     }
 

@@ -2,6 +2,7 @@ package io.raspberrywallet.manager;
 
 import com.stasbar.Logger;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
+import io.raspberrywallet.manager.bitcoin.WalletCrypter;
 import io.raspberrywallet.manager.cli.Opts;
 import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
@@ -25,7 +26,7 @@ public class Main {
 
         File yamlConfigFile = new File(Opts.CONFIG.getValue(cmd));
         Configuration configuration = Configuration.fromYamlFile(yamlConfigFile);
-        Bitcoin bitcoin = new Bitcoin(configuration);
+        Bitcoin bitcoin = new Bitcoin(configuration, new WalletCrypter());
 
         List<Module> modules = ModuleClassLoader.getModules(configuration);
         modules.forEach(Module::register);

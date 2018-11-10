@@ -1,13 +1,12 @@
 package io.raspberrywallet.manager.modules.pin;
 
 import io.raspberrywallet.contract.RequiredInputNotFound;
+import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
-import io.raspberrywallet.manager.cryptography.common.Password;
 import io.raspberrywallet.manager.cryptography.crypto.AESEncryptedObject;
 import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
-import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.modules.Module;
 import org.apache.commons.lang.SerializationUtils;
 
@@ -43,22 +42,18 @@ public class PinModule extends Module<PinConfig> {
 
     @Override
     public byte[] encrypt(byte[] payload) throws RequiredInputNotFound, EncryptionException {
-        Password password = new Password(getPin());
-    
         AESEncryptedObject<ByteWrapper> encryptedObject =
-                CryptoObject.encrypt(new ByteWrapper(payload), password);
+                CryptoObject.encrypt(new ByteWrapper(payload), getPin());
         
         return SerializationUtils.serialize(encryptedObject);
     }
 
     @Override
     public byte[] decrypt(byte[] payload) throws RequiredInputNotFound, DecryptionException {
-        Password password = new Password(getPin());
-    
         AESEncryptedObject<ByteWrapper> encryptedObject =
                 (AESEncryptedObject<ByteWrapper>) SerializationUtils.deserialize(payload);
-        
-        return CryptoObject.decrypt(encryptedObject, password).getData();
+
+        return CryptoObject.decrypt(encryptedObject, getPin()).getData();
     }
     
     private String getPin() throws RequiredInputNotFound {

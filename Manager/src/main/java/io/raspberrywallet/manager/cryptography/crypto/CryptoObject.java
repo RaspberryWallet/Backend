@@ -4,7 +4,6 @@ import io.raspberrywallet.manager.cryptography.crypto.algorithms.AESCipherParams
 import io.raspberrywallet.manager.cryptography.crypto.algorithms.RSACipherParams;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
-import io.raspberrywallet.manager.cryptography.common.Password;
 import org.apache.commons.lang.SerializationUtils;
 
 import javax.crypto.BadPaddingException;
@@ -27,7 +26,7 @@ public class CryptoObject {
      * @throws EncryptionException If there is any error with encryption, then it's caught and thrown as
      *                             EncryptionException, with original or custom error message.
      */
-    public static <E extends Serializable> AESEncryptedObject<E> encrypt(E object, Password password) throws EncryptionException {
+    public static <E extends Serializable> AESEncryptedObject<E> encrypt(E object, String password) throws EncryptionException {
         AESCipherParams aesCipherParams = new AESCipherParams();
         
         try {
@@ -81,7 +80,7 @@ public class CryptoObject {
      * @throws DecryptionException If there is any error in decryption, then it is caught and thrown as
      *                             DecryptionException, with it's original or custom message.
      */
-    public static <E extends Serializable> E decrypt(AESEncryptedObject<E> object, Password password) throws DecryptionException {
+    public static <E extends Serializable> E decrypt(AESEncryptedObject<E> object, String password) throws DecryptionException {
         if (!object.isEncrypted())
             throw new DecryptionException("Given object is not encrypted.");
         
