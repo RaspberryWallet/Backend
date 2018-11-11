@@ -1,6 +1,7 @@
 package io.raspberrywallet.manager;
 
 import com.stasbar.Logger;
+import io.raspberrywallet.contract.CommunicationChannel;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.bitcoin.WalletCrypter;
 import io.raspberrywallet.manager.cli.Opts;
@@ -8,6 +9,7 @@ import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.manager.modules.ModuleClassLoader;
+import io.raspberrywallet.server.KtorServer;
 import org.apache.commons.cli.CommandLine;
 import org.bitcoinj.store.BlockStoreException;
 
@@ -17,7 +19,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static io.raspberrywallet.manager.cli.CliUtils.parseArgs;
-import static io.raspberrywallet.server.KtorServerKt.startKtorServer;
 
 public class Main {
 
@@ -35,11 +36,26 @@ public class Main {
 
         Database db = new Database(configuration);
 
-        Manager manager = new Manager(db, modules, bitcoin, temperatureMonitor);
 
-        startKtorServer(manager, configuration.getBasePathPrefix(), configuration.getServerConfig());
+        // create backend->frontend communication channel
+        CommunicationChannel communicationChannel = new CommunicationChannel();
+
+        Manager manager = new Manager(
+                configuration,
+                db,
+                modules,
+                bitcoin,
+                temperatureMonitor,
+                communicationChannel);
+
+        KtorServer ktorServer = new KtorServer(
+                manager,
+                configuration.getBasePathPrefix(),
+                configuration.getServerConfig(),
+                communicationChannel);
 
         prepareShutdownHook(bitcoin);
+        ktorServer.startBlocking();
     }
 
     private static void prepareShutdownHook(Bitcoin bitcoin) {

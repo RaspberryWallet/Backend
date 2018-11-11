@@ -1,10 +1,7 @@
 package io.raspberrywallet.manager;
 
 import com.stasbar.Logger;
-import io.raspberrywallet.contract.RequiredInputNotFound;
-import io.raspberrywallet.contract.Response;
-import io.raspberrywallet.contract.WalletNotInitialized;
-import io.raspberrywallet.contract.WalletStatus;
+import io.raspberrywallet.contract.*;
 import io.raspberrywallet.contract.module.ModuleState;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
@@ -26,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntConsumer;
@@ -49,36 +47,39 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @NotNull
     private final Database database;
 
-    private int autoLockRemainingMinutes = 10;
+    @NotNull
+    private final CommunicationChannel frontendChannel;
+    private final AutoLockTimer autoLockTask;
 
-    Manager(@NotNull Database database,
+    Manager(@NotNull Configuration configuration,
+            @NotNull Database database,
             @NotNull List<Module> modules,
             @NotNull Bitcoin bitcoin,
-            @NotNull TemperatureMonitor tempMonitor) {
+            @NotNull TemperatureMonitor tempMonitor,
+            @NotNull CommunicationChannel frontendChannel) {
+        this.frontendChannel = frontendChannel;
         modules.forEach(module -> this.modules.put(module.getId(), module));
         this.database = database;
         this.bitcoin = bitcoin;
         this.tempMonitor = tempMonitor;
         this.wpaConfiguration = new WPAConfiguration();
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (autoLockRemainingMinutes == 1) {
-                    Logger.d("Autolock triggered");
-                    try {
-                        lockWallet();
-                    } catch (WalletNotInitialized ignored) {
-                        //we don't care about locking if it wasn't even inited
-                    }
-                    clearModuleInputs();
 
-                    timer.cancel();
-                }
-                --autoLockRemainingMinutes;
-
+        Runnable onLockTriggered = () -> {
+            try {
+                frontendChannel.info("Autolock triggered");
+            } catch (Exception e) {
+                // Queue is full or no receiver found, ignore.
             }
-        }, 60 * 1000 /* second */, 60 * 1000 /* second */);
+            try {
+                lockWallet();
+            } catch (WalletNotInitialized ignored) {
+                //we don't care about locking if it wasn't even inited
+            }
+            clearModuleInputs();
+        };
+        Timer timer = new Timer();
+        autoLockTask = new AutoLockTimer(configuration.getAutoLockSeconds(), timer, onLockTriggered);
+        timer.scheduleAtFixedRate(autoLockTask, Duration.ofSeconds(1).toMillis(), Duration.ofSeconds(1).toMillis());
     }
 
     @Override
@@ -173,7 +174,11 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         bitcoin.ensureWalletInitialized();
         fillModulesWithInputs(moduleToInputsMap);
         String password = getPrivateKeyHash();
-        bitcoin.decryptWallet(password);
+        try {
+            bitcoin.decryptWallet(password);
+        } catch (IllegalArgumentException e) {
+            frontendChannel.error(e.getMessage());
+        }
     }
 
     @Override
@@ -203,6 +208,8 @@ public class Manager implements io.raspberrywallet.contract.Manager {
             return true;
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            frontendChannel.error(e.getMessage());
         } finally {
             clearModuleInputs();
         }
@@ -281,7 +288,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
     @Override
     public void tap() {
-        autoLockRemainingMinutes = 10;
+        autoLockTask.tap();
     }
 
     @Override

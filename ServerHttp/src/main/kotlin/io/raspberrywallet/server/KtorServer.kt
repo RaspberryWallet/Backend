@@ -20,16 +20,11 @@ import io.ktor.response.respondRedirect
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
-import io.ktor.server.engine.applicationEngineEnvironment
-import io.ktor.server.engine.connector
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.engine.sslConnector
+import io.ktor.server.engine.*
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
-import io.raspberrywallet.contract.Manager
-import io.raspberrywallet.contract.ServerConfig
-import io.raspberrywallet.contract.WalletNotInitialized
+import io.raspberrywallet.contract.*
 import io.raspberrywallet.server.Paths.Bitcoin.availableBalance
 import io.raspberrywallet.server.Paths.Bitcoin.currentAddress
 import io.raspberrywallet.server.Paths.Bitcoin.estimatedBalance
@@ -53,6 +48,7 @@ import io.raspberrywallet.server.Paths.Utils.ping
 import io.raspberrywallet.server.Paths.Utils.setDatabasePassword
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.filter
 import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.delay
 import org.slf4j.event.Level
@@ -64,207 +60,237 @@ import java.time.Duration
 
 const val PORT = 9090
 const val PORT_SSL = 443
-lateinit var manager: Manager
-lateinit var serverConfig: ServerConfig
-lateinit var basePath: String
+lateinit var globalManager: Manager
 
-val keyStoreFile: File by lazy {
-    File(".", serverConfig.keystoreName)
-}
-val keyStore: KeyStore by lazy {
-    KeyStore.getInstance(KeyStore.getDefaultType())
-        .apply { load(FileInputStream(keyStoreFile), serverConfig.keystorePassword) }
-}
+class KtorServer(val manager: Manager,
+                 val basePath: String,
+                 private val serverConfig: ServerConfig,
+                 private val communicationChannel: CommunicationChannel) {
 
-fun startKtorServer(newManager: Manager, newBasePath: String, config: ServerConfig) {
-    manager = newManager
-    basePath = newBasePath
-    serverConfig = config
-
-    val env = applicationEngineEnvironment {
-        module {
-            mainModule()
-        }
-        connector {
-            port = PORT
-        }
-        sslConnector(keyStore, "ssl", { serverConfig.keystorePassword }, { serverConfig.keystorePassword }) {
-            port = PORT_SSL
-            keyStorePath = keyStoreFile.absoluteFile
-        }
-    }
-    embeddedServer(Netty, env).start(wait = true)
-}
-
-fun Application.mainModule() {
-    install(ContentNegotiation) {
-        jackson {
-            enable(SerializationFeature.INDENT_OUTPUT)
-        }
-    }
-    install(CallLogging) {
-        level = Level.INFO
-    }
-    install(CORS) {
-        anyHost()
-        allowCredentials = true
-    }
-    install(DefaultHeaders)
-    install(StatusPages) {
-        exception<WalletNotInitialized> {
-            call.respond(HttpStatusCode.MethodNotAllowed, mapOf("message" to "Wallet not initialized"))
-        }
-        exception<SecurityException> { cause ->
-            call.respond(HttpStatusCode.Forbidden, mapOf("message" to cause))
-        }
-    }
-    install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(60) // Disabled (null) by default
-        timeout = Duration.ofSeconds(15)
-        maxFrameSize = kotlin.Long.MAX_VALUE // Disabled (max value). The connection will be closed if surpassed this length.
-        masking = false
+    private val applicationEngine: ApplicationEngine
+    private val keyStoreFile: File = File(".", serverConfig.keystoreName) //TODO move keystore into basePath
+    private val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
+        load(FileInputStream(keyStoreFile), serverConfig.keystorePassword)
     }
 
-    routing {
-        /* Index */
-        get(statusEndpoint) {
-            manager.tap()
-            call.respond(status)
-        }
-        get("/") {
-            manager.tap()
-            call.respond(indexPage)
-        }
-        get("/index") {
-            manager.tap()
-            call.respond(indexPage)
-        }
-        static("/") {
-            resources("assets")
-        }
-
-        /*Utils*/
-        get(ping) {
-            manager.tap()
-            call.respond(mapOf("ping" to manager.ping()))
-        }
-        get(cpuTemp) {
-            manager.tap()
-            call.respond(mapOf("cpuTemp" to manager.cpuTemperature))
-        }
-
-        /* Network */
-        get(wifiStatus) {
-            call.respond(mapOf("wifiStatus" to manager.wifiStatus))
-        }
-        get(networks) {
-            call.respond(mapOf("networks" to manager.networkList))
-        }
-        post(setWifi) {
-            val params = call.receiveParameters()
-            val psk = params["psk"]!!
-            val ssid = params["ssid"]!!
-
-            manager.wifiConfig = mutableMapOf("ssid" to ssid, "psk" to psk)
-
-            call.respondRedirect(statusEndpoint)
-        }
-        get(setupWiFi) {
-            call.respond(setNetwork)
-        }
-
-        /*Modules*/
-        get(modules) {
-            manager.tap()
-            call.respond(manager.serverModules)
-        }
-        get(moduleState) {
-            manager.tap()
-            val id = call.parameters["id"]!!
-            val moduleState = manager.getModuleState(id)
-            call.respond(mapOf("state" to moduleState.name, "message" to moduleState.message))
-        }
-        post(nextStep) {
-            manager.tap()
-            val id = call.parameters["id"]!!
-            val input = call.receiveText()
-            val inputMap: Map<String, String> = jacksonObjectMapper().readValue(input, object : TypeReference<Map<String, String>>() {})
-            val response = manager.nextStep(id, inputMap)
-            call.respond(mapOf("response" to response.status))
-        }
-        post(restoreFromBackupPhrase) {
-            manager.tap()
-            val (mnemonicWords, modules, required) = call.receive<RestoreFromBackup>()
-            call.respond(manager.restoreFromBackupPhrase(mnemonicWords, modules, required))
-        }
-        get(walletStatus) {
-            manager.tap()
-            call.respond(mapOf("walletStatus" to manager.walletStatus))
-        }
-        post(unlockWallet) {
-            manager.tap()
-            val moduleToInputsMap = call.receive<Map<String, Map<String, String>>>()
-            call.respond(manager.unlockWallet(moduleToInputsMap))
-        }
-        post(loadWalletFromDisk) {
-            manager.tap()
-            val moduleToInputsMap = call.receive<Map<String, Map<String, String>>>()
-            call.respond(manager.loadWalletFromDisk(moduleToInputsMap))
-        }
-        post(setDatabasePassword) {
-            manager.tap()
-            val setDatabasePassword = call.receive<SetDatabasePassword>()
-            call.respond(manager.setDatabasePassword(setDatabasePassword.password))
-        }
-        get(lockWallet) {
-            call.respond(manager.lockWallet())
-        }
-
-        /*Bitcoin*/
-        post(sendCoins) {
-            manager.tap()
-            val (amount, recipient) = call.receive<SendCoinBody>()
-            manager.sendCoins(amount, recipient)
-            call.respond(HttpStatusCode.OK)
-        }
-        get(currentAddress) {
-            manager.tap()
-            call.respond(mapOf("currentAddress" to manager.currentReceiveAddress))
-        }
-        get(freshAddress) {
-            manager.tap()
-            call.respond(mapOf("freshAddress" to manager.freshReceiveAddress))
-        }
-        get(estimatedBalance) {
-            manager.tap()
-            call.respond(mapOf("estimatedBalance" to manager.estimatedBalance))
-        }
-        get(availableBalance) {
-            manager.tap()
-            call.respond(mapOf("availableBalance" to manager.availableBalance))
-        }
-
-        webSocket("/pingCounter") {
-            var counter = 0L
-            while (true) {
-                delay(1000)
-                outgoing.send(Frame.Text("$counter"))
-                counter++
+    init {
+        globalManager = manager
+        val env = applicationEngineEnvironment {
+            module {
+                mainModule()
+            }
+            connector {
+                port = PORT
+            }
+            sslConnector(keyStore, "ssl", { serverConfig.keystorePassword }, { serverConfig.keystorePassword }) {
+                port = PORT_SSL
+                keyStorePath = keyStoreFile.absoluteFile
             }
         }
-        val channel = Channel<Int>(Channel.CONFLATED)
-        manager.addBlockChainProgressListener { progress ->
-            channel.sendBlocking(progress)
+        applicationEngine = embeddedServer(Netty, env)
+    }
+
+    fun startBlocking() {
+        applicationEngine.start(wait = true)
+    }
+
+    fun start() {
+        applicationEngine.start(wait = false)
+    }
+
+
+    fun Application.mainModule() {
+        install(ContentNegotiation) {
+            jackson {
+                enable(SerializationFeature.INDENT_OUTPUT)
+            }
         }
-        webSocket("/blockChainSyncProgress") {
-            channel.consumeEach { progress ->
-                outgoing.send(Frame.Text("$progress"))
-                if (progress == 100) close()
+        install(CallLogging) {
+            level = Level.INFO
+        }
+        install(CORS) {
+            anyHost()
+            allowCredentials = true
+        }
+        install(DefaultHeaders)
+        install(StatusPages) {
+            exception<WalletNotInitialized> {
+                call.respond(HttpStatusCode.MethodNotAllowed, mapOf("message" to "Wallet not initialized"))
+            }
+            exception<SecurityException> { cause ->
+                call.respond(HttpStatusCode.Forbidden, mapOf("message" to cause))
+            }
+        }
+        install(WebSockets) {
+            pingPeriod = Duration.ofSeconds(60) // Disabled (null) by default
+            timeout = Duration.ofSeconds(15)
+            maxFrameSize = kotlin.Long.MAX_VALUE // Disabled (max value). The connection will be closed if surpassed this length.
+            masking = false
+        }
+
+        routing {
+            /* Index */
+            get(statusEndpoint) {
+                manager.tap()
+                call.respond(status)
+            }
+            get("/") {
+                manager.tap()
+                call.respond(indexPage)
+            }
+            get("/index") {
+                manager.tap()
+                call.respond(indexPage)
+            }
+            static("/") {
+                resources("assets")
+            }
+
+            /*Utils*/
+            get(ping) {
+                manager.tap()
+                call.respond(mapOf("ping" to manager.ping()))
+            }
+            get(cpuTemp) {
+                manager.tap()
+                call.respond(mapOf("cpuTemp" to manager.cpuTemperature))
+            }
+
+            /* Network */
+            get(wifiStatus) {
+                call.respond(mapOf("wifiStatus" to manager.wifiStatus))
+            }
+            get(networks) {
+                call.respond(mapOf("networks" to manager.networkList))
+            }
+            post(setWifi) {
+                val params = call.receiveParameters()
+                val psk = params["psk"]!!
+                val ssid = params["ssid"]!!
+
+                manager.wifiConfig = mutableMapOf("ssid" to ssid, "psk" to psk)
+
+                call.respondRedirect(statusEndpoint)
+            }
+            get(setupWiFi) {
+                call.respond(setNetwork)
+            }
+
+            /*Modules*/
+            get(modules) {
+                manager.tap()
+                call.respond(manager.serverModules)
+            }
+            get(moduleState) {
+                manager.tap()
+                val id = call.parameters["id"]!!
+                val moduleState = manager.getModuleState(id)
+                call.respond(mapOf("state" to moduleState.name, "message" to moduleState.message))
+            }
+            post(nextStep) {
+                manager.tap()
+                val id = call.parameters["id"]!!
+                val input = call.receiveText()
+                val inputMap: Map<String, String> = jacksonObjectMapper().readValue(input, object : TypeReference<Map<String, String>>() {})
+                val response = manager.nextStep(id, inputMap)
+                call.respond(mapOf("response" to response.status))
+            }
+            post(restoreFromBackupPhrase) {
+                manager.tap()
+                val (mnemonicWords, modules, required) = call.receive<RestoreFromBackup>()
+                call.respond(manager.restoreFromBackupPhrase(mnemonicWords, modules, required))
+            }
+            get(walletStatus) {
+                manager.tap()
+                call.respond(mapOf("walletStatus" to manager.walletStatus))
+            }
+            post(unlockWallet) {
+                manager.tap()
+                val moduleToInputsMap = call.receive<Map<String, Map<String, String>>>()
+                call.respond(manager.unlockWallet(moduleToInputsMap))
+            }
+            post(loadWalletFromDisk) {
+                manager.tap()
+                val moduleToInputsMap = call.receive<Map<String, Map<String, String>>>()
+                call.respond(manager.loadWalletFromDisk(moduleToInputsMap))
+            }
+            post(setDatabasePassword) {
+                manager.tap()
+                val setDatabasePassword = call.receive<SetDatabasePassword>()
+                call.respond(manager.setDatabasePassword(setDatabasePassword.password))
+            }
+            get(lockWallet) {
+                call.respond(manager.lockWallet())
+            }
+
+            /*Bitcoin*/
+            post(sendCoins) {
+                manager.tap()
+                val (amount, recipient) = call.receive<SendCoinBody>()
+                manager.sendCoins(amount, recipient)
+                call.respond(HttpStatusCode.OK)
+            }
+            get(currentAddress) {
+                manager.tap()
+                call.respond(mapOf("currentAddress" to manager.currentReceiveAddress))
+            }
+            get(freshAddress) {
+                manager.tap()
+                call.respond(mapOf("freshAddress" to manager.freshReceiveAddress))
+            }
+            get(estimatedBalance) {
+                manager.tap()
+                call.respond(mapOf("estimatedBalance" to manager.estimatedBalance))
+            }
+            get(availableBalance) {
+                manager.tap()
+                call.respond(mapOf("availableBalance" to manager.availableBalance))
+            }
+
+            webSocket("/pingCounter") {
+                var counter = 0L
+                while (true) {
+                    delay(1000)
+                    outgoing.send(Frame.Text("$counter"))
+                    counter++
+                }
+            }
+            val channel = Channel<Int>(Channel.CONFLATED)
+            manager.addBlockChainProgressListener { progress ->
+                channel.sendBlocking(progress)
+            }
+            webSocket("/blockChainSyncProgress") {
+                channel.consumeEach { progress ->
+                    outgoing.send(Frame.Text("$progress"))
+                    if (progress == 100) close()
+                }
+            }
+            webSocket("/info") {
+                communicationChannel.channel
+                    .filter { it is Message.InfoMessage }
+                    .consumeEach { infoMessage ->
+                        outgoing.send(Frame.Text(infoMessage.message))
+                    }
+            }
+            webSocket("/error") {
+                communicationChannel.channel
+                    .filter { it is Message.ErrorMessage }
+                    .consumeEach { errorMessage ->
+                        outgoing.send(Frame.Text(errorMessage.message))
+                    }
+            }
+            webSocket("/success") {
+                communicationChannel.channel
+                    .filter { it is Message.SuccessMessage }
+                    .consumeEach { successMessage ->
+                        outgoing.send(Frame.Text(successMessage.message))
+                    }
             }
         }
     }
+
+    data class RestoreFromBackup(val mnemonicWords: List<String>, val modules: Map<String, Map<String, String>>, val required: Int)
+    data class SendCoinBody(val amount: String, val recipient: String)
+    data class SetDatabasePassword(val password: String)
 }
 
-data class RestoreFromBackup(val mnemonicWords: List<String>, val modules: Map<String, Map<String, String>>, val required: Int)
-data class SendCoinBody(val amount: String, val recipient: String)
-data class SetDatabasePassword(val password: String)

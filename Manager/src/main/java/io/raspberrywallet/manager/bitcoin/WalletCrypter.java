@@ -24,7 +24,6 @@ public class WalletCrypter {
     void decryptWallet(@NotNull Wallet wallet, @NotNull String password) {
         if (password.length() == 0 || password.length() < 4) {
             throw new IllegalArgumentException("Bad password. The password you entered is empty or too short.");
-            //TODO show to UI
         }
 
         final KeyCrypterScrypt scrypt = (KeyCrypterScrypt) wallet.getKeyCrypter();
