@@ -72,6 +72,7 @@ class KtorServer(val manager: Manager,
     private val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
         load(FileInputStream(keyStoreFile), serverConfig.keystorePassword)
     }
+    private val blockChainSyncProgressionChannel = Channel<Int>(Channel.CONFLATED)
 
     init {
         globalManager = manager
@@ -88,6 +89,10 @@ class KtorServer(val manager: Manager,
             }
         }
         applicationEngine = embeddedServer(Netty, env)
+
+        manager.addBlockChainProgressListener { progress ->
+            blockChainSyncProgressionChannel.sendBlocking(progress)
+        }
     }
 
     fun startBlocking() {
@@ -255,12 +260,8 @@ class KtorServer(val manager: Manager,
                     counter++
                 }
             }
-            val channel = Channel<Int>(Channel.CONFLATED)
-            manager.addBlockChainProgressListener { progress ->
-                channel.sendBlocking(progress)
-            }
             webSocket("/blockChainSyncProgress") {
-                channel.consumeEach { progress ->
+                blockChainSyncProgressionChannel.consumeEach { progress ->
                     outgoing.send(Frame.Text("$progress"))
                     if (progress == 100) close()
                 }
