@@ -71,6 +71,8 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                     } catch (WalletNotInitialized ignored) {
                         //we don't care about locking if it wasn't even inited
                     }
+                    clearModuleInputs();
+
                     timer.cancel();
                 }
                 --autoLockRemainingMinutes;
