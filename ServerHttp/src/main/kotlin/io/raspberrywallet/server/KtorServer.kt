@@ -51,9 +51,10 @@ import io.raspberrywallet.server.Paths.Network.wifiStatus
 import io.raspberrywallet.server.Paths.Utils.cpuTemp
 import io.raspberrywallet.server.Paths.Utils.ping
 import io.raspberrywallet.server.Paths.Utils.setDatabasePassword
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.slf4j.event.Level
 import java.io.File
 import java.io.FileInputStream
@@ -251,14 +252,15 @@ fun Application.mainModule() {
                 counter++
             }
         }
+        val channel = Channel<Int>(Channel.CONFLATED)
+        manager.addBlockChainProgressListener { progress ->
+            channel.sendBlocking(progress)
+        }
         webSocket("/blockChainSyncProgress") {
-            manager.addBlockChainProgressListener { progress ->
-                launch {
-                    outgoing.send(Frame.Text("$progress"))
-                }
+            channel.consumeEach { progress ->
+                outgoing.send(Frame.Text("$progress"))
+                if (progress == 100) close()
             }
-
-            while (isActive) delay(1000)
         }
     }
 }

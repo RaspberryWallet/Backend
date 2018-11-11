@@ -27,7 +27,8 @@ public class BitcoinTest {
         mnemonicCode = Arrays.asList("member", "team", "romance", "alarm", "antique", "legal",
                 "captain", "dutch", "matter", "dinner", "loan", "orange");
         println("Using mnemonic:" + mnemonicCode.stream().reduce("", (acc, word) -> acc + " " + word));
-
+        // receive address mhTMbU8NqwVobEjT6Yqq3hSu9rmPABE1RU
+        // balance 0.14001595
         privateKeyHash = new String(Sha256Hash.hash("rasperrywallet is the best bitcoin wallet ever".getBytes()));
 
         File tempBaseDir = Paths.get("/", "tmp", "wallet").toFile();
@@ -59,6 +60,7 @@ public class BitcoinTest {
 
     @Test
     void getCurrentReceiveAddress() throws WalletNotInitialized {
+        should_restore_from_file();
         String currentAddress = bitcoin.getCurrentReceiveAddress();
 
         assertNotNull(currentAddress);
@@ -69,6 +71,7 @@ public class BitcoinTest {
 
     @Test
     void getFreshReceiveAddress() throws WalletNotInitialized {
+        should_restore_from_file();
         String freshAddress = bitcoin.getFreshReceiveAddress();
         assertNotNull(freshAddress);
         assertEquals(freshAddress.length(), 34);
@@ -77,12 +80,14 @@ public class BitcoinTest {
 
     @Test
     void getEstimatedBalance() throws WalletNotInitialized {
+        should_restore_from_file();
         String balance = bitcoin.getEstimatedBalance();
         println(balance);
     }
 
     @Test
     void getAvailableBalance() throws WalletNotInitialized {
+        should_restore_from_file();
         String availableBalance = bitcoin.getAvailableBalance();
         println(availableBalance);
     }
