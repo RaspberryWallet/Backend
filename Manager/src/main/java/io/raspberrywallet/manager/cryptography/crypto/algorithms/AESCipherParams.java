@@ -51,7 +51,7 @@ public class AESCipherParams extends CipherParams implements Serializable {
         
         IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
         SecretKeyFactory factory = SecretKeyFactory.getInstance(hashAlgorithmName);
-        PBEKeySpec spec = new PBEKeySpec(password.getSecret(), keySalt, iterationsAmount, keySize);
+        PBEKeySpec spec = new PBEKeySpec(password.getSecret().toCharArray(), keySalt, iterationsAmount, keySize);
         SecretKey secretKey = factory.generateSecret(spec);
         SecretKeySpec secret = new SecretKeySpec(secretKey.getEncoded(), algorithmName);
         cipher.init(cipherMode, secret, ivParameterSpec);

@@ -5,7 +5,7 @@ import io.raspberrywallet.manager.common.interfaces.Destroyable;
 
 public class Password implements Destroyable {
     
-    private char[] secret;
+    private String secret;
     
     /**
      * Since in most of cases, secret is a String, that is
@@ -16,24 +16,19 @@ public class Password implements Destroyable {
      * @param secret
      */
     public Password(String secret) {
-        this.secret = secret.toCharArray();
-    }
-    
-    public Password(char[] secret) {
         this.secret = secret;
     }
     
     public Password(byte[] secret) {
-        String string = new String(secret);
-        this.secret = string.toCharArray();
+        this.secret = new String(secret);
     }
     
-    public char[] getSecret() {
+    public String getSecret() {
         return secret;
     }
     
     public void destroy() {
-        ArrayDestroyer.destroy(secret);
+        secret = null;
     }
     
 }

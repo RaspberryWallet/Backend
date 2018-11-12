@@ -13,7 +13,7 @@ public class Credentials {
     private String password;
     
     public String getPasswordBase64() {
-        return Base64.getEncoder().encodeToString(password.getBytes());
+        return Base64.getUrlEncoder().encodeToString(password.getBytes());
     }
     
 }
