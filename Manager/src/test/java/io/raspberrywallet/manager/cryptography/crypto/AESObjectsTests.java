@@ -3,9 +3,7 @@ package io.raspberrywallet.manager.cryptography.crypto;
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
-import io.raspberrywallet.manager.cryptography.common.Password;
 import org.apache.commons.lang.SerializationUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.spongycastle.util.Arrays;
@@ -17,11 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AESObjectsTests {
     
     private static final int randomObjectsAmount = 52;
-    private static final Password defaultPassword = new Password("TestPassword123!@##$%".toCharArray());
+    private static final String defaultPassword = "TestPassword123!@##$%";
     
     private static Random random = new Random();
     private static byte[][] arrayOfRandomSizeObjects;
-    private static Password[] arrayOfRandomPasswords;
+    private static String[] arrayOfRandomPasswords;
     
     @BeforeAll
     static void initializeData() {
@@ -31,20 +29,20 @@ public class AESObjectsTests {
             arrayOfRandomSizeObjects[i] = new byte[random.nextInt(randomObjectsAmount * 4) + 1];
             random.nextBytes(arrayOfRandomSizeObjects[i]);
         }
-        
-        arrayOfRandomPasswords = new Password[randomObjectsAmount];
+
+        arrayOfRandomPasswords = new String[randomObjectsAmount];
         for (int i = 0; i < randomObjectsAmount; i++) {
             int passwordSize = random.nextInt(256 - 4) + 4;
             byte[] passwordBytes = new byte[passwordSize];
             random.nextBytes(passwordBytes);
-            arrayOfRandomPasswords[i] = new Password(TestsHelper.toCharArray(passwordBytes));
+            arrayOfRandomPasswords[i] = new String(TestsHelper.toCharArray(passwordBytes));
         }
     }
     
     @Test
     void WhenEncrypting_DataDecryptedWithDifferentPasswordDoesThrowException() {
         ByteWrapper wrappedData = new ByteWrapper(getRandomData());
-        Password randomPassword = getRandomPassword();
+        String randomPassword = getRandomPassword();
         try {
             AESEncryptedObject<ByteWrapper> encryptedObject = CryptoObject.encrypt(wrappedData, defaultPassword);
     
@@ -117,8 +115,8 @@ public class AESObjectsTests {
     private byte[] getRandomData() {
         return arrayOfRandomSizeObjects[random.nextInt(randomObjectsAmount)];
     }
-    
-    private Password getRandomPassword() {
+
+    private String getRandomPassword() {
         return arrayOfRandomPasswords[random.nextInt(randomObjectsAmount)];
     }
 }

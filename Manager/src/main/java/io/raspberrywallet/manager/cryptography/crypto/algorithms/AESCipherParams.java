@@ -1,7 +1,6 @@
 package io.raspberrywallet.manager.cryptography.crypto.algorithms;
 
 
-import io.raspberrywallet.manager.cryptography.common.Password;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -43,15 +42,15 @@ public class AESCipherParams extends CipherParams implements Serializable {
         keySize = algorithmFactory.getKeySize();
         iterationsAmount = algorithmFactory.getKeyHashIterationsAmount();
     }
-    
-    public Cipher getCipher(Password password, int cipherMode) throws NoSuchPaddingException, NoSuchAlgorithmException,
+
+    public Cipher getCipher(String password, int cipherMode) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidKeySpecException, InvalidAlgorithmParameterException, InvalidKeyException {
         
         Cipher cipher = Cipher.getInstance(algorithmFullName);
         
         IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
         SecretKeyFactory factory = SecretKeyFactory.getInstance(hashAlgorithmName);
-        PBEKeySpec spec = new PBEKeySpec(password.getSecret(), keySalt, iterationsAmount, keySize);
+        PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), keySalt, iterationsAmount, keySize);
         SecretKey secretKey = factory.generateSecret(spec);
         SecretKeySpec secret = new SecretKeySpec(secretKey.getEncoded(), algorithmName);
         cipher.init(cipherMode, secret, ivParameterSpec);

@@ -6,11 +6,11 @@ import io.raspberrywallet.contract.WalletStatus
 import io.raspberrywallet.contract.module.Module
 import io.raspberrywallet.contract.module.ModuleState
 import io.raspberrywallet.contract.step.SimpleStep
-import java.util.function.DoubleConsumer
+import java.util.function.IntConsumer
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
-    override fun addBlockChainProgressListener(listener: DoubleConsumer) {
+    override fun addBlockChainProgressListener(listener: IntConsumer) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.DoubleConsumer;
+import java.util.function.IntConsumer;
 
 public interface Manager {
     String ping(); // for DEBUG purposes
@@ -174,5 +174,5 @@ public interface Manager {
     @NotNull
     int setWifiConfig(Map<String, String> newConf);
 
-    void addBlockChainProgressListener(@NotNull DoubleConsumer listener);
+    void addBlockChainProgressListener(@NotNull IntConsumer listener);
 }

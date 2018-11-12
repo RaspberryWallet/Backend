@@ -4,7 +4,6 @@ import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.common.readers.WalletUUIDReader;
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
 import io.raspberrywallet.manager.common.wrappers.Credentials;
-import io.raspberrywallet.manager.cryptography.common.Password;
 import io.raspberrywallet.manager.cryptography.crypto.AESEncryptedObject;
 import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
@@ -85,7 +84,7 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
             initialize();
 
             String encodedSecret = serverAPI.getSecret(serverCredentials);
-            Password password = new Password(Base64.getDecoder().decode(encodedSecret));
+            String password = new String(Base64.getDecoder().decode(encodedSecret));
 
             AESEncryptedObject<ByteWrapper> encryptedSecret =
                     CryptoObject.encrypt(new ByteWrapper(payload), password);
@@ -101,7 +100,7 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
     public byte[] decrypt(byte[] keyPart) throws DecryptionException {
         try {
             String encodedSecret = serverAPI.getSecret(serverCredentials);
-            Password password = new Password(Base64.getDecoder().decode(encodedSecret));
+            String password = new String(Base64.getDecoder().decode(encodedSecret));
 
             AESEncryptedObject<ByteWrapper> deserializedKeyPart =
                     (AESEncryptedObject<ByteWrapper>) SerializationUtils.deserialize(keyPart);
