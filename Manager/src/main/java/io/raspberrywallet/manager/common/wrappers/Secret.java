@@ -19,7 +19,7 @@ public class Secret implements Destroyable {
      * @param base64Data base64 encoded data
      */
     public Secret(String base64Data) {
-        byte[] decodedData = Base64.getDecoder().decode(base64Data);
+        byte[] decodedData = Base64.getUrlDecoder().decode(base64Data);
         byteWrapper = new ByteWrapper(decodedData);
     }
     
