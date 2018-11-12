@@ -21,7 +21,7 @@ public class WalletCrypter {
             .build();
 
 
-    void decryptWallet(@NotNull Wallet wallet, @NotNull String password) {
+    void decryptWallet(@NotNull Wallet wallet, @NotNull String password) throws IllegalArgumentException {
         if (password.length() == 0 || password.length() < 4) {
             throw new IllegalArgumentException("Bad password. The password you entered is empty or too short.");
         }
@@ -32,9 +32,7 @@ public class WalletCrypter {
         if (wallet.checkAESKey(aesKey)) {
             wallet.decrypt(aesKey);
         } else {
-            Logger.err("User entered incorrect password");
-            Logger.err("Wrong password");
-            Logger.err("Please try entering your password again, carefully checking for typos or spelling errors.");
+            throw new IllegalArgumentException("Incorrect password, Please try entering your password again, carefully checking for typos or spelling errors.");
         }
     }
 
@@ -48,8 +46,6 @@ public class WalletCrypter {
         KeyParameter aesKey = script.deriveKey(password);
         Logger.info("Key derived, now encrypting");
         wallet.encrypt(script, aesKey);
-        Logger.info("Encryption done");
         Logger.info("Wallet encrypted");
-        Logger.info("You can remove the password at any time from the settings screen.");
     }
 }

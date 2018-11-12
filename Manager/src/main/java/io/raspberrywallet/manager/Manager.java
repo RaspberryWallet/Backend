@@ -65,11 +65,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         this.wpaConfiguration = new WPAConfiguration();
 
         Runnable onLockTriggered = () -> {
-            try {
-                frontendChannel.info("Autolock triggered");
-            } catch (Exception e) {
-                // Queue is full or no receiver found, ignore.
-            }
+            frontendChannel.info("Autolock triggered");
             try {
                 lockWallet();
             } catch (WalletNotInitialized ignored) {
