@@ -23,7 +23,6 @@ class AuthorizationServerAPI {
     private ApacheHttpClient httpClient;
 
     private Token token;
-    private Boolean isRegisteredFlag, isLoggedInFlag;
 
     AuthorizationServerAPI(@NotNull AuthorizationServerConfig configuration) {
         this.configuration = configuration;
@@ -31,10 +30,10 @@ class AuthorizationServerAPI {
                 .add(HttpHeaders.CONTENT_TYPE, "application/json")
                 .add("charset", "UTF-8");
 
-        if (configuration.getLoginEndpoint().startsWith("https://"))
+        if (configuration.getAddress().startsWith("http://"))
             httpClient = new UnsecureApacheHttpClient(defaultHeaders);
         else
-            httpClient = new SecureApacheHttpClient(defaultHeaders);
+            httpClient = new SecureApacheHttpClient(defaultHeaders, configuration.getAcceptUntrustedCerts());
     }
 
     void login(Credentials credentials, int sessionLength) throws RequestException {
@@ -70,8 +69,7 @@ class AuthorizationServerAPI {
                 .add(APIKeys.TOKEN.val, token.getData());
 
         HttpResponse response = executeRequest(body, configuration.getLogoutEndpoint());
-        isLoggedInFlag = !handleResponse(response);
-        return isLoggedInFlag;
+        return !handleResponse(response);
     }
 
     boolean register(Credentials credentials) throws RequestException {
@@ -84,20 +82,15 @@ class AuthorizationServerAPI {
     }
 
     boolean isRegistered(Credentials credentials) throws RequestException {
-        if (isRegisteredFlag != null)
-            return isRegisteredFlag;
-
         Form requestBody = Form.form()
                 .add(APIKeys.WALLETUUID.val, credentials.getName());
 
         HttpResponse response = executeRequest(requestBody, configuration.getWalletExistsEndpoint());
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == HttpStatus.SC_OK) {
-            isRegisteredFlag = true;
             return true;
         }
         if (statusCode == HttpStatus.SC_NOT_FOUND) {
-            isRegisteredFlag = false;
             return false;
         } else
             throw new RequestException("Request failed with error code: " + statusCode);
@@ -170,23 +163,6 @@ class AuthorizationServerAPI {
             throw new RequestException("Request failed with error code: " + statusCode);
 
         return true;
-    }
-
-    public void registerAndLogin(Credentials credentials) throws RequestException {
-        if (!isRegisteredCheck(credentials))
-            isRegisteredFlag = register(credentials);
-
-        if (!isLoggedIn()) {
-            login(credentials);
-            isLoggedInFlag = true;
-        }
-    }
-
-    private boolean isRegisteredCheck(Credentials credentials) throws RequestException {
-        if (isRegisteredFlag == null || !isRegisteredFlag)
-            isRegisteredFlag = isRegistered(credentials);
-
-        return isRegisteredFlag;
     }
 
     boolean isLoggedIn() {

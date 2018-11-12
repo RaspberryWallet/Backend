@@ -7,14 +7,25 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Getter
 @Setter
 @NoArgsConstructor
-class AuthorizationServerConfig implements ModuleConfig {
-    private String host = "http://localhost";
-    private int port = 8080;
+public class AuthorizationServerConfig implements ModuleConfig {
+    private String host = "https://localhost";
+    private int port = 8443;
     private String address = host + ":" + port;
-    private boolean https = false;
     private Endpoints endpoints = new Endpoints();
+    
+    /**
+     * By default true, needed for debugging. User will overwrite it
+     * with hist own configuration yaml file anyways.
+     */
+    @JsonProperty("accept-untrusted-certs")
+    private boolean acceptUntrustedCerts = true;
+    
+    boolean getAcceptUntrustedCerts() {
+        return acceptUntrustedCerts;
+    }
 
     String getLoginEndpoint() {
         return address + endpoints.getLogin();
