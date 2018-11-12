@@ -62,7 +62,8 @@ class ManagerTest {
         pinModule = new PinModule();
         modules.add(exampleModule);
         modules.add(pinModule);
-        manager = new Manager(database, modules, bitcoin, temperatureMonitor);
+
+        manager = new Manager(Configuration.testConfiguration(), database, modules, bitcoin, temperatureMonitor, null);
     }
 
 

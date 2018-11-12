@@ -1,10 +1,7 @@
 package io.raspberrywallet.manager;
 
 import com.stasbar.Logger;
-import io.raspberrywallet.contract.RequiredInputNotFound;
-import io.raspberrywallet.contract.Response;
-import io.raspberrywallet.contract.WalletNotInitialized;
-import io.raspberrywallet.contract.WalletStatus;
+import io.raspberrywallet.contract.*;
 import io.raspberrywallet.contract.module.ModuleState;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
@@ -23,13 +20,13 @@ import kotlin.text.Charsets;
 import lombok.Getter;
 import org.bitcoinj.core.Sha256Hash;
 import org.jetbrains.annotations.NotNull;
-import org.spongycastle.crypto.params.KeyParameter;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.DoubleConsumer;
+import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -50,34 +47,35 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @NotNull
     private final Database database;
 
-    private int autoLockRemainingMinutes = 10;
+    @NotNull
+    private final CommunicationChannel frontendChannel;
+    private final AutoLockTimer autoLockTask;
 
-    public Manager(@NotNull Database database,
-                   @NotNull List<Module> modules,
-                   @NotNull Bitcoin bitcoin,
-                   @NotNull TemperatureMonitor tempMonitor) {
+    Manager(@NotNull Configuration configuration,
+            @NotNull Database database,
+            @NotNull List<Module> modules,
+            @NotNull Bitcoin bitcoin,
+            @NotNull TemperatureMonitor tempMonitor,
+            @NotNull CommunicationChannel frontendChannel) {
+        this.frontendChannel = frontendChannel;
         modules.forEach(module -> this.modules.put(module.getId(), module));
         this.database = database;
         this.bitcoin = bitcoin;
         this.tempMonitor = tempMonitor;
         this.wpaConfiguration = new WPAConfiguration();
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (autoLockRemainingMinutes == 1) {
-                    Logger.d("Autolock triggered");
-                    try {
-                        lockWallet();
-                    } catch (WalletNotInitialized ignored) {
-                        //we don't care about locking if it wasn't even inited
-                    }
-                    timer.cancel();
-                }
-                --autoLockRemainingMinutes;
 
+        Runnable onLockTriggered = () -> {
+            frontendChannel.info("Autolock triggered");
+            try {
+                lockWallet();
+            } catch (WalletNotInitialized ignored) {
+                //we don't care about locking if it wasn't even inited
             }
-        }, 60 * 1000 /* second */, 60 * 1000 /* second */);
+            clearModuleInputs();
+        };
+        Timer timer = new Timer();
+        autoLockTask = new AutoLockTimer(configuration.getAutoLockSeconds(), timer, onLockTriggered);
+        timer.scheduleAtFixedRate(autoLockTask, Duration.ofSeconds(1).toMillis(), Duration.ofSeconds(1).toMillis());
     }
 
     @Override
@@ -95,6 +93,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
      * Modules
      */
 
+    @NotNull
     @Override
     public List<io.raspberrywallet.contract.module.Module> getServerModules() {
         return modules.values().stream()
@@ -116,7 +115,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
     @Override
     public void restoreFromBackupPhrase(@NotNull List<String> mnemonicCode,
-                                        Map<String, Map<String, String>> selectedModulesWithInputs,
+                                        @NotNull Map<String, Map<String, String>> selectedModulesWithInputs,
                                         int required) throws RequiredInputNotFound {
 
         List<Module> modulesToDecrypt = selectedModulesWithInputs.keySet().stream()
@@ -142,7 +141,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
             }
             database.addAllKeyParts(keyPartEntities);
 
-            bitcoin.setupWalletFromMnemonic(mnemonicCode, getWalletCipherKey());
+            bitcoin.setupWalletFromMnemonic(mnemonicCode, getPrivateKeyHash());
 
         } catch (ShamirException | EncryptionException e) {
             e.printStackTrace();
@@ -161,42 +160,35 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     }
 
 
-    private KeyParameter getWalletCipherKey() {
+    private String getPrivateKeyHash() {
         byte[] privateKeyHash = Sha256Hash.hash(getPrivateKeyFromModules());
-        return new KeyParameter(privateKeyHash);
+        return new String(privateKeyHash);
     }
 
     @Override
     public void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) throws WalletNotInitialized {
         bitcoin.ensureWalletInitialized();
         fillModulesWithInputs(moduleToInputsMap);
-        KeyParameter key = getWalletCipherKey();
+        String password = getPrivateKeyHash();
         try {
-            bitcoin.decryptWallet(key);
-        } finally {
-            Arrays.fill(key.getKey(), (byte) 0);
+            bitcoin.decryptWallet(password);
+        } catch (IllegalArgumentException e) {
+            frontendChannel.error(e.getMessage());
         }
     }
 
     @Override
     public void loadWalletFromDisk(@NotNull Map<String, Map<String, String>> moduleToInputsMap) {
         fillModulesWithInputs(moduleToInputsMap);
-        KeyParameter key = getWalletCipherKey();
-        try {
-            bitcoin.setupWalletFromFile(key);
-        } finally {
-            Arrays.fill(key.getKey(), (byte) 0);
-        }
-
+        String password = getPrivateKeyHash();
+        bitcoin.setupWalletFromFile(password);
     }
 
     private void fillModulesWithInputs(@NotNull Map<String, Map<String, String>> moduleToInputsMap) {
         moduleToInputsMap.forEach((moduleId, inputs) -> {
             Module module = modules.get(moduleId);
             Logger.d("Setting inputs for " + module.getId());
-            inputs.forEach((name, value) -> {
-                Logger.d(name + ": " + value);
-            });
+            inputs.forEach((name, value) -> Logger.d(name + ": " + value));
             inputs.forEach(module::setInput);
         });
     }
@@ -204,16 +196,17 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public boolean lockWallet() throws WalletNotInitialized {
         bitcoin.ensureWalletInitialized();
-        KeyParameter key = getWalletCipherKey();
+        String password = getPrivateKeyHash();
 
         try {
-            bitcoin.saveEncryptedWallet(key);
-            bitcoin.encryptWallet(key);
+            bitcoin.saveEncryptedWallet(password);
+            bitcoin.encryptWallet(password);
             return true;
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            frontendChannel.error(e.getMessage());
         } finally {
-            Arrays.fill(key.getKey(), (byte) 0);
             clearModuleInputs();
         }
         return false;
@@ -223,7 +216,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         modules.values().forEach(Module::clearInputs);
     }
 
-    public byte[] getPrivateKeyFromModules() {
+    private byte[] getPrivateKeyFromModules() {
         ShamirKey[] shamirKeys = modules.values().stream()
                 .map(module -> {
                     try {
@@ -250,21 +243,25 @@ public class Manager implements io.raspberrywallet.contract.Manager {
      * Bitcoin Domain
      */
 
+    @NotNull
     @Override
     public String getCurrentReceiveAddress() throws WalletNotInitialized {
         return bitcoin.getCurrentReceiveAddress();
     }
 
+    @NotNull
     @Override
     public String getFreshReceiveAddress() throws WalletNotInitialized {
         return bitcoin.getFreshReceiveAddress();
     }
 
+    @NotNull
     @Override
     public String getEstimatedBalance() throws WalletNotInitialized {
         return bitcoin.getEstimatedBalance();
     }
 
+    @NotNull
     @Override
     public String getAvailableBalance() throws WalletNotInitialized {
         return bitcoin.getAvailableBalance();
@@ -279,6 +276,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
      * Utilities
      */
 
+    @NotNull
     @Override
     public String getCpuTemperature() {
         return tempMonitor.call();
@@ -286,7 +284,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
     @Override
     public void tap() {
-        autoLockRemainingMinutes = 10;
+        autoLockTask.tap();
     }
 
     @Override
@@ -301,16 +299,19 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
     /* Network */
 
+    @NotNull
     @Override
     public String[] getNetworkList() {
         return new WifiScanner().call();
     }
 
+    @NotNull
     @Override
     public Map<String, String> getWifiStatus() {
         return new WifiStatus().call();
     }
 
+    @NotNull
     @Override
     public Map<String, String> getWifiConfig() {
         return this.wpaConfiguration.getAsMap();
@@ -322,7 +323,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     }
 
     @Override
-    public void addBlockChainProgressListener(@NotNull DoubleConsumer listener) {
+    public void addBlockChainProgressListener(@NotNull IntConsumer listener) {
         bitcoin.addBlockChainProgressListener(listener);
     }
 }

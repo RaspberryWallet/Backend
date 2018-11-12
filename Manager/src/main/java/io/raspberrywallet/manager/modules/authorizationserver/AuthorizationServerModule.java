@@ -5,7 +5,6 @@ import io.raspberrywallet.manager.common.generators.RandomStringGenerator;
 import io.raspberrywallet.manager.common.readers.WalletUUIDReader;
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
 import io.raspberrywallet.manager.common.wrappers.Credentials;
-import io.raspberrywallet.manager.cryptography.common.Password;
 import io.raspberrywallet.manager.cryptography.crypto.AESEncryptedObject;
 import io.raspberrywallet.manager.cryptography.crypto.CryptoObject;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;

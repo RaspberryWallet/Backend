@@ -40,7 +40,7 @@ final public class Configuration {
      * AutoLock idle time in seconds
      */
     @JsonProperty("autolock-seconds")
-    private long autoLockSeconds = 60 * 5;
+    private int autoLockSeconds = 60 * 5;
 
     /**
      * Modules configuration object, hides HashMap<String, JsonNode>
@@ -109,6 +109,9 @@ final public class Configuration {
         return config;
     }
 
+    static Configuration testConfiguration() {
+        return new Configuration("/tmp/wallet");
+    }
 
     @NoArgsConstructor
     public static class ModulesConfiguration extends HashMap<String, JsonNode> {
