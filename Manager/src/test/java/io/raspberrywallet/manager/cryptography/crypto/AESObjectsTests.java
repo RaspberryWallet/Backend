@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.cryptography.crypto;
 
+import io.raspberrywallet.manager.common.generators.RandomStringGenerator;
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
@@ -15,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AESObjectsTests {
     
     private static final int randomObjectsAmount = 52;
-    private static final Password defaultPassword = new Password("TestPassword123!@##$%");
     private static final String defaultPassword = "TestPassword123!@##$%";
     
     private static Random random = new Random();
@@ -34,9 +34,7 @@ public class AESObjectsTests {
         arrayOfRandomPasswords = new String[randomObjectsAmount];
         for (int i = 0; i < randomObjectsAmount; i++) {
             int passwordSize = random.nextInt(256 - 4) + 4;
-            byte[] passwordBytes = new byte[passwordSize];
-            random.nextBytes(passwordBytes);
-            arrayOfRandomPasswords[i] = new String(TestsHelper.toCharArray(passwordBytes));
+            arrayOfRandomPasswords[i] = RandomStringGenerator.get(passwordSize);
         }
     }
     

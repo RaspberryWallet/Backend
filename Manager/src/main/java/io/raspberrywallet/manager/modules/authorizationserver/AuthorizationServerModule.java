@@ -82,7 +82,7 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
             initialize();
 
             String encodedSecret = serverAPI.getSecret(serverCredentials);
-            Password password = new Password(Base64.getUrlDecoder().decode(encodedSecret));
+            String password = new String(Base64.getUrlDecoder().decode(encodedSecret));
 
             AESEncryptedObject<ByteWrapper> encryptedSecret =
                     CryptoObject.encrypt(new ByteWrapper(payload), password);
@@ -98,7 +98,7 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
     public byte[] decrypt(byte[] keyPart) throws DecryptionException {
         try {
             String encodedSecret = serverAPI.getSecret(serverCredentials);
-            Password password = new Password(Base64.getUrlDecoder().decode(encodedSecret));
+            String password = new String(Base64.getUrlDecoder().decode(encodedSecret));
 
             AESEncryptedObject<ByteWrapper> deserializedKeyPart =
                     (AESEncryptedObject<ByteWrapper>) SerializationUtils.deserialize(keyPart);
