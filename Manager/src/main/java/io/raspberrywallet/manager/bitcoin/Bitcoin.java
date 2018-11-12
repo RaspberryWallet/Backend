@@ -187,20 +187,21 @@ public class Bitcoin {
         chain.addWallet(wallet);
         peerGroup.addWallet(wallet);
         Runnable afterSynchronizationComplete = () -> {
-            try {
-                if (password != null)
+            if (password != null) {
+                try {
                     saveEncryptedWallet(password);
-                Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
-            } catch (WalletNotInitialized | IOException e) {
-                e.printStackTrace();
+                    Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
+                } catch (IOException | WalletNotInitialized e) {
+                    e.printStackTrace();
+                }
             }
+
         };
         Futures.addCallback(peerGroup.startAsync(), new FutureCallback<Object>() {
 
             @Override
             public void onSuccess(@Nullable Object result) {
                 completeExtensionInitiations(peerGroup, wallet);
-                final long start = System.currentTimeMillis();
                 DownloadProgressTracker listener = new DownloadProgressTracker() {
                     @Override
                     protected void progress(double pct, int blocksSoFar, Date date) {
@@ -255,7 +256,7 @@ public class Bitcoin {
         saveEncryptedWallet(getWallet(), password);
     }
 
-    private void saveEncryptedWallet(@NotNull Wallet wallet, String password) throws IOException {
+    private void saveEncryptedWallet(@NotNull Wallet wallet, String password) throws IOException, IllegalArgumentException {
         encryptWallet(wallet, password);
         wallet.saveToFile(walletFile);
         Logger.d("Saved wallet to: " + walletFile.getAbsolutePath());
@@ -266,7 +267,7 @@ public class Bitcoin {
         encryptWallet(getWallet(), password);
     }
 
-    private void encryptWallet(Wallet wallet, String password) {
+    private void encryptWallet(Wallet wallet, String password) throws IllegalArgumentException {
         walletCrypter.encryptWallet(wallet, password);
     }
 
@@ -274,7 +275,7 @@ public class Bitcoin {
         decryptWallet(getWallet(), password);
     }
 
-    private void decryptWallet(@NotNull Wallet wallet, String password) {
+    private void decryptWallet(@NotNull Wallet wallet, String password) throws IllegalArgumentException {
         walletCrypter.decryptWallet(wallet, password);
     }
 

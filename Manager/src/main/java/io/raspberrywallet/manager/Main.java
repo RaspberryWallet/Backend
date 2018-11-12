@@ -64,7 +64,6 @@ public class Main {
             try {
                 Objects.requireNonNull(bitcoin.getPeerGroup()).stop();
             } catch (NullPointerException e) {
-                Logger.err("Failed Wallet Encryption");
                 e.printStackTrace();
             }
             // Forcibly terminate the JVM because Orchid likes to spew non-daemon threads everywhere.
