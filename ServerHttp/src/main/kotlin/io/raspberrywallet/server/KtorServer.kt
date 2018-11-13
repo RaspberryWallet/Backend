@@ -9,10 +9,13 @@ import io.ktor.application.install
 import io.ktor.features.*
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.Frame
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
 import io.ktor.http.content.resources
 import io.ktor.http.content.static
 import io.ktor.jackson.jackson
 import io.ktor.request.receive
+import io.ktor.request.receiveMultipart
 import io.ktor.request.receiveParameters
 import io.ktor.request.receiveText
 import io.ktor.response.respond
@@ -32,6 +35,8 @@ import io.raspberrywallet.server.Paths.Bitcoin.freshAddress
 import io.raspberrywallet.server.Paths.Bitcoin.sendCoins
 import io.raspberrywallet.server.Paths.Modules.loadWalletFromDisk
 import io.raspberrywallet.server.Paths.Modules.lockWallet
+import io.raspberrywallet.server.Paths.Modules.moduleInstall
+import io.raspberrywallet.server.Paths.Modules.moduleInstallPost
 import io.raspberrywallet.server.Paths.Modules.moduleState
 import io.raspberrywallet.server.Paths.Modules.modules
 import io.raspberrywallet.server.Paths.Modules.nextStep
@@ -186,6 +191,25 @@ class KtorServer(val manager: Manager,
                 manager.tap()
                 call.respond(manager.serverModules)
             }
+
+            get(moduleInstall) {
+                manager.tap()
+                call.respond(uploadModuleForm)
+            }
+
+            post(moduleInstallPost) {
+                manager.tap()
+                val mp = call.receiveMultipart()
+                mp.forEachPart { part ->
+                    when(part) {
+                        is PartData.FileItem -> {
+                            val ext = File(part.originalFileName).extension
+                            val fi
+                        }
+                    }
+                }
+            }
+
             get(moduleState) {
                 manager.tap()
                 val id = call.parameters["id"]!!

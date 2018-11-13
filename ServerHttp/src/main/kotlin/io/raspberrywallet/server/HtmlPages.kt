@@ -82,8 +82,8 @@ val setNetwork = HtmlContent {
     head {
         title { +"Change Wi-Fi settings" }
         link(rel = "Stylesheet", type = "text/css", href = "/style.css")
-        script { src = "/scripts.js"; type = "text/javascript" }
         script { src = "/jquery.min.js"; type = "text/javascript" }
+        script { src = "/scripts.js"; type = "text/javascript" }
     }
     body {
         h1 { a(href = "/index/") { +"<- Back" } }
@@ -144,6 +144,26 @@ val status = HtmlContent {
                     td { +value }
                 }
             }
+        }
+    }
+}
+
+val uploadModuleForm = HtmlContent {
+    head {
+        title { +"System status" }
+        link(rel = "Stylesheet", type = "text/css", href = "/style.css")
+        script { src = "/jquery.min.js"; type = "text/javascript" }
+        script { src = "/scripts.js"; type = "text/javascript" }
+    }
+    body {
+        h1 { a(href = "/index/") { +"<- Back" } }
+        h2 { +"Install new module" }
+        form(action = Paths.Modules.moduleInstallPost, method = FormMethod.post) {
+            h3 {
+                +"File:"
+            }
+            input(type = InputType.file) { }
+            button(type = ButtonType.submit) { id="uploadModule"; +"Upload" }
         }
     }
 }
