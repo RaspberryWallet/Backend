@@ -22,7 +22,7 @@ class ConfigurationTest {
                 "autolock-seconds: 1800\n" +
                 "bitcoin:\n" +
                 "  network: testnet\n" +
-                "  userAgent: RaspberryWallet\n" +
+                "  user-agent: RaspberryWallet\n" +
                 "\n" +
                 "\n" +
                 "modules:\n" +
@@ -61,12 +61,5 @@ class ConfigurationTest {
         Configuration configuration = new Configuration(basePathPrefix);
         assertEquals(basePathPrefix, configuration.getBasePathPrefix());
     }
-
-    @Test
-    void getVersion() {
-        final String version = "1.0.0";
-        Configuration configuration = new Configuration("/opt/wallet");
-        assertEquals(version, configuration.getVersion());
-    }
-
+    
 }
