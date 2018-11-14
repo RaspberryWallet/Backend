@@ -15,10 +15,7 @@ public class SecureApacheHttpClient extends ApacheHttpClient {
     
     public SecureApacheHttpClient(Form defaultHeaders, boolean acceptAllCerts) {
         super(defaultHeaders);
-        if (acceptAllCerts)
-            httpClient = setupAcceptAllHttpClient();
-        else
-            httpClient = HttpClients.createDefault();
+        httpClient = acceptAllCerts ? setupAcceptAllHttpClient() : HttpClients.createDefault();
     }
     
     private HttpClient setupAcceptAllHttpClient() {
