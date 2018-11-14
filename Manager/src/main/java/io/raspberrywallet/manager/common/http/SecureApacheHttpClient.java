@@ -1,20 +1,36 @@
 package io.raspberrywallet.manager.common.http;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.fluent.Form;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 
-import java.io.IOException;
+import javax.net.ssl.SSLContext;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 
 public class SecureApacheHttpClient extends ApacheHttpClient {
     
-    @Override
-    public HttpResponse sendPOSTRequest(Form body, String endpoint) throws IOException {
-        throw new NotImplementedException();
+    public SecureApacheHttpClient(Form defaultHeaders, boolean acceptAllCerts) {
+        super(defaultHeaders);
+        httpClient = acceptAllCerts ? setupAcceptAllHttpClient() : HttpClients.createDefault();
     }
     
-    @Override
-    public HttpResponse sendGETRequest(Form body, String endpoint) {
-        throw new NotImplementedException();
+    private HttpClient setupAcceptAllHttpClient() {
+        SSLContext sslContext;
+        try {
+            sslContext = new SSLContextBuilder()
+                    .loadTrustMaterial(null, (certificate, authType) -> true).build();
+        
+        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException impossible) {
+            throw new RuntimeException(impossible);
+        }
+    
+        return HttpClients.custom()
+                .setSSLContext(sslContext)
+                .setSSLHostnameVerifier(new NoopHostnameVerifier())
+                .build();
     }
 }
