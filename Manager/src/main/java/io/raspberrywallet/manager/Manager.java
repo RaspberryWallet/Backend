@@ -16,13 +16,15 @@ import io.raspberrywallet.manager.linux.WPAConfiguration;
 import io.raspberrywallet.manager.linux.WifiScanner;
 import io.raspberrywallet.manager.linux.WifiStatus;
 import io.raspberrywallet.manager.modules.Module;
+import io.raspberrywallet.manager.modules.ModuleClassLoader;
 import kotlin.text.Charsets;
 import lombok.Getter;
 import org.bitcoinj.core.Sha256Hash;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
+import java.io.*;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +53,8 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     private final CommunicationChannel frontendChannel;
     private final AutoLockTimer autoLockTask;
 
+    private Configuration configuration;
+
     Manager(@NotNull Configuration configuration,
             @NotNull Database database,
             @NotNull List<Module> modules,
@@ -63,6 +67,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         this.bitcoin = bitcoin;
         this.tempMonitor = tempMonitor;
         this.wpaConfiguration = new WPAConfiguration();
+        this.configuration = configuration;
 
         Runnable onLockTriggered = () -> {
             frontendChannel.info("Autolock triggered");
@@ -325,5 +330,29 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public void addBlockChainProgressListener(@NotNull IntConsumer listener) {
         bitcoin.addBlockChainProgressListener(listener);
+    }
+
+    public void uploadNewModule(File file) throws Error {
+
+        //Weryfikacja w /tmp
+        try {
+            if(!ModuleClassLoader.verifyJarSignature(file)) throw new Error("Verification error (1000).");
+        } catch(MalformedURLException e) {
+            throw new Error("Internal I/O error (1).");
+        }
+
+        //Kopiowanie do nowej lokalizacji (nadpisanie tez)
+        try (InputStream inputStream = new FileInputStream(file); FileOutputStream fileOutputStream = new FileOutputStream(configuration.getBasePathPrefix() + "/modules/" + file.getName());) {
+            byte[] buffer = new byte[4096];
+            int l = 0;
+            while(inputStream.available()>0) {
+                l = inputStream.read(buffer);
+                fileOutputStream.write(buffer, 0, l);
+            }
+            Arrays.fill(buffer, (byte)0);
+            l = 0;
+        } catch(IOException e) {
+            throw new Error("Internal I/O error (2).");
+        }
     }
 }

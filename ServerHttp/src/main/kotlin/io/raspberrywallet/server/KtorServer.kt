@@ -9,11 +9,9 @@ import io.ktor.application.install
 import io.ktor.features.*
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.http.content.resources
-import io.ktor.http.content.static
+import io.ktor.http.content.*
 import io.ktor.jackson.jackson
+import io.ktor.network.util.ioCoroutineDispatcher
 import io.ktor.request.receive
 import io.ktor.request.receiveMultipart
 import io.ktor.request.receiveParameters
@@ -51,16 +49,23 @@ import io.raspberrywallet.server.Paths.Network.wifiStatus
 import io.raspberrywallet.server.Paths.Utils.cpuTemp
 import io.raspberrywallet.server.Paths.Utils.ping
 import io.raspberrywallet.server.Paths.Utils.setDatabasePassword
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.filter
 import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import org.slf4j.event.Level
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.lang.Error
 import java.security.KeyStore
 import java.time.Duration
+import java.util.*
 
 
 const val PORT = 9090
@@ -203,8 +208,13 @@ class KtorServer(val manager: Manager,
                 mp.forEachPart { part ->
                     when(part) {
                         is PartData.FileItem -> {
-                            val ext = File(part.originalFileName).extension
-                            val fi
+                            val dest = File("/tmp/" + ("" + System.currentTimeMillis() + "_" + Random().nextLong() % 99999) + ".jar")
+                            part.streamProvider().use { input -> dest.outputStream().buffered().use { output -> input.copyToSuspend(output) } }
+                            try {
+                                manager.uploadNewModule(dest)
+                            } catch (e:Error) {
+                                call.respond(HttpStatusCode.NotAcceptable, errorUpload(e.message))
+                            }
                         }
                     }
                 }
@@ -319,3 +329,26 @@ class KtorServer(val manager: Manager,
     data class SetDatabasePassword(val password: String)
 }
 
+suspend fun InputStream.copyToSuspend(
+    out: OutputStream,
+    bufferSize: Int = DEFAULT_BUFFER_SIZE,
+    yieldSize: Int = 4 * 1024 * 1024,
+    dispatcher: CoroutineDispatcher = ioCoroutineDispatcher
+): Long {
+    return withContext(dispatcher) {
+        val buffer = ByteArray(bufferSize)
+        var bytesCopied = 0L
+        var bytesAfterYield = 0L
+        while (true) {
+            val bytes = read(buffer).takeIf { it >= 0 } ?: break
+            out.write(buffer, 0, bytes)
+            if (bytesAfterYield >= yieldSize) {
+                yield()
+                bytesAfterYield %= yieldSize
+            }
+            bytesCopied += bytes
+            bytesAfterYield += bytes
+        }
+        return@withContext bytesCopied
+    }
+}

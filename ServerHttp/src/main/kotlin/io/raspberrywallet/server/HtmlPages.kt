@@ -59,6 +59,9 @@ val indexPage = HtmlContent {
             li {
                 a(href = Paths.Modules.lockWallet) { +Paths.Modules.lockWallet }
             }
+            li {
+                a(href = Paths.Modules.moduleInstall) { +Paths.Modules.moduleInstall }
+            }
         }
         h2 { +"Bitcoin" }
         ul {
@@ -158,12 +161,24 @@ val uploadModuleForm = HtmlContent {
     body {
         h1 { a(href = "/index/") { +"<- Back" } }
         h2 { +"Install new module" }
-        form(action = Paths.Modules.moduleInstallPost, method = FormMethod.post) {
+        form(action = Paths.Modules.moduleInstallPost, method = FormMethod.post, encType = FormEncType.multipartFormData) {
             h3 {
                 +"File:"
             }
             input(type = InputType.file) { }
             button(type = ButtonType.submit) { id="uploadModule"; +"Upload" }
         }
+    }
+}
+
+fun errorUpload(message: String?) = HtmlContent {
+    head {
+        title{ +"Error uploading" }
+        link(rel = "Stylesheet", type="text/css", href = "/style.css")
+    }
+    body {
+        h1 { a(href = "/index/") { +"<- Back" } }
+        h2 { +"Error installing module "}
+        h3 { message ?: "..." }
     }
 }

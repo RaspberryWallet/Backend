@@ -5,6 +5,7 @@ import io.raspberrywallet.contract.module.Module;
 import io.raspberrywallet.contract.module.ModuleState;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntConsumer;
@@ -175,4 +176,6 @@ public interface Manager {
     int setWifiConfig(Map<String, String> newConf);
 
     void addBlockChainProgressListener(@NotNull IntConsumer listener);
+
+    void uploadNewModule(File inputFile) throws Error;
 }
