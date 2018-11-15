@@ -332,7 +332,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         bitcoin.addBlockChainProgressListener(listener);
     }
 
-    public void uploadNewModule(File file) throws Error {
+    public void uploadNewModule(File file, String fileName) throws Error {
 
         //Weryfikacja w /tmp
         try {
@@ -342,7 +342,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         }
 
         //Kopiowanie do nowej lokalizacji (nadpisanie tez)
-        try (InputStream inputStream = new FileInputStream(file); FileOutputStream fileOutputStream = new FileOutputStream(configuration.getBasePathPrefix() + "/modules/" + file.getName());) {
+        try (InputStream inputStream = new FileInputStream(file); FileOutputStream fileOutputStream = new FileOutputStream(configuration.getBasePathPrefix() + "/modules/" + fileName);) {
             byte[] buffer = new byte[4096];
             int l = 0;
             while(inputStream.available()>0) {

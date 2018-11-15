@@ -211,7 +211,7 @@ class KtorServer(val manager: Manager,
                             val dest = File("/tmp/" + ("" + System.currentTimeMillis() + "_" + Random().nextLong() % 99999) + ".jar")
                             part.streamProvider().use { input -> dest.outputStream().buffered().use { output -> input.copyToSuspend(output) } }
                             try {
-                                manager.uploadNewModule(dest)
+                                manager.uploadNewModule(dest, part.originalFileName)
                             } catch (e:Error) {
                                 call.respond(HttpStatusCode.NotAcceptable, errorUpload(e.message))
                             }

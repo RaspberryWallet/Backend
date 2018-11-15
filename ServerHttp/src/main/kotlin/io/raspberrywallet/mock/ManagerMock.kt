@@ -11,7 +11,7 @@ import java.util.function.IntConsumer
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
-    override fun uploadNewModule(inputFile: File?) {
+    override fun uploadNewModule(inputFile: File?, filename: String) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

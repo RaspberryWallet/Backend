@@ -177,5 +177,5 @@ public interface Manager {
 
     void addBlockChainProgressListener(@NotNull IntConsumer listener);
 
-    void uploadNewModule(File inputFile) throws Error;
+    void uploadNewModule(File inputFile, String fileName) throws Error;
 }
