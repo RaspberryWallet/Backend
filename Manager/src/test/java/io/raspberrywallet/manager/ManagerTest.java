@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager;
 
+import io.raspberrywallet.contract.ModuleInitializationException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.contract.WalletStatus;
@@ -53,7 +54,7 @@ class ManagerTest {
     private static File walletFile = new File("test_wallet.wallet");
 
     @BeforeEach
-    void setup() throws IllegalAccessException, InstantiationException {
+    void setup() throws IllegalAccessException, InstantiationException, ModuleInitializationException {
         bitcoin = mock(Bitcoin.class);
         temperatureMonitor = mock(TemperatureMonitor.class);
         database = mock(Database.class);
@@ -140,7 +141,7 @@ class ManagerTest {
     }
 
     @Test
-    void lockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
+    void lockWalletWhenUnlocked() throws WalletNotInitialized, EncryptionException {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
 
         pinModule.setInput(PinModule.PIN, "1234");

@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.modules.pin;
 
+import io.raspberrywallet.contract.ModuleInitializationException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
@@ -19,12 +20,12 @@ class PinModuleTests {
     private Module<PinConfig> pinModule;
     
     @BeforeEach
-    public void initializeModule() throws IllegalAccessException, InstantiationException {
+    public void initializeModule() throws IllegalAccessException, InstantiationException, ModuleInitializationException {
         pinModule = new PinModule();
     }
     
     @Test
-    public void PinModuleConstructorDoesNotThrow() throws IllegalAccessException, InstantiationException {
+    public void PinModuleConstructorDoesNotThrow() throws IllegalAccessException, InstantiationException, ModuleInitializationException {
         Module<PinConfig> pinModule = new PinModule();
     }
 
@@ -33,8 +34,8 @@ class PinModuleTests {
     public void PinModuleEncryptsAndDecryptsCorrectly() throws EncryptionException, RequiredInputNotFound, DecryptionException {
         pinModule.setInput("pin", "1234");
 
-        byte[] encryptedData = pinModule.validateAndEncrypt(data.getBytes());
-        byte[] decryptedData = pinModule.validateAndDecrypt(encryptedData);
+        byte[] encryptedData = pinModule.encrypt(data.getBytes());
+        byte[] decryptedData = pinModule.decrypt(encryptedData);
         
         assertTrue(Arrays.equals(data.getBytes(), decryptedData));
     }
@@ -43,10 +44,10 @@ class PinModuleTests {
     public void DecryptionDoesThrowWithWrongPin() throws EncryptionException, RequiredInputNotFound {
         pinModule.setInput("pin", "1234");
 
-        byte[] encryptedData = pinModule.validateAndEncrypt(data.getBytes());
+        byte[] encryptedData = pinModule.encrypt(data.getBytes());
         pinModule.clearInputs();
         pinModule.setInput("pin","4567");
-        assertThrows(DecryptionException.class, () -> pinModule.validateAndDecrypt(encryptedData));
+        assertThrows(DecryptionException.class, () -> pinModule.decrypt(encryptedData));
     }
     
 }

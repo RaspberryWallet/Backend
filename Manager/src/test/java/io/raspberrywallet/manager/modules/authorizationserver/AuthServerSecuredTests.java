@@ -1,6 +1,7 @@
 package io.raspberrywallet.manager.modules.authorizationserver;
 
 
+import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,9 +28,7 @@ class AuthServerSecuredTests {
     }
     
     @Test
-    public void Secured_WalletEncryptionAndDecryptionWorks() throws EncryptionException, DecryptionException {
-        assertTrue(module.check());
-    
+    public void Secured_WalletEncryptionAndDecryptionWorks() throws EncryptionException, DecryptionException, RequiredInputNotFound {
         byte[] data = module.encrypt(encryptionData);
         byte[] decryptedData = module.decrypt(data);
     
@@ -37,9 +36,7 @@ class AuthServerSecuredTests {
     }
     
     @Test
-    void Secured_MultipleEncryptionAndDecryptionOperationWorks() throws EncryptionException, DecryptionException {
-        assertTrue(module.check());
-        
+    void Secured_MultipleEncryptionAndDecryptionOperationWorks() throws EncryptionException, DecryptionException, RequiredInputNotFound {
         byte[] firstEncryptedData = module.encrypt(encryptionData);
         assertTrue(Arrays.equals(encryptionData, module.decrypt(firstEncryptedData)));
         

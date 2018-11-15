@@ -3,6 +3,7 @@ package io.raspberrywallet.manager.modules;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stasbar.Logger;
+import io.raspberrywallet.contract.ModuleInitializationException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
@@ -57,11 +58,12 @@ public abstract class Module<Config extends ModuleConfig> {
 
         statusString = initialStatusString;
         Config newConfiguration = parseConfigurationFrom(modulesConfiguration, configClass);
-        if (newConfiguration == null) newConfiguration = configClass.newInstance();
+        if (newConfiguration == null)
+            newConfiguration = configClass.newInstance();
 
         configuration = newConfiguration;
     }
-
+    
     /**
      * Parses config yaml file representation to module specific Config object
      *
@@ -102,43 +104,18 @@ public abstract class Module<Config extends ModuleConfig> {
     public abstract String getDescription();
 
     protected abstract void validateInputs() throws RequiredInputNotFound;
-
-    /**
-     * @param keyPart - decrypted key part
-     * @return encrypted payload
-     */
-    public byte[] validateAndEncrypt(byte[] keyPart) throws RequiredInputNotFound, EncryptionException {
-        validateInputs();
-        return encrypt(keyPart);
-    }
-
+    
     /**
      * @param keyPart - unencrypted key part
      * @return encrypted payload
      */
-    protected abstract byte[] encrypt(byte[] keyPart) throws EncryptionException, RequiredInputNotFound;
-
-
-    /**
-     * @param keyPart - encrypted key part
-     * @return decrypted payload
-     */
-    public byte[] validateAndDecrypt(byte[] keyPart) throws RequiredInputNotFound, DecryptionException {
-        validateInputs();
-        return decrypt(keyPart);
-    }
+    public abstract byte[] encrypt(byte[] keyPart) throws EncryptionException, RequiredInputNotFound;
 
     /**
      * @param payload - encrypted payload
      * @return decrypted key part
      */
-    protected abstract byte[] decrypt(byte[] payload) throws DecryptionException;
-
-    /**
-     * this function should prepare module before consecutive use.
-     * Manager should call this.
-     */
-    public abstract void register();
+    public abstract byte[] decrypt(byte[] payload) throws DecryptionException, RequiredInputNotFound;
 
     /**
      * this function should return HTML UI form or null if not required

@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.modules.authorizationserver;
 
+import io.raspberrywallet.contract.ModuleInitializationException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.common.generators.RandomStringGenerator;
@@ -20,7 +21,7 @@ import java.util.Random;
 import java.util.UUID;
 
 public class AuthorizationServerModule extends Module<AuthorizationServerConfig> {
-    public static String PASSWORD = "password";
+    public static final String PASSWORD = "password";
     private final static int PASSWORD_SIZE_IN_BYTES = 256;
 
     private final WalletUUIDReader walletUUIDReader = WalletUUIDReader.getInstance();
@@ -35,69 +36,62 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
 
     public AuthorizationServerModule() throws InstantiationException, IllegalAccessException {
         super("Please enter username and password for external server.", AuthorizationServerConfig.class);
+        tryGetInputsAndInitialize();
     }
 
     public AuthorizationServerModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException {
         super("Please enter username and password for external server.", modulesConfiguration, AuthorizationServerConfig.class);
+        tryGetInputsAndInitialize();
     }
-
+    
     @Override
-    public String getDescription() {
-        return "This module is authenticating user with external authorization server.";
-    }
-
-
-    /**
-     * There is no need to take actions before next encryption/decryption
-     * operations, so there is no point in implementing this method.
-     */
-    @Override
-    public void register() {
-    }
-
-    @Nullable
-    @Override
-    public String getHtmlUi() {
-        return "<input type=\"text\" name=\"password\">";
-    }
-
-
-    public boolean check() {
+    protected void validateInputs() throws RequiredInputNotFound {
         if (hasInput(PASSWORD)) {
-            try {
-                String password = getInput(PASSWORD);
+            String password = getInput(PASSWORD);
+            if (password != null)
                 serverCredentials = new Credentials(walletUUID.toString(),
                         Base64.getUrlEncoder().encodeToString(password.getBytes()));
-                initialize();
-            } catch (RequestException e) {
-                return false;
-            }
-            return true;
-        } else return serverCredentials != null;
+        }
+        else if (serverCredentials == null)
+            throw new RequiredInputNotFound(AuthorizationServerModule.class.getName(), "password");
     }
-
-
-    private void initialize() throws RequestException {
-        if (!serverAPI.isRegistered(serverCredentials))
-            serverAPI.register(serverCredentials);
-
-        if (!serverAPI.isLoggedIn())
-            serverAPI.login(serverCredentials);
-
-        if (!serverAPI.secretIsSet(serverCredentials)) {
-            String randomSecret = RandomStringGenerator.get(PASSWORD_SIZE_IN_BYTES);
-            String encodedSecret = Base64.getUrlEncoder().encodeToString(randomSecret.getBytes());
-            serverAPI.overwriteSecret(serverCredentials, encodedSecret);
+    
+    private void initialize() throws ModuleInitializationException {
+        try {
+            validateInputs();
+            
+            if (!serverAPI.isRegistered(serverCredentials))
+                serverAPI.register(serverCredentials);
+            
+            if (!serverAPI.isLoggedIn())
+                serverAPI.login(serverCredentials);
+            
+            if (!serverAPI.secretIsSet(serverCredentials)) {
+                String randomSecret = RandomStringGenerator.get(PASSWORD_SIZE_IN_BYTES);
+                serverAPI.overwriteSecret(serverCredentials, randomSecret);
+            }
+        } catch (RequestException | RequiredInputNotFound e) {
+            throw new ModuleInitializationException(
+                    "Failed to initialize module " + AuthorizationServerConfig.class.getName() + ":" + e.getMessage());
         }
     }
-
+    
+    private void tryGetInputsAndInitialize() {
+        // if it's possible, try to get inputs and initialize module
+        try {
+            validateInputs();
+            initialize();
+        } catch (RequiredInputNotFound | ModuleInitializationException ignored) {
+        
+        }
+    }
+    
     @Override
-    public byte[] encrypt(byte[] payload) throws EncryptionException {
+    public byte[] encrypt(byte[] payload) throws EncryptionException, RequiredInputNotFound {
         try {
             initialize();
 
-            String encodedSecret = serverAPI.getSecret(serverCredentials);
-            String password = new String(Base64.getUrlDecoder().decode(encodedSecret));
+            String password = serverAPI.getSecret(serverCredentials);
 
             AESEncryptedObject<ByteWrapper> encryptedSecret =
                     CryptoObject.encrypt(new ByteWrapper(payload), password);
@@ -106,14 +100,19 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
 
         } catch (RequestException e) {
             throw new EncryptionException(e.getMessage());
+        } catch (ModuleInitializationException e) {
+            throw new RequiredInputNotFound(AuthorizationServerModule.class.getName()
+                            + " has no required inputs or failed on initialization phase. Message: "
+                            + e.getMessage());
         }
     }
-
+    
     @Override
-    public byte[] decrypt(byte[] keyPart) throws DecryptionException {
+    public byte[] decrypt(byte[] keyPart) throws DecryptionException, RequiredInputNotFound {
         try {
-            String encodedSecret = serverAPI.getSecret(serverCredentials);
-            String password = new String(Base64.getUrlDecoder().decode(encodedSecret));
+            initialize();
+    
+            String password = serverAPI.getSecret(serverCredentials);
 
             AESEncryptedObject<ByteWrapper> deserializedKeyPart =
                     (AESEncryptedObject<ByteWrapper>) SerializationUtils.deserialize(keyPart);
@@ -122,12 +121,22 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
 
         } catch (RequestException e) {
             throw new DecryptionException(e.getMessage());
+        } catch (ModuleInitializationException e) {
+            throw new RequiredInputNotFound(AuthorizationServerModule.class.getName()
+                    + " has no required inputs or failed on initialization phase. Message: "
+                    + e.getMessage());
         }
     }
-
+    
     @Override
-    protected void validateInputs() throws RequiredInputNotFound {
-
+    public String getDescription() {
+        return "This module is authenticating user with external authorization server.";
     }
-
+    
+    @Nullable
+    @Override
+    public String getHtmlUi() {
+        return "<input type=\"text\" name=\"password\">";
+    }
+    
 }

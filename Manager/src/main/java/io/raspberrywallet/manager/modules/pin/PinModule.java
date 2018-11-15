@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.modules.pin;
 
+import io.raspberrywallet.contract.ModuleInitializationException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
@@ -13,22 +14,17 @@ import org.apache.commons.lang.SerializationUtils;
 public class PinModule extends Module<PinConfig> {
     public static String PIN = "pin";
 
-    public PinModule() throws InstantiationException, IllegalAccessException {
+    public PinModule() throws InstantiationException, IllegalAccessException, ModuleInitializationException {
         super("Enter PIN", PinConfig.class);
     }
 
-    public PinModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException {
+    public PinModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException, ModuleInitializationException {
         super("Enter PIN", modulesConfiguration, PinConfig.class);
     }
 
     @Override
     public String getDescription() {
         return "Module that require enter a digit code to unlock.";
-    }
-
-
-    @Override
-    public void register() {
     }
 
     @Override
@@ -55,8 +51,12 @@ public class PinModule extends Module<PinConfig> {
     @Override
     protected void validateInputs() throws RequiredInputNotFound {
         String pin = getInput(PIN);
-        if (pin == null || pin.length() < configuration.minLength || pin.length() > configuration.maxLength)
+        if (isPINWeak(pin))
             throw new RequiredInputNotFound(getId(), PIN);
+    }
+    
+    private boolean isPINWeak(String pin) {
+        return pin == null || pin.length() < configuration.minLength || pin.length() > configuration.maxLength;
     }
 
 

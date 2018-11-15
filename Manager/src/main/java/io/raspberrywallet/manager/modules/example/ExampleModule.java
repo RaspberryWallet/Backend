@@ -1,7 +1,6 @@
 package io.raspberrywallet.manager.modules.example;
 
 
-import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.modules.Module;
@@ -54,12 +53,8 @@ public class ExampleModule extends Module<ExampleConfig> {
 
         return r;
     }
-
+    
     @Override
-    public void register() {
-    }
-
-    @Override
-    protected void validateInputs() throws RequiredInputNotFound {
+    protected void validateInputs() {
     }
 }
