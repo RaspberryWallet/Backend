@@ -110,7 +110,7 @@ class ManagerTest {
         mnemonicCode.forEach(System.out::println);
 
         Map<String, String> pinInputs = new HashMap<>();
-        pinInputs.put(PinModule.Inputs.PIN, "1234");
+        pinInputs.put(PinModule.PIN, "1234");
 
         Map<String, Map<String, String>> selectedModulesWithInputs = new HashMap<>();
         selectedModulesWithInputs.put(pinModule.getId(), pinInputs);
@@ -133,7 +133,7 @@ class ManagerTest {
 
         Map<String, Map<String, String>> moduleToInputsMap = new HashMap<>();
         HashMap<String, String> pinInputs = new HashMap<>();
-        pinInputs.put(PinModule.Inputs.PIN, "1234");
+        pinInputs.put(PinModule.PIN, "1234");
         moduleToInputsMap.put(pinModule.getId(), pinInputs);
 
         assertThrows(IllegalStateException.class, () -> manager.unlockWallet(moduleToInputsMap));
@@ -143,7 +143,7 @@ class ManagerTest {
     void lockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
 
-        pinModule.setInput(PinModule.Inputs.PIN, "1234");
+        pinModule.setInput(PinModule.PIN, "1234");
 
         ShamirKey exampleKey = new ShamirKey(BigInteger.ONE, BigInteger.TEN, BigInteger.ONE);
         ShamirKey pinKey = new ShamirKey(BigInteger.TEN, BigInteger.ONE, BigInteger.TEN);
@@ -158,7 +158,7 @@ class ManagerTest {
 
         assertTrue(walletFile.exists());
         assertEquals(manager.getWalletStatus(), WalletStatus.ENCRYPTED);
-        assertFalse(pinModule.hasInput(PinModule.Inputs.PIN));
+        assertFalse(pinModule.hasInput(PinModule.PIN));
     }
 
     @Test
@@ -167,7 +167,7 @@ class ManagerTest {
 
         Map<String, Map<String, String>> moduleToInputsMap = new HashMap<>();
         HashMap<String, String> pinInputs = new HashMap<>();
-        pinInputs.put(PinModule.Inputs.PIN, "1234");
+        pinInputs.put(PinModule.PIN, "1234");
         moduleToInputsMap.put(pinModule.getId(), pinInputs);
 
         manager.unlockWallet(moduleToInputsMap);

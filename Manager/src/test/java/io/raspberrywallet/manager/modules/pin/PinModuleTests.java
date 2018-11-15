@@ -4,7 +4,6 @@ import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.modules.Module;
-import org.apache.commons.lang.SerializationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,19 +27,14 @@ class PinModuleTests {
     public void PinModuleConstructorDoesNotThrow() throws IllegalAccessException, InstantiationException {
         Module<PinConfig> pinModule = new PinModule();
     }
-    
-    @Test
-    public void PinModuleCorrectStateValidationCheckWorks() {
-        pinModule.setInput("pin", "1234");
-        assertTrue(pinModule.check());
-    }
+
     
     @Test
     public void PinModuleEncryptsAndDecryptsCorrectly() throws EncryptionException, RequiredInputNotFound, DecryptionException {
         pinModule.setInput("pin", "1234");
-        
-        byte[] encryptedData = pinModule.encrypt(data.getBytes());
-        byte[] decryptedData = pinModule.decrypt(encryptedData);
+
+        byte[] encryptedData = pinModule.validateAndEncrypt(data.getBytes());
+        byte[] decryptedData = pinModule.validateAndDecrypt(encryptedData);
         
         assertTrue(Arrays.equals(data.getBytes(), decryptedData));
     }
@@ -48,11 +42,11 @@ class PinModuleTests {
     @Test
     public void DecryptionDoesThrowWithWrongPin() throws EncryptionException, RequiredInputNotFound {
         pinModule.setInput("pin", "1234");
-    
-        byte[] encryptedData = pinModule.encrypt(data.getBytes());
+
+        byte[] encryptedData = pinModule.validateAndEncrypt(data.getBytes());
         pinModule.clearInputs();
         pinModule.setInput("pin","4567");
-        assertThrows(DecryptionException.class, () -> pinModule.decrypt(encryptedData));
+        assertThrows(DecryptionException.class, () -> pinModule.validateAndDecrypt(encryptedData));
     }
     
 }

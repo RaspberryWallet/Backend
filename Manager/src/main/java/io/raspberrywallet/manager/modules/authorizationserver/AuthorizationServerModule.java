@@ -20,7 +20,7 @@ import java.util.Random;
 import java.util.UUID;
 
 public class AuthorizationServerModule extends Module<AuthorizationServerConfig> {
-    private static String PASSWORD = "password";
+    public static String PASSWORD = "password";
     private final static int PASSWORD_SIZE_IN_BYTES = 256;
 
     private final WalletUUIDReader walletUUIDReader = WalletUUIDReader.getInstance();
@@ -62,7 +62,6 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
     }
 
 
-    @Override
     public boolean check() {
         if (hasInput(PASSWORD)) {
             try {

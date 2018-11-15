@@ -7,7 +7,7 @@ import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.modules.Module;
 
 public class PushButtonModule extends Module<PushButtonConfig> {
-    private static String PRESSED = "pressed";
+    public static String PRESSED = "pressed";
     private final static Pin BUTTON_GPIO_PINS = RaspiPin.GPIO_23;
 
     private final GpioController gpio;
