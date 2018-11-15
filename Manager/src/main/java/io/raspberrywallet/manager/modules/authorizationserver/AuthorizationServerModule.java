@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.modules.authorizationserver;
 
+import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.common.generators.RandomStringGenerator;
 import io.raspberrywallet.manager.common.readers.WalletUUIDReader;
@@ -13,14 +14,13 @@ import io.raspberrywallet.manager.modules.Module;
 import org.apache.commons.lang.SerializationUtils;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Random;
 import java.util.UUID;
 
 public class AuthorizationServerModule extends Module<AuthorizationServerConfig> {
-
+    private static String PASSWORD = "password";
     private final static int PASSWORD_SIZE_IN_BYTES = 256;
 
     private final WalletUUIDReader walletUUIDReader = WalletUUIDReader.getInstance();
@@ -46,11 +46,27 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
         return "This module is authenticating user with external authorization server.";
     }
 
+
+    /**
+     * There is no need to take actions before next encryption/decryption
+     * operations, so there is no point in implementing this method.
+     */
+    @Override
+    public void register() {
+    }
+
+    @Nullable
+    @Override
+    public String getHtmlUi() {
+        return "<input type=\"text\" name=\"password\">";
+    }
+
+
     @Override
     public boolean check() {
-        if (hasInput("password")) {
+        if (hasInput(PASSWORD)) {
             try {
-                String password = getInput("password");
+                String password = getInput(PASSWORD);
                 serverCredentials = new Credentials(walletUUID.toString(),
                         Base64.getUrlEncoder().encodeToString(password.getBytes()));
                 initialize();
@@ -110,19 +126,9 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
         }
     }
 
-    /**
-     * There is no need to take actions before next encryption/decryption
-     * operations, so there is no point in implementing this method.
-     */
     @Override
-    public void register() {
-    }
+    protected void validateInputs() throws RequiredInputNotFound {
 
-    @Nullable
-    @Override
-    public String getHtmlUi() {
-        return "<input type=\"text\" name=\"password\">";
     }
-
 
 }

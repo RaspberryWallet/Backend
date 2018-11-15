@@ -11,6 +11,7 @@ import io.raspberrywallet.manager.modules.Module;
 import org.apache.commons.lang.SerializationUtils;
 
 public class PinModule extends Module<PinConfig> {
+    private static String PIN = "pin";
 
     public PinModule() throws InstantiationException, IllegalAccessException {
         super("Enter PIN", PinConfig.class);
@@ -58,7 +59,5 @@ public class PinModule extends Module<PinConfig> {
             throw new RequiredInputNotFound(getId(), PIN);
     }
 
-
-    private static String PIN = "pin";
 
 }

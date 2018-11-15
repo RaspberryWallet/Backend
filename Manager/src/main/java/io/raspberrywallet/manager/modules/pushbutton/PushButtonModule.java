@@ -6,10 +6,8 @@ import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.modules.Module;
 
-import static io.raspberrywallet.manager.modules.pushbutton.PushButtonModule.Inputs.PRESSED;
-
 public class PushButtonModule extends Module<PushButtonConfig> {
-
+    private static String PRESSED = "pressed";
     private final static Pin BUTTON_GPIO_PINS = RaspiPin.GPIO_23;
 
     private final GpioController gpio;
@@ -68,7 +66,4 @@ public class PushButtonModule extends Module<PushButtonConfig> {
             throw new RequiredInputNotFound(getId(), PRESSED);
     }
 
-    static class Inputs {
-        static String PRESSED = "pressed";
-    }
 }
