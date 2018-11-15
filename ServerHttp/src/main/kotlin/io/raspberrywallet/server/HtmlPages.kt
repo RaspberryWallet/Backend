@@ -165,7 +165,7 @@ val uploadModuleForm = HtmlContent {
             h3 {
                 +"File:"
             }
-            input(type = InputType.file) { }
+            input(type = InputType.file) { name = "moduleJar" }
             button(type = ButtonType.submit) { id="uploadModule"; +"Upload" }
         }
     }

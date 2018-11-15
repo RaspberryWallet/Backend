@@ -218,6 +218,11 @@ class KtorServer(val manager: Manager,
                         }
                     }
                 }
+                call.respondRedirect("/", false)
+            }
+
+            get(moduleInstallPost) {
+                call.respond("this shouldn't ever happen...")
             }
 
             get(moduleState) {
