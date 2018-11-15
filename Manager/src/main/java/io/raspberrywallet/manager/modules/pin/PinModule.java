@@ -11,7 +11,7 @@ import io.raspberrywallet.manager.modules.Module;
 import org.apache.commons.lang.SerializationUtils;
 
 public class PinModule extends Module<PinConfig> {
-    
+
     public PinModule() throws InstantiationException, IllegalAccessException {
         super("Enter PIN", PinConfig.class);
     }
@@ -25,11 +25,6 @@ public class PinModule extends Module<PinConfig> {
         return "Module that require enter a digit code to unlock.";
     }
 
-    @Override
-    public boolean check() {
-        return hasInput("pin");
-    }
-
 
     @Override
     public void register() {
@@ -41,32 +36,29 @@ public class PinModule extends Module<PinConfig> {
     }
 
     @Override
-    public byte[] encrypt(byte[] payload) throws RequiredInputNotFound, EncryptionException {
+    public byte[] encrypt(byte[] payload) throws EncryptionException {
         AESEncryptedObject<ByteWrapper> encryptedObject =
-                CryptoObject.encrypt(new ByteWrapper(payload), getPin());
-        
+                CryptoObject.encrypt(new ByteWrapper(payload), getInput(PIN));
+
         return SerializationUtils.serialize(encryptedObject);
     }
 
     @Override
-    public byte[] decrypt(byte[] payload) throws RequiredInputNotFound, DecryptionException {
+    public byte[] decrypt(byte[] payload) throws DecryptionException {
         AESEncryptedObject<ByteWrapper> encryptedObject =
                 (AESEncryptedObject<ByteWrapper>) SerializationUtils.deserialize(payload);
 
-        return CryptoObject.decrypt(encryptedObject, getPin()).getData();
-    }
-    
-    private String getPin() throws RequiredInputNotFound {
-        String pin = getInput("pin");
-        
-        //validation of user's input
-        if (pin == null || pin.length() < configuration.minLength || pin.length() > configuration.maxLength)
-            throw new RequiredInputNotFound(getId(), "pin");
-        
-        return pin;
+        return CryptoObject.decrypt(encryptedObject, getInput(PIN)).getData();
     }
 
-    public static class Inputs {
-        public static String PIN = "pin";
+    @Override
+    protected void validateInputs() throws RequiredInputNotFound {
+        String pin = getInput(PIN);
+        if (pin == null || pin.length() < configuration.minLength || pin.length() > configuration.maxLength)
+            throw new RequiredInputNotFound(getId(), PIN);
     }
+
+
+    private static String PIN = "pin";
+
 }

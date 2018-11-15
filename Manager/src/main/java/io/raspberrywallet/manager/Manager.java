@@ -135,7 +135,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                 Module module = modulesToDecrypt.get(i);
                 module.setInputs(selectedModulesWithInputs.get(module.getId()));
                 KeyPartEntity keyPartEntity = new KeyPartEntity();
-                keyPartEntity.setPayload(module.encrypt(keys[i].toByteArray()));
+                keyPartEntity.setPayload(module.validateAndEncrypt(keys[i].toByteArray()));
                 keyPartEntity.setModule(module.getId());
                 keyPartEntities.add(keyPartEntity);
             }
@@ -225,7 +225,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                             return null;
 
                         KeyPartEntity dbEntity = keyPartEntity.get();
-                        return module.decrypt(dbEntity.getPayload());
+                        return module.validateAndDecrypt(dbEntity.getPayload());
                     } catch (DecryptionException | RequiredInputNotFound e) {
                         e.printStackTrace();
                         return null;

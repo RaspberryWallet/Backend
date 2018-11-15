@@ -1,6 +1,7 @@
 package io.raspberrywallet.manager.modules.example;
 
 
+import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.modules.Module;
@@ -19,30 +20,13 @@ public class ExampleModule extends Module<ExampleConfig> {
         return "An example waiting and xoring module to show how things work.";
     }
 
+
     public static final byte[] KEY = "EXAMPLEKEY".getBytes();
 
-    /*
-     * First the module is "registered" by manager just after user needs to decrypt keypart.
-     */
-    private long lastTime = 1000;
-
-    @Override
-    public void register() {
-        lastTime = System.currentTimeMillis();
-    }
 
     @Override
     public String getHtmlUi() {
         return null;
-    }
-
-    /*
-     * The manager checks periodically for status. If status is true (i.e. here 5 seconds passed),
-     * process() should be called
-     */
-    @Override
-    public boolean check() {
-        return System.currentTimeMillis() - lastTime > 5000;
     }
 
     /*
@@ -69,5 +53,13 @@ public class ExampleModule extends Module<ExampleConfig> {
             r[i] = (byte) (r[i] ^ KEY[i % KEY.length]);
 
         return r;
+    }
+
+    @Override
+    public void register() {
+    }
+
+    @Override
+    protected void validateInputs() throws RequiredInputNotFound {
     }
 }

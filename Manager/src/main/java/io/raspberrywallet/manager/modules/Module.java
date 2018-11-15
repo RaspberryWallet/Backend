@@ -36,8 +36,8 @@ public abstract class Module<Config extends ModuleConfig> {
      * This constructor enforce that the state and configuration is always present
      *
      * @param initialStatusString - initial module status string
-     * @param configClass - class representation of module specific Config type,
-     *                    required for dynamic Config class initialization, either from file and default value
+     * @param configClass         - class representation of module specific Config type,
+     *                            required for dynamic Config class initialization, either from file and default value
      */
     public Module(@NotNull String initialStatusString, Class<Config> configClass)
             throws IllegalAccessException, InstantiationException {
@@ -64,8 +64,9 @@ public abstract class Module<Config extends ModuleConfig> {
 
     /**
      * Parses config yaml file representation to module specific Config object
+     *
      * @param moduleConfiguration whole `modules` node of yaml file
-     * @param configClass class representation of module specific Config type
+     * @param configClass         class representation of module specific Config type
      * @return module specific config object
      */
     private Config parseConfigurationFrom(Configuration.ModulesConfiguration moduleConfiguration,
@@ -86,6 +87,7 @@ public abstract class Module<Config extends ModuleConfig> {
     /**
      * Used in all sort of identifications like config.yaml, internal module mapping and UI naming.
      * For now, it's just simplified SimpleClassName
+     *
      * @return module identifier.
      */
     public String getId() {
@@ -99,24 +101,38 @@ public abstract class Module<Config extends ModuleConfig> {
 
     public abstract String getDescription();
 
+    protected abstract void validateInputs() throws RequiredInputNotFound;
+
     /**
-     * Check if needed interaction (User-Module) has been completed
-     *
-     * @return true, if we are ready to decrypt
+     * @param keyPart - decrypted key part
+     * @return encrypted payload
      */
-    public abstract boolean check();
+    public byte[] validateAndEncrypt(byte[] keyPart) throws RequiredInputNotFound, EncryptionException {
+        validateInputs();
+        return encrypt(keyPart);
+    }
 
     /**
      * @param keyPart - unencrypted key part
      * @return encrypted payload
      */
-    public abstract byte[] encrypt(byte[] keyPart) throws RequiredInputNotFound, EncryptionException;
+    protected abstract byte[] encrypt(byte[] keyPart) throws EncryptionException, RequiredInputNotFound;
+
+
+    /**
+     * @param keyPart - encrypted key part
+     * @return decrypted payload
+     */
+    public byte[] validateAndDecrypt(byte[] keyPart) throws RequiredInputNotFound, DecryptionException {
+        validateInputs();
+        return decrypt(keyPart);
+    }
 
     /**
      * @param payload - encrypted payload
      * @return decrypted key part
      */
-    public abstract byte[] decrypt(byte[] payload) throws DecryptionException, RequiredInputNotFound;
+    protected abstract byte[] decrypt(byte[] payload) throws DecryptionException;
 
     /**
      * this function should prepare module before consecutive use.
