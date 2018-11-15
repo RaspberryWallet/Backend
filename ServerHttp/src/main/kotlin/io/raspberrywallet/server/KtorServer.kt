@@ -57,9 +57,6 @@ import java.io.FileInputStream
 import java.security.KeyStore
 import java.time.Duration
 
-
-const val PORT = 9090
-const val PORT_SSL = 443
 lateinit var globalManager: Manager
 
 class KtorServer(val manager: Manager,
@@ -81,10 +78,10 @@ class KtorServer(val manager: Manager,
                 mainModule()
             }
             connector {
-                port = PORT
+                port = serverConfig.port
             }
             sslConnector(keyStore, "ssl", { serverConfig.keystorePassword }, { serverConfig.keystorePassword }) {
-                port = PORT_SSL
+                port = serverConfig.securePort
                 keyStorePath = keyStoreFile.absoluteFile
             }
         }

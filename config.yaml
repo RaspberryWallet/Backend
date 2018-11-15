@@ -10,6 +10,8 @@ server:
   keystore-name: RaspberryWallet.keystore
   keystore-password: raspberrywallet
   key-alias: ssl
+  port: 80
+  secure-port: 433
 
 modules:
   PinModule:
