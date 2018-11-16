@@ -36,8 +36,10 @@ public class PushButtonModule extends Module<PushButtonConfig> {
     }
     
     private void initialize() {
-        pushButton.addListener((GpioPinListenerDigital) event ->
-                setInput(PRESSED, event.getState().isHigh() + "")
+        pushButton.addListener((GpioPinListenerDigital) event -> {
+                    setInput(PRESSED, event.getState().isHigh() + "");
+                    System.out.println("PushButonModule: " + event.getState().getName());
+                }
         );
     }
     
