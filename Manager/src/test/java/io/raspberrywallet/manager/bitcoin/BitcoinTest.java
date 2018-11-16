@@ -5,6 +5,7 @@ import io.raspberrywallet.manager.Configuration;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.store.BlockStoreException;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -17,6 +18,7 @@ import static io.raspberrywallet.manager.Utils.println;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@Disabled("Long running and resource consuming tests")
 public class BitcoinTest {
     static private Bitcoin bitcoin;
     static private List<String> mnemonicCode;
@@ -28,7 +30,7 @@ public class BitcoinTest {
                 "captain", "dutch", "matter", "dinner", "loan", "orange");
         println("Using mnemonic:" + mnemonicCode.stream().reduce("", (acc, word) -> acc + " " + word));
         // receive address mhTMbU8NqwVobEjT6Yqq3hSu9rmPABE1RU
-        // balance 0.14001595
+        // balance 0.15001595
         privateKeyHash = new String(Sha256Hash.hash("rasperrywallet is the best bitcoin wallet ever".getBytes()));
 
         File tempBaseDir = Paths.get("/", "tmp", "wallet").toFile();

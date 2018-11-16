@@ -10,6 +10,8 @@ server:
   keystore-name: RaspberryWallet.keystore
   keystore-password: raspberrywallet
   key-alias: ssl
+  port: 80
+  secure-port: 433
 
 modules:
   PinModule:
@@ -18,7 +20,7 @@ modules:
   AuthorizationServerModule:
     host: https://127.0.0.1
     port: 8443
-    accept-unstrusted-certs: true
+    accept-untrusted-certs: true
     endpoints:
       set-secret: /authorization/secret/set
       overwrite: /authorization/secret/overwritte

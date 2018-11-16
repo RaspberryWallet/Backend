@@ -140,7 +140,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                 Module module = modulesToDecrypt.get(i);
                 module.setInputs(selectedModulesWithInputs.get(module.getId()));
                 KeyPartEntity keyPartEntity = new KeyPartEntity();
-                keyPartEntity.setPayload(module.encrypt(keys[i].toByteArray()));
+                keyPartEntity.setPayload(module.encryptKeyPart(keys[i].toByteArray()));
                 keyPartEntity.setModule(module.getId());
                 keyPartEntities.add(keyPartEntity);
             }
@@ -148,7 +148,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
             bitcoin.setupWalletFromMnemonic(mnemonicCode, getPrivateKeyHash());
 
-        } catch (ShamirException | EncryptionException e) {
+        } catch (ShamirException | EncryptionException | InternalModuleException e) {
             e.printStackTrace();
         }
     }
@@ -230,8 +230,8 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                             return null;
 
                         KeyPartEntity dbEntity = keyPartEntity.get();
-                        return module.decrypt(dbEntity.getPayload());
-                    } catch (DecryptionException | RequiredInputNotFound e) {
+                        return module.decryptKeyPart(dbEntity.getPayload());
+                    } catch (InternalModuleException | DecryptionException | RequiredInputNotFound e) {
                         e.printStackTrace();
                         return null;
                     }
