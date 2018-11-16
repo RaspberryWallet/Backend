@@ -29,6 +29,7 @@ class AuthServerSecuredTests {
     }
     
     @Test
+
     public void Secured_WalletEncryptionAndDecryptionWorks() throws EncryptionException, DecryptionException, InternalModuleException, RequiredInputNotFound {
         byte[] data = module.encryptKeyPart(encryptionData);
         byte[] decryptedData = module.decryptKeyPart(data);
