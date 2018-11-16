@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.modules.pin;
 
+import io.raspberrywallet.contract.InternalModuleException;
 import io.raspberrywallet.contract.ModuleInitializationException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
@@ -31,23 +32,23 @@ class PinModuleTests {
 
     
     @Test
-    public void PinModuleEncryptsAndDecryptsCorrectly() throws EncryptionException, RequiredInputNotFound, DecryptionException {
+    public void PinModuleEncryptsAndDecryptsCorrectly() throws EncryptionException, RequiredInputNotFound, DecryptionException, InternalModuleException {
         pinModule.setInput("pin", "1234");
 
-        byte[] encryptedData = pinModule.encrypt(data.getBytes());
-        byte[] decryptedData = pinModule.decrypt(encryptedData);
+        byte[] encryptedData = pinModule.encryptKeyPart(data.getBytes());
+        byte[] decryptedData = pinModule.decryptKeyPart(encryptedData);
         
         assertTrue(Arrays.equals(data.getBytes(), decryptedData));
     }
     
     @Test
-    public void DecryptionDoesThrowWithWrongPin() throws EncryptionException, RequiredInputNotFound {
+    public void DecryptionDoesThrowWithWrongPin() throws EncryptionException, RequiredInputNotFound, InternalModuleException {
         pinModule.setInput("pin", "1234");
 
-        byte[] encryptedData = pinModule.encrypt(data.getBytes());
+        byte[] encryptedData = pinModule.encryptKeyPart(data.getBytes());
         pinModule.clearInputs();
         pinModule.setInput("pin","4567");
-        assertThrows(DecryptionException.class, () -> pinModule.decrypt(encryptedData));
+        assertThrows(DecryptionException.class, () -> pinModule.decryptKeyPart(encryptedData));
     }
     
 }

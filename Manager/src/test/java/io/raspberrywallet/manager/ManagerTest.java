@@ -1,9 +1,6 @@
 package io.raspberrywallet.manager;
 
-import io.raspberrywallet.contract.ModuleInitializationException;
-import io.raspberrywallet.contract.RequiredInputNotFound;
-import io.raspberrywallet.contract.WalletNotInitialized;
-import io.raspberrywallet.contract.WalletStatus;
+import io.raspberrywallet.contract.*;
 import io.raspberrywallet.contract.module.ModuleState;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
@@ -122,13 +119,13 @@ class ManagerTest {
     }
 
     @Test
-    void unlockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
+    void unlockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException, InternalModuleException {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
 
         ShamirKey exampleKey = new ShamirKey(BigInteger.ONE, BigInteger.TEN, BigInteger.ONE);
         ShamirKey pinKey = new ShamirKey(BigInteger.TEN, BigInteger.ONE, BigInteger.TEN);
-        final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encrypt(exampleKey.toByteArray()), exampleModule.getId());
-        final KeyPartEntity pinKeyPart = new KeyPartEntity(pinModule.encrypt(pinKey.toByteArray()), pinModule.getId());
+        final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encryptKeyPart(exampleKey.toByteArray()), exampleModule.getId());
+        final KeyPartEntity pinKeyPart = new KeyPartEntity(pinModule.encryptKeyPart(pinKey.toByteArray()), pinModule.getId());
         when(database.getKeypartForModuleId(exampleModule.getId())).thenReturn(Optional.of(exampleKeyPart));
         when(database.getKeypartForModuleId(pinModule.getId())).thenReturn(Optional.of(pinKeyPart));
 
@@ -141,15 +138,15 @@ class ManagerTest {
     }
 
     @Test
-    void lockWalletWhenUnlocked() throws WalletNotInitialized, EncryptionException {
+    void lockWalletWhenUnlocked() throws WalletNotInitialized, EncryptionException, InternalModuleException, RequiredInputNotFound {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
 
         pinModule.setInput(PinModule.PIN, "1234");
 
         ShamirKey exampleKey = new ShamirKey(BigInteger.ONE, BigInteger.TEN, BigInteger.ONE);
         ShamirKey pinKey = new ShamirKey(BigInteger.TEN, BigInteger.ONE, BigInteger.TEN);
-        final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encrypt(exampleKey.toByteArray()), exampleModule.getId());
-        final KeyPartEntity pinKeyPart = new KeyPartEntity(pinModule.encrypt(pinKey.toByteArray()), pinModule.getId());
+        final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encryptKeyPart(exampleKey.toByteArray()), exampleModule.getId());
+        final KeyPartEntity pinKeyPart = new KeyPartEntity(pinModule.encryptKeyPart(pinKey.toByteArray()), pinModule.getId());
         when(database.getKeypartForModuleId(exampleModule.getId())).thenReturn(Optional.of(exampleKeyPart));
         when(database.getKeypartForModuleId(pinModule.getId())).thenReturn(Optional.of(pinKeyPart));
 
@@ -163,7 +160,7 @@ class ManagerTest {
     }
 
     @Test
-    void unlockWalletWhenLocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
+    void unlockWalletWhenLocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException, InternalModuleException {
         lockWalletWhenUnlocked();
 
         Map<String, Map<String, String>> moduleToInputsMap = new HashMap<>();

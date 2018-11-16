@@ -1,6 +1,7 @@
 package io.raspberrywallet.manager.modules.authorizationserver;
 
 
+import io.raspberrywallet.contract.InternalModuleException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
@@ -28,20 +29,20 @@ class AuthServerSecuredTests {
     }
     
     @Test
-    public void Secured_WalletEncryptionAndDecryptionWorks() throws EncryptionException, DecryptionException, RequiredInputNotFound {
-        byte[] data = module.encrypt(encryptionData);
-        byte[] decryptedData = module.decrypt(data);
+    public void Secured_WalletEncryptionAndDecryptionWorks() throws EncryptionException, DecryptionException, InternalModuleException, RequiredInputNotFound {
+        byte[] data = module.encryptKeyPart(encryptionData);
+        byte[] decryptedData = module.decryptKeyPart(data);
     
         assertTrue(Arrays.equals(decryptedData, encryptionData));
     }
     
     @Test
-    void Secured_MultipleEncryptionAndDecryptionOperationWorks() throws EncryptionException, DecryptionException, RequiredInputNotFound {
-        byte[] firstEncryptedData = module.encrypt(encryptionData);
-        assertTrue(Arrays.equals(encryptionData, module.decrypt(firstEncryptedData)));
-        
-        byte[] secondEncryptedData = module.encrypt(differentEncryptionData);
-        assertTrue(Arrays.equals(differentEncryptionData, module.decrypt(secondEncryptedData)));
+    void Secured_MultipleEncryptionAndDecryptionOperationWorks() throws EncryptionException, DecryptionException, RequiredInputNotFound, InternalModuleException {
+        byte[] firstEncryptedData = module.encryptKeyPart(encryptionData);
+        assertTrue(Arrays.equals(encryptionData, module.decryptKeyPart(firstEncryptedData)));
+
+        byte[] secondEncryptedData = module.encryptKeyPart(differentEncryptionData);
+        assertTrue(Arrays.equals(differentEncryptionData, module.decryptKeyPart(secondEncryptedData)));
     }
     
 }

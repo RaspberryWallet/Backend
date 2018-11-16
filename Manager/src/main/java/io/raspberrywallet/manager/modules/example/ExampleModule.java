@@ -32,7 +32,7 @@ public class ExampleModule extends Module<ExampleConfig> {
      * Before we can decrypt a keypart, we need an encrypted one
      */
     @Override
-    public byte[] encrypt(byte[] data) {
+    protected byte[] encrypt(byte[] data) {
         byte[] r = data.clone();
         for (int i = 0; i < r.length; ++i)
             r[i] = (byte) (r[i] ^ KEY[i % KEY.length]);
@@ -43,7 +43,7 @@ public class ExampleModule extends Module<ExampleConfig> {
      * We are processing (decrypting) the keypart with a KEY.
      */
     @Override
-    public byte[] decrypt(byte[] payload) throws DecryptionException {
+    protected byte[] decrypt(byte[] payload) throws DecryptionException {
         if (payload == null) throw new DecryptionException(DecryptionException.NO_DATA);
 
         byte[] r = payload.clone();

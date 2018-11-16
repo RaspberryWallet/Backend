@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.modules.authorizationserver;
 
+import io.raspberrywallet.contract.InternalModuleException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.commons.CustomConfig;
@@ -32,20 +33,20 @@ class AuthServerUnsecuredTests {
     }
     
     @Test
-    void Unsecured_WalletEncryptionAndDecryptionWorks() throws EncryptionException, DecryptionException, RequiredInputNotFound {
-        byte[] data = module.encrypt(encryptionData);
-        byte[] decryptedData = module.decrypt(data);
+    void Unsecured_WalletEncryptionAndDecryptionWorks() throws EncryptionException, DecryptionException, RequiredInputNotFound, InternalModuleException {
+        byte[] data = module.encryptKeyPart(encryptionData);
+        byte[] decryptedData = module.decryptKeyPart(data);
         
         assertTrue(Arrays.equals(decryptedData, encryptionData));
     }
     
     @Test
-    void Unsecured_MultipleEncryptionAndDecryptionOperationWorks() throws EncryptionException, DecryptionException, RequiredInputNotFound {
-        byte[] firstEncryptedData = module.encrypt(encryptionData);
-        assertTrue(Arrays.equals(encryptionData, module.decrypt(firstEncryptedData)));
-        
-        byte[] secondEncryptedData = module.encrypt(differentEncryptionData);
-        assertTrue(Arrays.equals(differentEncryptionData, module.decrypt(secondEncryptedData)));
+    void Unsecured_MultipleEncryptionAndDecryptionOperationWorks() throws EncryptionException, DecryptionException, RequiredInputNotFound, InternalModuleException {
+        byte[] firstEncryptedData = module.encryptKeyPart(encryptionData);
+        assertTrue(Arrays.equals(encryptionData, module.decryptKeyPart(firstEncryptedData)));
+
+        byte[] secondEncryptedData = module.encryptKeyPart(differentEncryptionData);
+        assertTrue(Arrays.equals(differentEncryptionData, module.decryptKeyPart(secondEncryptedData)));
     }
     
 }

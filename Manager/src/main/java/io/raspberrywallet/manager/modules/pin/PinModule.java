@@ -33,7 +33,7 @@ public class PinModule extends Module<PinConfig> {
     }
 
     @Override
-    public byte[] encrypt(byte[] payload) throws EncryptionException {
+    protected byte[] encrypt(byte[] payload) throws EncryptionException {
         AESEncryptedObject<ByteWrapper> encryptedObject =
                 CryptoObject.encrypt(new ByteWrapper(payload), getInput(PIN));
 
@@ -41,7 +41,7 @@ public class PinModule extends Module<PinConfig> {
     }
 
     @Override
-    public byte[] decrypt(byte[] payload) throws DecryptionException {
+    protected byte[] decrypt(byte[] payload) throws DecryptionException {
         AESEncryptedObject<ByteWrapper> encryptedObject =
                 (AESEncryptedObject<ByteWrapper>) SerializationUtils.deserialize(payload);
 

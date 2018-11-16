@@ -42,12 +42,12 @@ public class PushButtonModule extends Module<PushButtonConfig> {
     }
     
     @Override
-    public byte[] encrypt(byte[] data) {
+    protected byte[] encrypt(byte[] data) {
         return data;
     }
     
     @Override
-    public byte[] decrypt(byte[] payload) {
+    protected byte[] decrypt(byte[] payload) {
         return payload;
     }
     
