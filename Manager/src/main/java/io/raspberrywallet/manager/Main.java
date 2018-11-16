@@ -30,7 +30,6 @@ public class Main {
         Bitcoin bitcoin = new Bitcoin(configuration, new WalletCrypter());
 
         List<Module> modules = ModuleClassLoader.getModules(configuration);
-        modules.forEach(Module::register);
 
         TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
 

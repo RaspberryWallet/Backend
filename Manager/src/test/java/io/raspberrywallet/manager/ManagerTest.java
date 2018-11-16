@@ -1,8 +1,6 @@
 package io.raspberrywallet.manager;
 
-import io.raspberrywallet.contract.RequiredInputNotFound;
-import io.raspberrywallet.contract.WalletNotInitialized;
-import io.raspberrywallet.contract.WalletStatus;
+import io.raspberrywallet.contract.*;
 import io.raspberrywallet.contract.module.ModuleState;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
@@ -19,6 +17,7 @@ import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.Wallet;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -53,7 +52,7 @@ class ManagerTest {
     private static File walletFile = new File("test_wallet.wallet");
 
     @BeforeEach
-    void setup() throws IllegalAccessException, InstantiationException {
+    void setup() throws IllegalAccessException, InstantiationException, ModuleInitializationException {
         bitcoin = mock(Bitcoin.class);
         temperatureMonitor = mock(TemperatureMonitor.class);
         database = mock(Database.class);
@@ -63,7 +62,8 @@ class ManagerTest {
         modules.add(exampleModule);
         modules.add(pinModule);
 
-        manager = new Manager(Configuration.testConfiguration(), database, modules, bitcoin, temperatureMonitor, null);
+        CommunicationChannel channel = new CommunicationChannel();
+        manager = new Manager(Configuration.testConfiguration(), database, modules, bitcoin, temperatureMonitor, channel);
     }
 
 
@@ -89,6 +89,7 @@ class ManagerTest {
     }
 
     @Test
+    @Disabled("Long running test")
     void getWalletStatusSet() throws MnemonicException, NoSuchAlgorithmException, RequiredInputNotFound, WalletNotInitialized {
         restoreFromBackupPhrase();
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), generateRandomDeterministicSeed()));
@@ -105,12 +106,13 @@ class ManagerTest {
     }
 
     @Test
+    @Disabled("Long running test")
     void restoreFromBackupPhrase() throws NoSuchAlgorithmException, MnemonicException, RequiredInputNotFound {
         List<String> mnemonicCode = TestUtils.generateRandomDeterministicMnemonicCode();
         mnemonicCode.forEach(System.out::println);
 
         Map<String, String> pinInputs = new HashMap<>();
-        pinInputs.put(PinModule.Inputs.PIN, "1234");
+        pinInputs.put(PinModule.PIN, "1234");
 
         Map<String, Map<String, String>> selectedModulesWithInputs = new HashMap<>();
         selectedModulesWithInputs.put(pinModule.getId(), pinInputs);
@@ -121,34 +123,39 @@ class ManagerTest {
     }
 
     @Test
-    void unlockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
+    void unlockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException, InternalModuleException {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
+        pinModule.setInput(PinModule.PIN, "1234");
 
         ShamirKey exampleKey = new ShamirKey(BigInteger.ONE, BigInteger.TEN, BigInteger.ONE);
         ShamirKey pinKey = new ShamirKey(BigInteger.TEN, BigInteger.ONE, BigInteger.TEN);
-        final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encrypt(exampleKey.toByteArray()), exampleModule.getId());
-        final KeyPartEntity pinKeyPart = new KeyPartEntity(pinModule.encrypt(pinKey.toByteArray()), pinModule.getId());
+        final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encryptKeyPart(exampleKey.toByteArray()), exampleModule.getId());
+        final KeyPartEntity pinKeyPart = new KeyPartEntity(pinModule.encryptKeyPart(pinKey.toByteArray()), pinModule.getId());
+
         when(database.getKeypartForModuleId(exampleModule.getId())).thenReturn(Optional.of(exampleKeyPart));
         when(database.getKeypartForModuleId(pinModule.getId())).thenReturn(Optional.of(pinKeyPart));
 
-        Map<String, Map<String, String>> moduleToInputsMap = new HashMap<>();
-        HashMap<String, String> pinInputs = new HashMap<>();
-        pinInputs.put(PinModule.Inputs.PIN, "1234");
-        moduleToInputsMap.put(pinModule.getId(), pinInputs);
 
-        assertThrows(IllegalStateException.class, () -> manager.unlockWallet(moduleToInputsMap));
+        Map<String, String> pinInputs = new HashMap<>();
+        pinInputs.put(PinModule.PIN, "1234");
+
+        Map<String, Map<String, String>> selectedModulesWithInputs = new HashMap<>();
+        selectedModulesWithInputs.put(pinModule.getId(), pinInputs);
+        selectedModulesWithInputs.put(exampleModule.getId(), new HashMap<>());
+
+        assertThrows(IllegalStateException.class, () -> manager.unlockWallet(selectedModulesWithInputs));
     }
 
     @Test
-    void lockWalletWhenUnlocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
+    void lockWalletWhenUnlocked() throws WalletNotInitialized, EncryptionException, InternalModuleException, RequiredInputNotFound {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
 
-        pinModule.setInput(PinModule.Inputs.PIN, "1234");
+        pinModule.setInput(PinModule.PIN, "1234");
 
         ShamirKey exampleKey = new ShamirKey(BigInteger.ONE, BigInteger.TEN, BigInteger.ONE);
         ShamirKey pinKey = new ShamirKey(BigInteger.TEN, BigInteger.ONE, BigInteger.TEN);
-        final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encrypt(exampleKey.toByteArray()), exampleModule.getId());
-        final KeyPartEntity pinKeyPart = new KeyPartEntity(pinModule.encrypt(pinKey.toByteArray()), pinModule.getId());
+        final KeyPartEntity exampleKeyPart = new KeyPartEntity(exampleModule.encryptKeyPart(exampleKey.toByteArray()), exampleModule.getId());
+        final KeyPartEntity pinKeyPart = new KeyPartEntity(pinModule.encryptKeyPart(pinKey.toByteArray()), pinModule.getId());
         when(database.getKeypartForModuleId(exampleModule.getId())).thenReturn(Optional.of(exampleKeyPart));
         when(database.getKeypartForModuleId(pinModule.getId())).thenReturn(Optional.of(pinKeyPart));
 
@@ -158,16 +165,16 @@ class ManagerTest {
 
         assertTrue(walletFile.exists());
         assertEquals(manager.getWalletStatus(), WalletStatus.ENCRYPTED);
-        assertFalse(pinModule.hasInput(PinModule.Inputs.PIN));
+        assertFalse(pinModule.hasInput(PinModule.PIN));
     }
 
     @Test
-    void unlockWalletWhenLocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException {
+    void unlockWalletWhenLocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException, InternalModuleException {
         lockWalletWhenUnlocked();
 
         Map<String, Map<String, String>> moduleToInputsMap = new HashMap<>();
         HashMap<String, String> pinInputs = new HashMap<>();
-        pinInputs.put(PinModule.Inputs.PIN, "1234");
+        pinInputs.put(PinModule.PIN, "1234");
         moduleToInputsMap.put(pinModule.getId(), pinInputs);
 
         manager.unlockWallet(moduleToInputsMap);
