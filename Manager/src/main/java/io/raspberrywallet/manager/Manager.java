@@ -334,25 +334,43 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
     public void uploadNewModule(File file, String fileName) throws Error {
 
-        //Weryfikacja w /tmp
+        //Verify in /tmp
         try {
-            if(!ModuleClassLoader.verifyJarSignature(file)) throw new Error("Verification error (1000).");
-        } catch(MalformedURLException e) {
-            throw new Error("Internal I/O error (1).");
+            if ( ! ModuleClassLoader.verifyJarSignature(file) ) throw new Error("Verification error.");
+        } catch ( MalformedURLException e ) {
+            throw new Error("Internal I/O error (Malformed URL Exception).");
         }
 
-        //Kopiowanie do nowej lokalizacji (nadpisanie tez)
-        try (InputStream inputStream = new FileInputStream(file); FileOutputStream fileOutputStream = new FileOutputStream(configuration.getBasePathPrefix() + "/modules/" + fileName);) {
+        //Copy to new location (with overwrite)
+        copyVerifiedModule(file, fileName);
+    }
+
+    public void copyVerifiedModule(File file, String fileName) throws Error {
+
+        //Create streams (can throw IOException)
+        try ( InputStream inputStream
+                      = new FileInputStream(file);
+              FileOutputStream fileOutputStream
+                      = new FileOutputStream(configuration.getBasePathPrefix() + "/modules/" + fileName);
+        ) {
+
+            //Prepare buffer
             byte[] buffer = new byte[4096];
             int l = 0;
-            while(inputStream.available()>0) {
+
+            //Copy
+            while ( inputStream.available() > 0 ) {
                 l = inputStream.read(buffer);
                 fileOutputStream.write(buffer, 0, l);
             }
-            Arrays.fill(buffer, (byte)0);
+
+            //Clean up
+            Arrays.fill( buffer, (byte) 0 );
             l = 0;
-        } catch(IOException e) {
-            throw new Error("Internal I/O error (2).");
+
+        } catch ( IOException e ) {
+            throw new Error("Internal I/O error (IOException from streams).");
         }
+
     }
 }
