@@ -76,7 +76,8 @@ public class Bitcoin {
         this.walletFile = Paths.get(bitcoinRootDirectory.getAbsolutePath(), walletFileName + ".wallet").toFile();
         this.blockStoreFile = Paths.get(bitcoinRootDirectory.getAbsolutePath(), walletFileName + ".spvchain").toFile();
         if (isChainFileLocked())
-            throw new IllegalStateException("This application is already running and cannot be started twice.");
+            throw new IllegalStateException("This application is already running and cannot be started twice. " +
+                    "Please check what process is using blockstore file[fuser/lsof] : " + blockStoreFile.getAbsolutePath());
 
         this.blockStore = new SPVBlockStore(params, blockStoreFile);
     }
