@@ -1,6 +1,5 @@
 package io.raspberrywallet.manager.modules.pin;
 
-import io.raspberrywallet.contract.ModuleInitializationException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.common.wrappers.ByteWrapper;
@@ -12,13 +11,12 @@ import io.raspberrywallet.manager.modules.Module;
 import org.apache.commons.lang.SerializationUtils;
 
 public class PinModule extends Module<PinConfig> {
-    public static String PIN = "pin";
-
-    public PinModule() throws InstantiationException, IllegalAccessException, ModuleInitializationException {
+    
+    public PinModule() throws InstantiationException, IllegalAccessException {
         super("Enter PIN", PinConfig.class);
     }
 
-    public PinModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException, ModuleInitializationException {
+    public PinModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException {
         super("Enter PIN", modulesConfiguration, PinConfig.class);
     }
 
@@ -28,36 +26,47 @@ public class PinModule extends Module<PinConfig> {
     }
 
     @Override
+    public boolean check() {
+        return hasInput("pin");
+    }
+
+
+    @Override
+    public void register() {
+    }
+
+    @Override
     public String getHtmlUi() {
         return "<input type=\"text\" name=\"pin\">";
     }
 
     @Override
-    protected byte[] encrypt(byte[] payload) throws EncryptionException {
+    public byte[] encrypt(byte[] payload) throws RequiredInputNotFound, EncryptionException {
         AESEncryptedObject<ByteWrapper> encryptedObject =
-                CryptoObject.encrypt(new ByteWrapper(payload), getInput(PIN));
-
+                CryptoObject.encrypt(new ByteWrapper(payload), getPin());
+        
         return SerializationUtils.serialize(encryptedObject);
     }
 
     @Override
-    protected byte[] decrypt(byte[] payload) throws DecryptionException {
+    public byte[] decrypt(byte[] payload) throws RequiredInputNotFound, DecryptionException {
         AESEncryptedObject<ByteWrapper> encryptedObject =
                 (AESEncryptedObject<ByteWrapper>) SerializationUtils.deserialize(payload);
 
-        return CryptoObject.decrypt(encryptedObject, getInput(PIN)).getData();
-    }
-
-    @Override
-    protected void validateInputs() throws RequiredInputNotFound {
-        String pin = getInput(PIN);
-        if (isPINWeak(pin))
-            throw new RequiredInputNotFound(getId(), PIN);
+        return CryptoObject.decrypt(encryptedObject, getPin()).getData();
     }
     
-    private boolean isPINWeak(String pin) {
-        return pin == null || pin.length() < configuration.minLength || pin.length() > configuration.maxLength;
+    private String getPin() throws RequiredInputNotFound {
+        String pin = getInput("pin");
+        
+        //validation of user's input
+        if (pin == null || pin.length() < configuration.minLength || pin.length() > configuration.maxLength)
+            throw new RequiredInputNotFound(getId(), "pin");
+        
+        return pin;
     }
 
-
+    public static class Inputs {
+        public static String PIN = "pin";
+    }
 }

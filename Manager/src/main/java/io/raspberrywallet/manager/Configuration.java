@@ -96,7 +96,7 @@ final public class Configuration {
      * @param yamlFile configuration file encoded in YAML structure
      * @return YAML config parsed into Configuration object
      */
-    static Configuration fromYamlFile(File yamlFile) {
+    public static Configuration fromYamlFile(File yamlFile) {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         Configuration config;
         try {

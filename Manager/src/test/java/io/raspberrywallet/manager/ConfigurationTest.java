@@ -14,6 +14,7 @@ class ConfigurationTest {
     @Test
     void fromYamlFile() throws IOException {
         String version = "0.5.0";
+        long sessionLength = 3600000;
         String basePrefixDir = "/opt/wallet";
         String configYamlContent = "" +
                 "version: " + version + "\n" +
@@ -22,6 +23,11 @@ class ConfigurationTest {
                 "bitcoin:\n" +
                 "  network: testnet\n" +
                 "  user-agent: RaspberryWallet\n" +
+                "\n" +
+                "\n" +
+                "modules:\n" +
+                "  PinModule:\n" +
+                "    max-retry: 5\n" +
                 "\n" +
                 "  AuthorizationServerModule:\n" +
                 "    host: 89.89.89.89\n" +

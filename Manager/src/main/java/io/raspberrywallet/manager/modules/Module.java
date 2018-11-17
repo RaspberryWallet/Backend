@@ -3,7 +3,6 @@ package io.raspberrywallet.manager.modules;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stasbar.Logger;
-import io.raspberrywallet.contract.InternalModuleException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
@@ -37,8 +36,8 @@ public abstract class Module<Config extends ModuleConfig> {
      * This constructor enforce that the state and configuration is always present
      *
      * @param initialStatusString - initial module status string
-     * @param configClass         - class representation of module specific Config type,
-     *                            required for dynamic Config class initialization, either from file and default value
+     * @param configClass - class representation of module specific Config type,
+     *                    required for dynamic Config class initialization, either from file and default value
      */
     public Module(@NotNull String initialStatusString, Class<Config> configClass)
             throws IllegalAccessException, InstantiationException {
@@ -58,17 +57,15 @@ public abstract class Module<Config extends ModuleConfig> {
 
         statusString = initialStatusString;
         Config newConfiguration = parseConfigurationFrom(modulesConfiguration, configClass);
-        if (newConfiguration == null)
-            newConfiguration = configClass.newInstance();
+        if (newConfiguration == null) newConfiguration = configClass.newInstance();
 
         configuration = newConfiguration;
     }
 
     /**
      * Parses config yaml file representation to module specific Config object
-     *
      * @param moduleConfiguration whole `modules` node of yaml file
-     * @param configClass         class representation of module specific Config type
+     * @param configClass class representation of module specific Config type
      * @return module specific config object
      */
     private Config parseConfigurationFrom(Configuration.ModulesConfiguration moduleConfiguration,
@@ -89,7 +86,6 @@ public abstract class Module<Config extends ModuleConfig> {
     /**
      * Used in all sort of identifications like config.yaml, internal module mapping and UI naming.
      * For now, it's just simplified SimpleClassName
-     *
      * @return module identifier.
      */
     public String getId() {
@@ -103,45 +99,30 @@ public abstract class Module<Config extends ModuleConfig> {
 
     public abstract String getDescription();
 
-    protected abstract void validateInputs() throws RequiredInputNotFound;
+    /**
+     * Check if needed interaction (User-Module) has been completed
+     *
+     * @return true, if we are ready to decrypt
+     */
+    public abstract boolean check();
 
     /**
-     * this wrapper enforce module to validateInputs and throw exception if they are absent
-     *
      * @param keyPart - unencrypted key part
      * @return encrypted payload
      */
-    public byte[] encryptKeyPart(byte[] keyPart) throws EncryptionException, RequiredInputNotFound, InternalModuleException {
-        validateInputs();
-        return encrypt(keyPart);
-    }
+    public abstract byte[] encrypt(byte[] keyPart) throws RequiredInputNotFound, EncryptionException;
 
     /**
-     * method to override by module, validation should not be called here, use validateInputs() instead
-     *
-     * @param keyPart - unencrypted key part
-     * @return encrypted payload
-     */
-    protected abstract byte[] encrypt(byte[] keyPart) throws EncryptionException, InternalModuleException;
-
-    /**
-     * this wrapper enforce module to validateInputs and throw exception if they are absent
-     *
      * @param payload - encrypted payload
      * @return decrypted key part
      */
-    public byte[] decryptKeyPart(byte[] payload) throws DecryptionException, RequiredInputNotFound, InternalModuleException {
-        validateInputs();
-        return decrypt(payload);
-    }
+    public abstract byte[] decrypt(byte[] payload) throws DecryptionException, RequiredInputNotFound;
 
     /**
-     * method to override by module, validation should not be called here, use validateInputs() instead
-     *
-     * @param payload - encrypted payload
-     * @return decrypted key part
+     * this function should prepare module before consecutive use.
+     * Manager should call this.
      */
-    protected abstract byte[] decrypt(byte[] payload) throws DecryptionException, InternalModuleException;
+    public abstract void register();
 
     /**
      * this function should return HTML UI form or null if not required

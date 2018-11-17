@@ -1,11 +1,10 @@
 package io.raspberrywallet.manager.modules.pin;
 
-import io.raspberrywallet.contract.InternalModuleException;
-import io.raspberrywallet.contract.ModuleInitializationException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.modules.Module;
+import org.apache.commons.lang.SerializationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,34 +20,39 @@ class PinModuleTests {
     private Module<PinConfig> pinModule;
     
     @BeforeEach
-    public void initializeModule() throws IllegalAccessException, InstantiationException, ModuleInitializationException {
+    public void initializeModule() throws IllegalAccessException, InstantiationException {
         pinModule = new PinModule();
     }
     
     @Test
-    public void PinModuleConstructorDoesNotThrow() throws IllegalAccessException, InstantiationException, ModuleInitializationException {
+    public void PinModuleConstructorDoesNotThrow() throws IllegalAccessException, InstantiationException {
         Module<PinConfig> pinModule = new PinModule();
     }
-
     
     @Test
-    public void PinModuleEncryptsAndDecryptsCorrectly() throws EncryptionException, RequiredInputNotFound, DecryptionException, InternalModuleException {
+    public void PinModuleCorrectStateValidationCheckWorks() {
         pinModule.setInput("pin", "1234");
-
-        byte[] encryptedData = pinModule.encryptKeyPart(data.getBytes());
-        byte[] decryptedData = pinModule.decryptKeyPart(encryptedData);
+        assertTrue(pinModule.check());
+    }
+    
+    @Test
+    public void PinModuleEncryptsAndDecryptsCorrectly() throws EncryptionException, RequiredInputNotFound, DecryptionException {
+        pinModule.setInput("pin", "1234");
+        
+        byte[] encryptedData = pinModule.encrypt(data.getBytes());
+        byte[] decryptedData = pinModule.decrypt(encryptedData);
         
         assertTrue(Arrays.equals(data.getBytes(), decryptedData));
     }
     
     @Test
-    public void DecryptionDoesThrowWithWrongPin() throws EncryptionException, RequiredInputNotFound, InternalModuleException {
+    public void DecryptionDoesThrowWithWrongPin() throws EncryptionException, RequiredInputNotFound {
         pinModule.setInput("pin", "1234");
-
-        byte[] encryptedData = pinModule.encryptKeyPart(data.getBytes());
+    
+        byte[] encryptedData = pinModule.encrypt(data.getBytes());
         pinModule.clearInputs();
         pinModule.setInput("pin","4567");
-        assertThrows(DecryptionException.class, () -> pinModule.decryptKeyPart(encryptedData));
+        assertThrows(DecryptionException.class, () -> pinModule.decrypt(encryptedData));
     }
     
 }
