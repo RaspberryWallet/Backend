@@ -5,7 +5,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-modules = ['PinModule', 'ExampleModule', 'AuthorizationServerModule']
+modules = ['PinModule', 'ExampleModule', 'AuthorizationServerModule', 'PushButtonModule']
 
 while not os.getcwd().lower().endswith("backend"):
     os.chdir("..")
