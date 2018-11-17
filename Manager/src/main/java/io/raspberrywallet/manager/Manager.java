@@ -4,6 +4,7 @@ import com.stasbar.Logger;
 import io.raspberrywallet.contract.*;
 import io.raspberrywallet.contract.module.ModuleState;
 import io.raspberrywallet.manager.bitcoin.Bitcoin;
+import io.raspberrywallet.manager.common.StreamUtils;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.Shamir;
@@ -331,46 +332,41 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     public void addBlockChainProgressListener(@NotNull IntConsumer listener) {
         bitcoin.addBlockChainProgressListener(listener);
     }
-
-    public void uploadNewModule(File file, String fileName) throws Error {
-
+    
+    public void uploadNewModule(File file, String fileName) throws ModuleUploadException {
+        
         //Verify in /tmp
         try {
-            if ( ! ModuleClassLoader.verifyJarSignature(file) ) throw new Error("Verification error.");
-        } catch ( MalformedURLException e ) {
-            throw new Error("Internal I/O error (Malformed URL Exception).");
+            if (!ModuleClassLoader.verifyJarSignature(file))
+                throw new ModuleUploadException("Jar verification failed for given module.");
+        
+        } catch (MalformedURLException e) {
+            throw new ModuleUploadException("Internal I/O error, uploaded module file path is malformed.");
         }
-
-        //Copy to new location (with overwrite)
+        
         copyVerifiedModule(file, fileName);
     }
-
-    public void copyVerifiedModule(File file, String fileName) throws Error {
-
+    
+    /**
+     * This method is copying verified module to a new location.
+     * If there is already a module in given location, then it's overwritten.
+     */
+    private void copyVerifiedModule(File file, String fileName) throws ModuleUploadException {
+        
         //Create streams (can throw IOException)
-        try ( InputStream inputStream
-                      = new FileInputStream(file);
-              FileOutputStream fileOutputStream
-                      = new FileOutputStream(configuration.getBasePathPrefix() + "/modules/" + fileName);
-        ) {
-
-            //Prepare buffer
-            byte[] buffer = new byte[4096];
-            int l = 0;
-
-            //Copy
-            while ( inputStream.available() > 0 ) {
-                l = inputStream.read(buffer);
-                fileOutputStream.write(buffer, 0, l);
-            }
-
-            //Clean up
-            Arrays.fill( buffer, (byte) 0 );
-            l = 0;
-
-        } catch ( IOException e ) {
-            throw new Error("Internal I/O error (IOException from streams).");
+        try (InputStream inputStream = new FileInputStream(file);
+             FileOutputStream outputStream = new FileOutputStream(
+                     configuration.getBasePathPrefix() + "/modules/" + fileName)) {
+            
+            StreamUtils.transferTo(inputStream, outputStream);
+            
+        } catch (IOException e) {
+            if (e.getCause() != null)
+                throw new ModuleUploadException(e.getClass().getName() + " caught while trying to save module. Cause: "
+                        + e.getCause());
+            else
+                throw new ModuleUploadException(e.getClass().getName() + " caught while trying to save module.");
         }
-
+        
     }
 }
