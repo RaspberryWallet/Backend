@@ -2,6 +2,7 @@ package io.raspberrywallet.manager.bitcoin;
 
 import com.google.protobuf.ByteString;
 import com.stasbar.Logger;
+import io.raspberrywallet.contract.IncorrectPasswordException;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.wallet.Protos;
 import org.bitcoinj.wallet.Wallet;
@@ -21,10 +22,10 @@ public class WalletCrypter {
             .build();
 
 
-    void decryptWallet(@NotNull Wallet wallet, @NotNull String password) throws IllegalArgumentException {
-        if (password.length() == 0 || password.length() < 4) {
-            throw new IllegalArgumentException("Bad password. The password you entered is empty or too short.");
-        }
+    void decryptWallet(@NotNull Wallet wallet, @NotNull String password) throws IncorrectPasswordException {
+        if (password.length() == 0 || password.length() < 4)
+            throw new IncorrectPasswordException("Bad password. The password you entered is empty or too short.");
+
 
         final KeyCrypterScrypt scrypt = (KeyCrypterScrypt) wallet.getKeyCrypter();
         checkNotNull(scrypt);   // We should never arrive at this GUI if the wallet isn't actually encrypted.
@@ -32,15 +33,15 @@ public class WalletCrypter {
         if (wallet.checkAESKey(aesKey)) {
             wallet.decrypt(aesKey);
         } else {
-            throw new IllegalArgumentException("Incorrect password, Please try entering your password again, carefully checking for typos or spelling errors.");
+            throw new IncorrectPasswordException("Incorrect password, Please try entering your password again, carefully checking for typos or spelling errors.");
         }
     }
 
-    public void encryptWallet(@NotNull Wallet wallet, @NotNull String password) {
+    public void encryptWallet(@NotNull Wallet wallet, @NotNull String password) throws IncorrectPasswordException {
         // This is kind of arbitrary and we could do much more to help people pick strong passwords.
-        if (password.length() < 4) {
-            throw new IllegalArgumentException("Password too short. You need to pick a password at least five characters or longer.");
-        }
+        if (password.length() < 4)
+            throw new IncorrectPasswordException("Password too short. You need to pick a password at least five characters or longer.");
+
 
         KeyCrypterScrypt script = new KeyCrypterScrypt(SCRYPT_PARAMETERS);
         KeyParameter aesKey = script.deriveKey(password);

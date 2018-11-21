@@ -1,6 +1,6 @@
 version: 0.5.0
 base-path-prefix: /opt/wallet/
-autolock-seconds: 1800
+autolock-seconds: 60
 
 bitcoin:
   network: testnet
@@ -23,7 +23,7 @@ modules:
     accept-untrusted-certs: true
     endpoints:
       set-secret: /authorization/secret/set
-      overwrite: /authorization/secret/overwritte
+      overwrite: /authorization/secret/overwrite
 
   PushButtonModule:
     some: configuration

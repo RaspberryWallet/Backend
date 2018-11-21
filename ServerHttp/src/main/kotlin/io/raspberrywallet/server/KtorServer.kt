@@ -54,7 +54,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.filter
 import kotlinx.coroutines.channels.sendBlocking
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.slf4j.event.Level
@@ -62,7 +61,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
-import java.lang.Error
 import java.security.KeyStore
 import java.time.Duration
 import java.util.*
@@ -80,6 +78,7 @@ class KtorServer(val manager: Manager,
         load(FileInputStream(keyStoreFile), serverConfig.keystorePassword)
     }
     private val blockChainSyncProgressionChannel = Channel<Int>(Channel.CONFLATED)
+    private val autoLockChannel = Channel<Int>(Channel.CONFLATED)
 
     init {
         globalManager = manager
@@ -90,7 +89,7 @@ class KtorServer(val manager: Manager,
             connector {
                 port = serverConfig.port
             }
-            sslConnector(keyStore, "ssl", { serverConfig.keystorePassword }, { serverConfig.keystorePassword }) {
+            sslConnector(keyStore, serverConfig.keyAlias, { serverConfig.keystorePassword }, { serverConfig.keystorePassword }) {
                 port = serverConfig.securePort
                 keyStorePath = keyStoreFile.absoluteFile
             }
@@ -99,6 +98,9 @@ class KtorServer(val manager: Manager,
 
         manager.addBlockChainProgressListener { progress ->
             blockChainSyncProgressionChannel.sendBlocking(progress)
+        }
+        manager.addAutoLockChannelListener { secondsRemaining ->
+            autoLockChannel.sendBlocking(secondsRemaining)
         }
     }
 
@@ -131,6 +133,12 @@ class KtorServer(val manager: Manager,
             }
             exception<SecurityException> { cause ->
                 call.respond(HttpStatusCode.Forbidden, mapOf("message" to cause))
+            }
+            exception<RuntimeException> { cause ->
+                call.respond(HttpStatusCode.InternalServerError, mapOf("message" to cause))
+            }
+            exception<Exception> { cause ->
+                call.respond(HttpStatusCode.InternalServerError, mapOf("message" to cause))
             }
         }
         install(WebSockets) {
@@ -203,13 +211,13 @@ class KtorServer(val manager: Manager,
                 manager.tap()
                 val mp = call.receiveMultipart()
                 mp.forEachPart { part ->
-                    when(part) {
+                    when (part) {
                         is PartData.FileItem -> {
                             val dest = File("/tmp/" + ("" + System.currentTimeMillis() + "_" + Random().nextLong() % 99999) + ".jar")
                             part.streamProvider().use { input -> dest.outputStream().buffered().use { output -> input.copyToSuspend(output) } }
                             try {
                                 manager.uploadNewModule(dest, part.originalFileName)
-                            } catch (e:Error) {
+                            } catch (e: Error) {
                                 call.respond(HttpStatusCode.NotAcceptable, errorUpload(e.message))
                             }
                         }
@@ -288,18 +296,15 @@ class KtorServer(val manager: Manager,
                 call.respond(mapOf("availableBalance" to manager.availableBalance))
             }
 
-            webSocket("/pingCounter") {
-                var counter = 0L
-                while (true) {
-                    delay(1000)
-                    outgoing.send(Frame.Text("$counter"))
-                    counter++
-                }
-            }
             webSocket("/blockChainSyncProgress") {
                 blockChainSyncProgressionChannel.consumeEach { progress ->
                     outgoing.send(Frame.Text("$progress"))
                     if (progress == 100) close()
+                }
+            }
+            webSocket("/autolock") {
+                autoLockChannel.consumeEach { timeRemaining ->
+                    outgoing.send(Frame.Text("$timeRemaining"))
                 }
             }
             webSocket("/info") {

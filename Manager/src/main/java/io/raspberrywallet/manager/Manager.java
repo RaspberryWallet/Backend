@@ -52,9 +52,11 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
     @NotNull
     private final CommunicationChannel frontendChannel;
-    private final AutoLockTimer autoLockTask;
-
+    private AutoLockTimer autoLockTask;
+    private Timer timer = new Timer();
     private Configuration configuration;
+    @NotNull
+    final Runnable onLockTriggered;
 
     Manager(@NotNull Configuration configuration,
             @NotNull Database database,
@@ -69,17 +71,21 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         this.tempMonitor = tempMonitor;
         this.wpaConfiguration = new WPAConfiguration();
         this.configuration = configuration;
-
-        Runnable onLockTriggered = () -> {
+        onLockTriggered = () -> {
             frontendChannel.info("Autolock triggered");
             try {
                 lockWallet();
             } catch (WalletNotInitialized ignored) {
                 //we don't care about locking if it wasn't even inited
+            } catch (IncorrectPasswordException | IOException e) {
+                throw new RuntimeException(e);
             }
             clearModuleInputs();
         };
-        Timer timer = new Timer();
+        startAutoLockTask();
+    }
+
+    private void startAutoLockTask() {
         autoLockTask = new AutoLockTimer(configuration.getAutoLockSeconds(), timer, onLockTriggered);
         timer.scheduleAtFixedRate(autoLockTask, Duration.ofSeconds(1).toMillis(), Duration.ofSeconds(1).toMillis());
     }
@@ -172,15 +178,11 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     }
 
     @Override
-    public void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) throws WalletNotInitialized {
+    public void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) throws WalletNotInitialized, IncorrectPasswordException {
         bitcoin.ensureWalletInitialized();
         fillModulesWithInputs(moduleToInputsMap);
         String password = getPrivateKeyHash();
-        try {
-            bitcoin.decryptWallet(password);
-        } catch (IllegalArgumentException e) {
-            frontendChannel.error(e.getMessage());
-        }
+        bitcoin.decryptWallet(password);
     }
 
     @Override
@@ -200,7 +202,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     }
 
     @Override
-    public boolean lockWallet() throws WalletNotInitialized {
+    public boolean lockWallet() throws WalletNotInitialized, IncorrectPasswordException, IOException {
         bitcoin.ensureWalletInitialized();
         String password = getPrivateKeyHash();
 
@@ -208,14 +210,9 @@ public class Manager implements io.raspberrywallet.contract.Manager {
             bitcoin.saveEncryptedWallet(password);
             bitcoin.encryptWallet(password);
             return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            frontendChannel.error(e.getMessage());
         } finally {
             clearModuleInputs();
         }
-        return false;
     }
 
     private void clearModuleInputs() {
@@ -232,8 +229,11 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
                         KeyPartEntity dbEntity = keyPartEntity.get();
                         return module.decryptKeyPart(dbEntity.getPayload());
-                    } catch (InternalModuleException | DecryptionException | RequiredInputNotFound e) {
-                        e.printStackTrace();
+                    } catch (InternalModuleException | DecryptionException e) {
+                        frontendChannel.error("Unlock module exception");
+                        return null;
+                    } catch (RequiredInputNotFound e) {
+                        frontendChannel.info("Required input not set for " + module.getId());
                         return null;
                     }
                 })
@@ -332,34 +332,34 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     public void addBlockChainProgressListener(@NotNull IntConsumer listener) {
         bitcoin.addBlockChainProgressListener(listener);
     }
-    
+
     public void uploadNewModule(File file, String fileName) throws ModuleUploadException {
-        
+
         //Verify in /tmp
         try {
             if (!ModuleClassLoader.verifyJarSignature(file))
                 throw new ModuleUploadException("Jar verification failed for given module.");
-        
+
         } catch (MalformedURLException e) {
             throw new ModuleUploadException("Internal I/O error, uploaded module file path is malformed.");
         }
-        
+
         copyVerifiedModule(file, fileName);
     }
-    
+
     /**
      * This method is copying verified module to a new location.
      * If there is already a module in given location, then it's overwritten.
      */
     private void copyVerifiedModule(File file, String fileName) throws ModuleUploadException {
-        
+
         //Create streams (can throw IOException)
         try (InputStream inputStream = new FileInputStream(file);
              FileOutputStream outputStream = new FileOutputStream(
                      configuration.getBasePathPrefix() + "/modules/" + fileName)) {
-            
+
             StreamUtils.transferTo(inputStream, outputStream);
-            
+
         } catch (IOException e) {
             if (e.getCause() != null)
                 throw new ModuleUploadException(e.getClass().getName() + " caught while trying to save module. Cause: "
@@ -367,6 +367,10 @@ public class Manager implements io.raspberrywallet.contract.Manager {
             else
                 throw new ModuleUploadException(e.getClass().getName() + " caught while trying to save module.");
         }
-        
+    }
+
+    @Override
+    public void addAutoLockChannelListener(@NotNull IntConsumer autoLockChannelListener) {
+        autoLockTask.setAutoLockChannelListener(autoLockChannelListener);
     }
 }

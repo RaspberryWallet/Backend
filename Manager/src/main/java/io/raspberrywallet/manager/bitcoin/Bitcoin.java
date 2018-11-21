@@ -4,6 +4,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.stasbar.Logger;
+import io.raspberrywallet.contract.CommunicationChannel;
+import io.raspberrywallet.contract.IncorrectPasswordException;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.Configuration;
 import lombok.Getter;
@@ -61,13 +63,14 @@ public class Bitcoin {
     private InputStream checkpoints;
     private IntConsumer blockchainProgressListener;
     private final WalletCrypter walletCrypter;
+    private CommunicationChannel frontendChannel;
 
-    public Bitcoin(Configuration configuration, @NotNull WalletCrypter walletCrypter) throws BlockStoreException, IOException {
+    public Bitcoin(Configuration configuration, @NotNull WalletCrypter walletCrypter, CommunicationChannel frontendChannel) throws BlockStoreException, IOException {
         BriefLogFormatter.init();
         this.walletCrypter = walletCrypter;
         this.bitcoinConfig = configuration.getBitcoinConfig();
         this.params = parseNetworkFrom(configuration.getBitcoinConfig());
-
+        this.frontendChannel = frontendChannel;
         this.bitcoinRootDirectory = Paths.get(configuration.getBasePathPrefix(), DIRECTORY_NAME).toFile();
         bitcoinRootDirectory.mkdirs();
 
@@ -158,8 +161,11 @@ public class Bitcoin {
                     decryptWallet(wallet, password);
 
                 synchronizeWalletNonBlocking(wallet, password, blocking);
-            } catch (IOException | UnreadableWalletException e) {
+            } catch (IOException | UnreadableWalletException | IllegalArgumentException e) {
                 e.printStackTrace();
+                frontendChannel.error(e.getMessage());
+            } catch (IncorrectPasswordException e) {
+                throw new RuntimeException(e);
             }
         };
         if (peerGroup != null && peerGroup.isRunning()) {
@@ -193,7 +199,8 @@ public class Bitcoin {
                 try {
                     saveEncryptedWallet(password);
                     Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
-                } catch (IOException | WalletNotInitialized e) {
+                } catch (IOException | WalletNotInitialized | IncorrectPasswordException e) {
+                    frontendChannel.error(e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -208,10 +215,10 @@ public class Bitcoin {
                     @Override
                     protected void progress(double pct, int blocksSoFar, Date date) {
                         super.progress(pct, blocksSoFar, date);
-                        Logger.d("Progress " + pct + "%");
+                        Logger.d("Progress " + (int) Math.round(pct) + "%");
                         if (blockchainProgressListener != null) {
                             blockchainProgressListener.accept((int) Math.round(pct));
-                            Logger.d("blockchainProgressListener not null, sending " + pct);
+                            Logger.d("blockchainProgressListener not null, sending " + (int) Math.round(pct));
                         }
                     }
 
@@ -254,30 +261,30 @@ public class Bitcoin {
      * @throws IOException          when the problem with saving wallet occurs
      * @throws WalletNotInitialized when you try to save not initialized wallet
      */
-    public void saveEncryptedWallet(String password) throws IOException, WalletNotInitialized {
+    public void saveEncryptedWallet(String password) throws IOException, WalletNotInitialized, IncorrectPasswordException {
         saveEncryptedWallet(getWallet(), password);
     }
 
-    private void saveEncryptedWallet(@NotNull Wallet wallet, String password) throws IOException, IllegalArgumentException {
+    private void saveEncryptedWallet(@NotNull Wallet wallet, String password) throws IOException, IncorrectPasswordException {
         encryptWallet(wallet, password);
         wallet.saveToFile(walletFile);
         Logger.d("Saved wallet to: " + walletFile.getAbsolutePath());
         decryptWallet(wallet, password);
     }
 
-    public void encryptWallet(String password) throws WalletNotInitialized {
+    public void encryptWallet(String password) throws WalletNotInitialized, IncorrectPasswordException {
         encryptWallet(getWallet(), password);
     }
 
-    private void encryptWallet(Wallet wallet, String password) throws IllegalArgumentException {
+    private void encryptWallet(Wallet wallet, String password) throws IncorrectPasswordException {
         walletCrypter.encryptWallet(wallet, password);
     }
 
-    public void decryptWallet(String password) throws WalletNotInitialized {
+    public void decryptWallet(String password) throws WalletNotInitialized, IncorrectPasswordException {
         decryptWallet(getWallet(), password);
     }
 
-    private void decryptWallet(@NotNull Wallet wallet, String password) throws IllegalArgumentException {
+    private void decryptWallet(@NotNull Wallet wallet, String password) throws IncorrectPasswordException {
         walletCrypter.decryptWallet(wallet, password);
     }
 

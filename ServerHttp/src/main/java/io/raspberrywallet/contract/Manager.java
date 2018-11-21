@@ -6,6 +6,7 @@ import io.raspberrywallet.contract.module.ModuleState;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntConsumer;
@@ -57,7 +58,7 @@ public interface Manager {
      *
      * @param moduleToInputsMap map of moduleId => [inputName => inputValue]
      */
-    void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) throws WalletNotInitialized;
+    void unlockWallet(Map<String, Map<String, String>> moduleToInputsMap) throws WalletNotInitialized, IncorrectPasswordException;
 
     /**
      * Decrypt and load wallet from disk
@@ -70,7 +71,7 @@ public interface Manager {
      *
      * @return true if locking succeeded
      */
-    boolean lockWallet() throws WalletNotInitialized;
+    boolean lockWallet() throws WalletNotInitialized, IncorrectPasswordException, IOException;
 
 
     /*
@@ -178,4 +179,6 @@ public interface Manager {
     void addBlockChainProgressListener(@NotNull IntConsumer listener);
 
     void uploadNewModule(File inputFile, String fileName) throws ModuleUploadException;
+
+    void addAutoLockChannelListener(@NotNull IntConsumer listener);
 }

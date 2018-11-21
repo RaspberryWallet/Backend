@@ -191,7 +191,7 @@ public abstract class Module<Config extends ModuleConfig> {
      * @return - if key exists
      */
     public boolean hasInput(String key) {
-        return input.containsKey(key);
+        return input.containsKey(key) && !input.get(key).isEmpty();
     }
 
     /**

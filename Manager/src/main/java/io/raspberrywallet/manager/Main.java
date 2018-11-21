@@ -24,10 +24,12 @@ public class Main {
 
     public static void main(String... args) throws BlockStoreException, IOException {
         CommandLine cmd = parseArgs(args);
+        // create backend->frontend communication channel
+        CommunicationChannel communicationChannel = new CommunicationChannel();
 
         File yamlConfigFile = new File(Opts.CONFIG.getValue(cmd));
         Configuration configuration = Configuration.fromYamlFile(yamlConfigFile);
-        Bitcoin bitcoin = new Bitcoin(configuration, new WalletCrypter());
+        Bitcoin bitcoin = new Bitcoin(configuration, new WalletCrypter(), communicationChannel);
 
         List<Module> modules = ModuleClassLoader.getModules(configuration);
 
@@ -35,9 +37,6 @@ public class Main {
 
         Database db = new Database(configuration);
 
-
-        // create backend->frontend communication channel
-        CommunicationChannel communicationChannel = new CommunicationChannel();
 
         Manager manager = new Manager(
                 configuration,
