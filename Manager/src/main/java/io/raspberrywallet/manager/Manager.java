@@ -29,6 +29,7 @@ import java.net.MalformedURLException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.DoubleConsumer;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
@@ -56,7 +57,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     private Timer timer = new Timer();
     private Configuration configuration;
     @NotNull
-    final Runnable onLockTriggered;
+    private final Runnable onLockTriggered;
 
     Manager(@NotNull Configuration configuration,
             @NotNull Database database,
@@ -77,8 +78,10 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                 lockWallet();
             } catch (WalletNotInitialized ignored) {
                 //we don't care about locking if it wasn't even inited
-            } catch (IncorrectPasswordException | IOException e) {
-                throw new RuntimeException(e);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (IncorrectPasswordException e) {
+                frontendChannel.error("AutoLock failed: " + e.getMessage());
             }
             clearModuleInputs();
         };
@@ -329,7 +332,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     }
 
     @Override
-    public void addBlockChainProgressListener(@NotNull IntConsumer listener) {
+    public void addBlockChainProgressListener(@NotNull DoubleConsumer listener) {
         bitcoin.addBlockChainProgressListener(listener);
     }
 

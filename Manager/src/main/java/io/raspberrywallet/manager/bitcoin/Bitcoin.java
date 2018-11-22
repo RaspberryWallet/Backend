@@ -35,7 +35,7 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.function.IntConsumer;
+import java.util.function.DoubleConsumer;
 
 /**
  * Class representing Bitcoin network, IO, key management API,
@@ -61,7 +61,7 @@ public class Bitcoin {
     private PeerGroup peerGroup;
     private SPVBlockStore blockStore;
     private InputStream checkpoints;
-    private IntConsumer blockchainProgressListener;
+    private DoubleConsumer blockchainProgressListener;
     private final WalletCrypter walletCrypter;
     private CommunicationChannel frontendChannel;
 
@@ -199,9 +199,11 @@ public class Bitcoin {
                 try {
                     saveEncryptedWallet(password);
                     Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
-                } catch (IOException | WalletNotInitialized | IncorrectPasswordException e) {
+                } catch (IOException | WalletNotInitialized e) {
                     frontendChannel.error(e.getMessage());
                     e.printStackTrace();
+                } catch (IncorrectPasswordException e) {
+                    frontendChannel.error("Failed to save wallet " + e.getMessage());
                 }
             }
 
@@ -215,10 +217,10 @@ public class Bitcoin {
                     @Override
                     protected void progress(double pct, int blocksSoFar, Date date) {
                         super.progress(pct, blocksSoFar, date);
-                        Logger.d("Progress " + (int) Math.round(pct) + "%");
+                        Logger.d("Progress " + pct + "%");
                         if (blockchainProgressListener != null) {
-                            blockchainProgressListener.accept((int) Math.round(pct));
-                            Logger.d("blockchainProgressListener not null, sending " + (int) Math.round(pct));
+                            blockchainProgressListener.accept(pct);
+                            Logger.d("blockchainProgressListener not null, sending " + pct);
                         }
                     }
 
@@ -370,7 +372,7 @@ public class Bitcoin {
         }
     }
 
-    public void addBlockChainProgressListener(IntConsumer blockchainProgressListener) {
+    public void addBlockChainProgressListener(DoubleConsumer blockchainProgressListener) {
         this.blockchainProgressListener = blockchainProgressListener;
     }
 }

@@ -77,7 +77,7 @@ class KtorServer(val manager: Manager,
     private val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
         load(FileInputStream(keyStoreFile), serverConfig.keystorePassword)
     }
-    private val blockChainSyncProgressionChannel = Channel<Int>(Channel.CONFLATED)
+    private val blockChainSyncProgressionChannel = Channel<Double>(Channel.CONFLATED)
     private val autoLockChannel = Channel<Int>(Channel.CONFLATED)
 
     init {
@@ -299,7 +299,7 @@ class KtorServer(val manager: Manager,
             webSocket("/blockChainSyncProgress") {
                 blockChainSyncProgressionChannel.consumeEach { progress ->
                     outgoing.send(Frame.Text("$progress"))
-                    if (progress == 100) close()
+                    if (Math.round(progress) == 100L) close()
                 }
             }
             webSocket("/autolock") {
