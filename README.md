@@ -1,5 +1,7 @@
 # Backend
 
+![Demo](https://i.imgur.com/dS7OEjs.gif)
+
 ```
 usage: java -jar Manager.jar[-modules <arg>]
  -modules <arg>   Modules classes directory path

@@ -36,9 +36,9 @@ public class AutoLockTimer extends TimerTask {
             timer.cancel();
         }
         --autoLockRemainingSeconds;
-
         if (autoLockChannelListener != null)
             autoLockChannelListener.accept(autoLockRemainingSeconds);
+
     }
 
     public void tap() {
