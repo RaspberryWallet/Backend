@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.bitcoin;
 
+import io.raspberrywallet.contract.CommunicationChannel;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.Configuration;
 import org.bitcoinj.core.Sha256Hash;
@@ -26,8 +27,8 @@ public class BitcoinTest {
 
     @BeforeAll
     static void setup() throws BlockStoreException, IOException {
-        mnemonicCode = Arrays.asList("member", "team", "romance", "alarm", "antique", "legal",
-                "captain", "dutch", "matter", "dinner", "loan", "orange");
+        String mnemonicWords = "member team romance alarm antique legal captain dutch matter dinner loan orange";
+        mnemonicCode = Arrays.asList(mnemonicWords.split(" "));
         println("Using mnemonic:" + mnemonicCode.stream().reduce("", (acc, word) -> acc + " " + word));
         // receive address mhTMbU8NqwVobEjT6Yqq3hSu9rmPABE1RU
         // balance 0.15001595
@@ -37,7 +38,8 @@ public class BitcoinTest {
         tempBaseDir.mkdirs();
         Configuration configuration = new Configuration(tempBaseDir.getAbsolutePath());
         WalletCrypter walletCrypter = new WalletCrypter();
-        bitcoin = new Bitcoin(configuration, walletCrypter);
+        CommunicationChannel communicationChannel = new CommunicationChannel();
+        bitcoin = new Bitcoin(configuration, walletCrypter, communicationChannel);
     }
 
     @Test

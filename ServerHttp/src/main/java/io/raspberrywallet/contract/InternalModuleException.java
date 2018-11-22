@@ -1,6 +1,6 @@
 package io.raspberrywallet.contract;
 
-public class InternalModuleException extends Throwable {
+public class InternalModuleException extends Exception {
     public InternalModuleException(String message) {
         super(message);
     }

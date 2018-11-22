@@ -13,6 +13,7 @@ import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionExcep
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
 import io.raspberrywallet.manager.modules.Module;
 import org.apache.commons.lang.SerializationUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Base64;
@@ -24,9 +25,6 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
 
     private final WalletUUIDReader walletUUIDReader = WalletUUIDReader.getInstance();
     private final UUID walletUUID = walletUUIDReader.get();
-
-    //todo change it to read data from conf yml
-    private Credentials serverCredentials = new Credentials(walletUUID.toString(), "123");
 
     private final AuthorizationServerAPI serverAPI = new AuthorizationServerAPI(configuration);
 
@@ -40,16 +38,11 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
 
     @Override
     protected void validateInputs() throws RequiredInputNotFound {
-        if (hasInput(PASSWORD)) {
-            String password = getInput(PASSWORD);
-            if (password != null)
-                serverCredentials = new Credentials(walletUUID.toString(),
-                        Base64.getUrlEncoder().encodeToString(password.getBytes()));
-        } else if (serverCredentials == null)
+        if (!hasInput(PASSWORD))
             throw new RequiredInputNotFound(AuthorizationServerModule.class.getName(), PASSWORD);
     }
 
-    private void callServer() throws InternalModuleException {
+    private void callServer(Credentials serverCredentials) throws InternalModuleException {
         try {
             if (!serverAPI.isRegistered(serverCredentials))
                 serverAPI.register(serverCredentials);
@@ -67,10 +60,17 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
         }
     }
 
+    @NotNull
+    private Credentials createCredentials(String password) {
+        return new Credentials(walletUUID.toString(),
+                Base64.getUrlEncoder().encodeToString(password.getBytes()));
+    }
+
     @Override
     protected byte[] encrypt(byte[] payload) throws EncryptionException, InternalModuleException {
         try {
-            callServer();
+            Credentials serverCredentials = createCredentials(getInput(PASSWORD));
+            callServer(serverCredentials);
             String password = serverAPI.getSecret(serverCredentials);
 
             AESEncryptedObject<ByteWrapper> encryptedSecret =
@@ -86,7 +86,8 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
     @Override
     protected byte[] decrypt(byte[] keyPart) throws DecryptionException, InternalModuleException {
         try {
-            callServer();
+            Credentials serverCredentials = createCredentials(getInput(PASSWORD));
+            callServer(serverCredentials);
             String password = serverAPI.getSecret(serverCredentials);
 
             AESEncryptedObject<ByteWrapper> deserializedKeyPart =

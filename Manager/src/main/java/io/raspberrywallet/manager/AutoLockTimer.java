@@ -1,10 +1,13 @@
 package io.raspberrywallet.manager;
 
 import com.stasbar.Logger;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.function.IntConsumer;
 
 public class AutoLockTimer extends TimerTask {
     private int autoLockRemainingSeconds;
@@ -13,6 +16,10 @@ public class AutoLockTimer extends TimerTask {
     private final Runnable onLockTriggered;
     @NotNull
     final private Timer timer;
+
+    @Nullable
+    @Setter
+    private IntConsumer autoLockChannelListener;
 
     AutoLockTimer(int autoLockRemainingSeconds, @NotNull Timer timer, @NotNull Runnable onLockTriggered) {
         this.autoLockRemainingSeconds = autoLockRemainingSeconds;
@@ -29,6 +36,9 @@ public class AutoLockTimer extends TimerTask {
             timer.cancel();
         }
         --autoLockRemainingSeconds;
+
+        if (autoLockChannelListener != null)
+            autoLockChannelListener.accept(autoLockRemainingSeconds);
     }
 
     public void tap() {

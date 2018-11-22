@@ -1,6 +1,6 @@
 package io.raspberrywallet.contract;
 
-public class ModuleInitializationException extends Throwable {
+public class ModuleInitializationException extends Exception {
     
     public ModuleInitializationException(String message) {
         super(message);

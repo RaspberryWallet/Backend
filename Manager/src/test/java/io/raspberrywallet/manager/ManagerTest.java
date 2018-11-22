@@ -15,13 +15,14 @@ import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.Wallet;
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -49,7 +50,13 @@ class ManagerTest {
         }
     }
 
-    private static File walletFile = new File("test_wallet.wallet");
+    private static File walletFile;
+
+    @BeforeAll
+    static void setupAll() throws IOException {
+        walletFile = File.createTempFile("test_wallet", "wallet");
+        walletFile.deleteOnExit();
+    }
 
     @BeforeEach
     void setup() throws IllegalAccessException, InstantiationException, ModuleInitializationException {
@@ -66,11 +73,6 @@ class ManagerTest {
         manager = new Manager(Configuration.testConfiguration(), database, modules, bitcoin, temperatureMonitor, channel);
     }
 
-
-    @AfterAll
-    static void tearDown() {
-        walletFile.delete();
-    }
 
     @Test
     void ping() {
@@ -147,9 +149,8 @@ class ManagerTest {
     }
 
     @Test
-    void lockWalletWhenUnlocked() throws WalletNotInitialized, EncryptionException, InternalModuleException, RequiredInputNotFound {
+    void lockWalletWhenUnlocked() throws WalletNotInitialized, EncryptionException, InternalModuleException, RequiredInputNotFound, IOException, IncorrectPasswordException {
         when(bitcoin.getWallet()).thenReturn(Wallet.fromSeed(TestNet3Params.get(), seed));
-
         pinModule.setInput(PinModule.PIN, "1234");
 
         ShamirKey exampleKey = new ShamirKey(BigInteger.ONE, BigInteger.TEN, BigInteger.ONE);
@@ -164,12 +165,13 @@ class ManagerTest {
         manager.lockWallet();
 
         assertTrue(walletFile.exists());
+        println(manager.getWalletStatus());
         assertEquals(manager.getWalletStatus(), WalletStatus.ENCRYPTED);
         assertFalse(pinModule.hasInput(PinModule.PIN));
     }
 
     @Test
-    void unlockWalletWhenLocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException, InternalModuleException {
+    void unlockWalletWhenLocked() throws WalletNotInitialized, RequiredInputNotFound, EncryptionException, InternalModuleException, IncorrectPasswordException, IOException {
         lockWalletWhenUnlocked();
 
         Map<String, Map<String, String>> moduleToInputsMap = new HashMap<>();
