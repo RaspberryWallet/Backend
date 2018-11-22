@@ -7,19 +7,20 @@ import io.raspberrywallet.contract.module.Module
 import io.raspberrywallet.contract.module.ModuleState
 import io.raspberrywallet.contract.step.SimpleStep
 import java.io.File
+import java.util.function.DoubleConsumer
 import java.util.function.IntConsumer
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
+    override fun addBlockChainProgressListener(listener: DoubleConsumer) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun addAutoLockChannelListener(listener: IntConsumer) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun uploadNewModule(inputFile: File?, filename: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun addBlockChainProgressListener(listener: IntConsumer) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
