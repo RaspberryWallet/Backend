@@ -28,29 +28,20 @@ java -jar target/manager_artifact_name.jar [-modules <arg>]
 ## Table of contents
 
 [//]: https://atom.io/packages/markdown-toc
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-- [Backend :closed_lock_with_key:](#backend-closedlockwithkey)
-	- [Requirements](#requirements)
-	- [Installation](#installation)
-- [get repo](#get-repo)
-- [build jars and install them into your local repository](#build-jars-and-install-them-into-your-local-repository)
-- [run Manager, modules option specifies directory path of Modules classes](#run-manager-modules-option-specifies-directory-path-of-modules-classes)
-	- [Table of contents](#table-of-contents)
-	- [Modularity](#modularity)
-			- [Module implementation](#module-implementation)
-			- [Adding custom modules](#adding-custom-modules)
-- [run Manager and specify correct path to your module and other modules](#run-manager-and-specify-correct-path-to-your-module-and-other-modules)
-- [create jars](#create-jars)
-- [sign jar](#sign-jar)
-	- [Not sure what is this](#not-sure-what-is-this)
-	- [Configuration](#configuration)
-			- [Configuration example](#configuration-example)
-- [default global configuration](#default-global-configuration)
-- [every module has his own configuration](#every-module-has-his-own-configuration)
-			- [Module configuration example](#module-configuration-example)
-	- [Authors](#authors)
-	- [Changelog](#changelog)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Table of contents](#table-of-contents)
+- [Modularity](#modularity)
+	- [Module implementation](#module-implementation)
+	- [Adding custom modules](#adding-custom-modules)
+- [Not sure what is this](#not-sure-what-is-this)
+- [Configuration](#configuration)
+	- [Configuration example](#configuration-example)
+	- [Module configuration example](#module-configuration-example)
+- [Authors](#authors)
+- [Changelog](#changelog)
 
 <!-- /TOC -->
 
