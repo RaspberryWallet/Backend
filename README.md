@@ -197,7 +197,7 @@ modules:
 
 Fields are specified in `PinModuleConfig` class like this:
 ```java
-public class PinConfig implements ModuleConfig {
+public class PinModuleConfig implements ModuleConfig {
 
     @JsonAlias("max-retry")
     public int maxRetry = 3;
