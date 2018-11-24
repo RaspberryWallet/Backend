@@ -100,6 +100,7 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
         }
     }
 
+    @NotNull
     @Override
     public String getDescription() {
         return "This module is authenticating user with external authorization server.";

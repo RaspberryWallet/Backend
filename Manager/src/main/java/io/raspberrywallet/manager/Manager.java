@@ -16,7 +16,7 @@ import io.raspberrywallet.manager.linux.TemperatureMonitor;
 import io.raspberrywallet.manager.linux.WPAConfiguration;
 import io.raspberrywallet.manager.linux.WifiScanner;
 import io.raspberrywallet.manager.linux.WifiStatus;
-import io.raspberrywallet.manager.modules.Module;
+import io.raspberrywallet.manager.modules.IModule;
 import io.raspberrywallet.manager.modules.ModuleClassLoader;
 import kotlin.text.Charsets;
 import lombok.Getter;
@@ -42,7 +42,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
      */
     @NotNull
     @Getter
-    private final ConcurrentHashMap<String, Module> modules = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, IModule> modules = new ConcurrentHashMap<>();
     @NotNull
     private final Bitcoin bitcoin;
     @NotNull
@@ -61,7 +61,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
     Manager(@NotNull Configuration configuration,
             @NotNull Database database,
-            @NotNull List<Module> modules,
+            @NotNull List<IModule> modules,
             @NotNull Bitcoin bitcoin,
             @NotNull TemperatureMonitor tempMonitor,
             @NotNull CommunicationChannel frontendChannel) {
@@ -114,7 +114,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     @Override
     public List<io.raspberrywallet.contract.module.Module> getServerModules() {
         return modules.values().stream()
-                .map(Module::asServerModule)
+                .map(IModule::asServerModule)
                 .collect(toList());
     }
 
@@ -135,7 +135,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
                                         @NotNull Map<String, Map<String, String>> selectedModulesWithInputs,
                                         int required) throws RequiredInputNotFound {
 
-        List<Module> modulesToDecrypt = selectedModulesWithInputs.keySet().stream()
+        List<IModule> modulesToDecrypt = selectedModulesWithInputs.keySet().stream()
                 .map(modules::get)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -149,7 +149,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
             List<KeyPartEntity> keyPartEntities = new ArrayList<>();
             for (int i = 0; i < keys.length; i++) {
-                Module module = modulesToDecrypt.get(i);
+                IModule module = modulesToDecrypt.get(i);
                 module.setInputs(selectedModulesWithInputs.get(module.getId()));
                 KeyPartEntity keyPartEntity = new KeyPartEntity();
                 keyPartEntity.setPayload(module.encryptKeyPart(keys[i].toByteArray()));
@@ -199,7 +199,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
 
     private void fillModulesWithInputs(@NotNull Map<String, Map<String, String>> moduleToInputsMap) {
         moduleToInputsMap.forEach((moduleId, inputs) -> {
-            Module module = modules.get(moduleId);
+            IModule module = modules.get(moduleId);
             Logger.d("Setting inputs for " + module.getId());
             inputs.forEach((name, value) -> Logger.d(name + ": " + value));
             inputs.forEach(module::setInput);
@@ -221,7 +221,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
     }
 
     private void clearModuleInputs() {
-        modules.values().forEach(Module::clearInputs);
+        modules.values().forEach(IModule::clearInputs);
     }
 
     private byte[] getPrivateKeyFromModules() {
@@ -328,6 +328,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         return this.wpaConfiguration.getAsMap();
     }
 
+    @NotNull
     @Override
     public int setWifiConfig(Map<String, String> config) {
         return this.wpaConfiguration.setFromMap(config);

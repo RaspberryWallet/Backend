@@ -25,7 +25,7 @@ public class ModuleClassLoader {
      * @return objects of instantiated Modules {@link Module}
      */
     @NotNull
-    public static List<Module> getModules(Configuration configuration) {
+    public static List<IModule> getModules(Configuration configuration) {
         File modulesDir = new File(configuration.getBasePathPrefix(), "modules");
         if (!modulesDir.exists() && !modulesDir.mkdirs()) {
             System.err.println("Cannot create necessary directories!");
@@ -39,7 +39,7 @@ public class ModuleClassLoader {
             URLClassLoader classLoader = new URLClassLoader(new URL[]{url}, ModuleClassLoader.class.getClassLoader());
 
             List<Class<?>> classes = getClasses(files, classLoader);
-            List<Module> modules = instantiateModulesObjects(classes, configuration.getModulesConfig());
+            List<IModule> modules = instantiateModulesObjects(classes, configuration.getModulesConfig());
             printLoadedModules(modules);
             return modules;
         } catch (MalformedURLException e) {
@@ -91,7 +91,7 @@ public class ModuleClassLoader {
         }
     }
 
-    private static List<Module> instantiateModulesObjects(List<Class<?>> classes, Configuration.ModulesConfiguration modulesConfiguration) {
+    private static List<IModule> instantiateModulesObjects(List<Class<?>> classes, Configuration.ModulesConfiguration modulesConfiguration) {
         return classes.stream().map(clazz -> {
             try {
                 Module module = (Module) clazz.getConstructor(modulesConfiguration.getClass()).newInstance(modulesConfiguration);
@@ -108,7 +108,7 @@ public class ModuleClassLoader {
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    private static void printLoadedModules(List<Module> modules) {
+    private static void printLoadedModules(List<IModule> modules) {
         Logger.info("ModuleClassLoader", String.format("Loaded %d modules", modules.size()));
         modules.forEach(module ->
                 Logger.info(String.format("Module {\n\tname: %s \n\tid: %s \n\tdescription: %s \n}",

@@ -8,7 +8,7 @@ import io.raspberrywallet.manager.cryptography.sharedsecret.shamir.ShamirKey;
 import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.database.KeyPartEntity;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
-import io.raspberrywallet.manager.modules.Module;
+import io.raspberrywallet.manager.modules.IModule;
 import io.raspberrywallet.manager.modules.example.ExampleModule;
 import io.raspberrywallet.manager.modules.pin.PinModule;
 import org.bitcoinj.crypto.MnemonicException;
@@ -59,11 +59,11 @@ class ManagerTest {
     }
 
     @BeforeEach
-    void setup() throws IllegalAccessException, InstantiationException, ModuleInitializationException {
+    void setup() throws IllegalAccessException, InstantiationException {
         bitcoin = mock(Bitcoin.class);
         temperatureMonitor = mock(TemperatureMonitor.class);
         database = mock(Database.class);
-        List<Module> modules = new ArrayList<>();
+        List<IModule> modules = new ArrayList<>();
         exampleModule = new ExampleModule();
         pinModule = new PinModule();
         modules.add(exampleModule);
