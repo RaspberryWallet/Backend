@@ -7,6 +7,8 @@ This module is responsible for main logic on the whole wallet. It contains HTTP 
 client, internal Manager logic, which locks and unlocks modules and also it contains built in Modules logic or
 interfaces that provide access to them.
 
+![Demo](https://i.imgur.com/dS7OEjs.gif)
+
 ## Requirements
 - Maven 3+
 - Java 8
@@ -23,6 +25,7 @@ mvn clean install
 
 # run Manager, modules option specifies directory path of Modules classes
 java -jar target/manager_artifact_name.jar [-modules <arg>]
+
 ```
 
 ## Table of contents

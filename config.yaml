@@ -1,6 +1,6 @@
 version: 0.5.0
 base-path-prefix: /opt/wallet/
-autolock-seconds: 60
+autolock-seconds: 300
 
 bitcoin:
   network: testnet
