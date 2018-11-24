@@ -48,8 +48,6 @@ java -jar target/manager_artifact_name.jar [-modules <arg>]
 
 <!-- /TOC -->
 
-![Demo](https://i.imgur.com/dS7OEjs.gif)
-
 ## Modularity
 
 Our architecture is focused on modularity. We want to give user a choice, if
