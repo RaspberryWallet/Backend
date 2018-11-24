@@ -214,11 +214,11 @@ More documents can be found in dedicated repository [here](https://github.com/Ra
 
 [//]: https://tablesgenerator.com/markdown_tables
 
-| Name                                                 | email                     |
-|------------------------------------------------------|---------------------------|
-| [Stanisław Barański](https://github.com/stasbar)     | stasbar1995@gmail.com     |
-| [Patryk Milewski](https://github.com/PatrykMilewski) | patryk.milewski@gmail.com |
-| [Piotr Pabis](https://github.com/pfoof)              | rotworm0@yahoo.pl         |
+| Name                                                 | email                        |
+|------------------------------------------------------|------------------------------|
+| [Stanisław Barański](https://github.com/stasbar)     | stasbar1995 at gmail.com     |
+| [Patryk Milewski](https://github.com/PatrykMilewski) | patryk.milewski at gmail.com |
+| [Piotr Pabis](https://github.com/pfoof)              | rotworm0 at yahoo.pl         |
 
 ## Changelog
 
