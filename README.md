@@ -71,8 +71,11 @@ https://github.com/RaspberryWallet/Backend/blob/master/Manager/src/main/java/io/
 It may look complicated, but in fact, most of the logic is implemented by default
 as protected methods. You just have to fill abstract methods.
 
-Module also should follow package naming convention:
-//TODO @stasbar please add description, I'm not 100% sure if it has to be done
+Module also, should follow package naming convention:
+* Your module class name must contains postfix `Module` e.g. `PinModule`, `PushButtonModule`
+* YourModule class must be placed in `io.raspberrywallet.manager.modules.<name>`  e.g `io.raspberrywallet.manager.modules.pin`
+
+Otherwise it won't be loaded.
 
 Modules by default reads configuration from their configuration class that
 implements `ModuleConfig` interface. You don't have to implement anything,
@@ -87,7 +90,7 @@ jar Module, that may cause catastrophic problems to your funds. :imp:
 #### Adding custom modules
 
 As we said before, your `CustomModule.java`
-- must implement `io.raspberrywallet.manager.modules.Module interface`
+- must implement `io.raspberrywallet.manager.modules.Module` interface
 - must be in package `io.raspberrywallet.manager.modules.<your_package_name>`
 
 Manager loads modules (in `jar` format) from `/opt/wallet/modules` or specified by `-modules path/to/modules/` relative to your current directory.
@@ -125,15 +128,6 @@ It will be automatically loaded and verified on startup
         description: Module that require enter 4 digits code
 }
 ```
-
-## Not sure what is this
-
-Docs: https://docs.google.com/document/d/1wW5mRy51MvwghFcwk7K07LozbIV1sD53q4ejCQhjzFw/edit?usp=sharing
-
-mnemonic code for tests purposes `farm hospital shadow common raw neither pond access suggest army prefer expire`
-
-ssl key generated with:
-`keytool -genkey -keyalg RSA -alias ssl -keystore RaspberryWallet.keystore -validity 360 -keysize 2048`
 
 ## Configuration
 
@@ -212,6 +206,9 @@ public class PinModuleConfig implements ModuleConfig {
 
 As you can see, `max-retry: 5` is mapped by Wallet to a field `public int maxRetry`.  
 You can assign values to other fields implemented in `PinModuleConfig` class analogically.
+
+## Documents
+More documents can be found in dedicated repository [here](https://github.com/RaspberryWallet/Documents)
 
 ## Authors
 
