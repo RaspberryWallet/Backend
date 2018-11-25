@@ -90,10 +90,7 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
     }
 
     /**
-     * Used in all sort of identifications like config.yaml, internal module mapping and UI naming.
-     * For now, it's just simplified SimpleClassName
-     *
-     * @return module identifier.
+     * {@inheritDoc}
      */
     @NotNull
     @Override
@@ -101,6 +98,9 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
         return this.getClass().getSimpleName();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NotNull
     @Override
     public io.raspberrywallet.contract.module.Module asServerModule() {
@@ -113,10 +113,7 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
      */
 
     /**
-     * this wrapper enforce module to validateInputs and throw exception if they are absent
-     *
-     * @param keyPart - unencrypted key part
-     * @return encrypted payload
+     * {@inheritDoc}
      */
     @NotNull
     @Override
@@ -126,10 +123,7 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
     }
 
     /**
-     * this wrapper enforce module to validateInputs and throw exception if they are absent
-     *
-     * @param payload - encrypted payload
-     * @return decrypted key part
+     * {@inheritDoc}
      */
     @NotNull
     @Override
@@ -160,21 +154,22 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
      * View State
      */
 
+    /**
+     * {@inheritDoc}
+     */
     @NotNull
     @Override
     public abstract String getDescription();
 
     /**
-     * this function should return HTML UI form or null if not required
+     * {@inheritDoc}
      */
     @Override
     @Nullable
     public abstract String getHtmlUi();
 
     /**
-     * Returns status of the module to show to the user
-     *
-     * @return message
+     * {@inheritDoc}
      */
     @NotNull
     @Override
@@ -183,9 +178,7 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
     }
 
     /**
-     * Setting the status message for the user
-     *
-     * @param status - new status
+     * {@inheritDoc}
      */
     @Override
     public void setStatusString(@NotNull String status) {
@@ -197,10 +190,7 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
      */
 
     /**
-     * Sets input for this Module from user
-     *
-     * @param key   - key of the parameter
-     * @param value - value of the parameter
+     * {@inheritDoc}
      */
     @Override
     public void setInput(@NotNull String key, @NotNull String value) {
@@ -208,7 +198,7 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
     }
 
     /**
-     * Sets inputs for this Module from user
+     * {@inheritDoc}
      */
     @Override
     public void setInputs(@NotNull Map<String, String> inputs) {
@@ -216,10 +206,7 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
     }
 
     /**
-     * Checks if user has submitted any input
-     *
-     * @param key - key of the parameter
-     * @return - if key exists
+     * {@inheritDoc}
      */
     @Override
     public boolean hasInput(@NotNull String key) {
@@ -227,10 +214,7 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
     }
 
     /**
-     * Gets the value which user has submitted
-     *
-     * @param key - parameter key
-     * @return - value of the parameter
+     * {@inheritDoc}
      */
     @Nullable
     @Override
@@ -239,7 +223,7 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
     }
 
     /**
-     * Clear the user inputs, prepare for new
+     * {@inheritDoc}
      */
     @Override
     public void clearInputs() {
