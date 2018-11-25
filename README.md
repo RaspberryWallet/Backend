@@ -1,6 +1,6 @@
 <img src="docs/logo.png" width="200" align="right">
 
-# Backend :closed_lock_with_key:
+# Backend :lock:
 [![CircleCI](https://circleci.com/gh/RaspberryWallet/Backend.svg?style=svg)](https://circleci.com/gh/RaspberryWallet/Backend)
 
 This module is responsible for main logic on the whole wallet. It contains HTTP Server, that is accessible by
