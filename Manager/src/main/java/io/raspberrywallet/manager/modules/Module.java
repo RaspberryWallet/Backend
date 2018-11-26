@@ -22,7 +22,7 @@ import java.util.Map;
  * @param <Config> type of module specific configuration class implementing ModuleConfig base interface
  */
 @ToString
-public abstract class Module<Config extends ModuleConfig> implements IModule {
+public abstract class Module<Config extends ModuleConfig> {
     @NotNull
     private String statusString;
 
@@ -90,19 +90,20 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
     }
 
     /**
-     * {@inheritDoc}
+     * Used in all sort of identifications like config.yaml, internal module mapping and UI naming.
+     * For now, it's just simplified SimpleClassName
+     *
+     * @return module identifier.
      */
     @NotNull
-    @Override
     public String getId() {
         return this.getClass().getSimpleName();
     }
 
     /**
-     * {@inheritDoc}
+     * @return Server-side module representation
      */
     @NotNull
-    @Override
     public io.raspberrywallet.contract.module.Module asServerModule() {
         return new io.raspberrywallet.contract.module.Module(getId(), getId(), getDescription(), getHtmlUi()) {
         };
@@ -113,20 +114,24 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
      */
 
     /**
-     * {@inheritDoc}
+     * this wrapper enforce module to validateInputs and throw exception if they are absent
+     *
+     * @param keyPart - unencrypted key part
+     * @return encrypted payload
      */
     @NotNull
-    @Override
     public byte[] encryptKeyPart(@NotNull byte[] keyPart) throws EncryptionException, RequiredInputNotFound, InternalModuleException {
         validateInputs();
         return encrypt(keyPart);
     }
 
     /**
-     * {@inheritDoc}
+     * this wrapper enforce module to validateInputs and throw exception if they are absent
+     *
+     * @param payload - encrypted payload
+     * @return decrypted key part
      */
     @NotNull
-    @Override
     public byte[] decryptKeyPart(@NotNull byte[] payload) throws DecryptionException, RequiredInputNotFound, InternalModuleException {
         validateInputs();
         return decrypt(payload);
@@ -155,32 +160,34 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
      */
 
     /**
-     * {@inheritDoc}
+     * Returns general description what this module does
+     *
+     * @return message
      */
     @NotNull
-    @Override
     public abstract String getDescription();
 
     /**
-     * {@inheritDoc}
+     * this function should return HTML UI form or null if not required
      */
-    @Override
     @Nullable
     public abstract String getHtmlUi();
 
     /**
-     * {@inheritDoc}
+     * Returns current status of the module to show to the user
+     *
+     * @return message
      */
     @NotNull
-    @Override
     public String getStatusString() {
         return statusString == null ? "null" : statusString;
     }
 
     /**
-     * {@inheritDoc}
+     * Setting current status message of the module
+     *
+     * @param status - new status
      */
-    @Override
     public void setStatusString(@NotNull String status) {
         this.statusString = status;
     }
@@ -190,17 +197,18 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
      */
 
     /**
-     * {@inheritDoc}
+     * Sets input for this Module from user
+     *
+     * @param key   - key of the parameter
+     * @param value - value of the parameter
      */
-    @Override
     public void setInput(@NotNull String key, @NotNull String value) {
         input.put(key, value);
     }
 
     /**
-     * {@inheritDoc}
+     * Sets inputs for this Module from user
      */
-    @Override
     public void setInputs(@NotNull Map<String, String> inputs) {
         input.putAll(inputs);
     }
@@ -208,24 +216,24 @@ public abstract class Module<Config extends ModuleConfig> implements IModule {
     /**
      * {@inheritDoc}
      */
-    @Override
     public boolean hasInput(@NotNull String key) {
         return input.containsKey(key) && !input.get(key).isEmpty();
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if user has submitted any input
+     *
+     * @param key - key of the parameter
+     * @return - if key exists
      */
     @Nullable
-    @Override
     public String getInput(String key) {
         return input.get(key);
     }
 
     /**
-     * {@inheritDoc}
+     * Clear the user inputs, prepare for new
      */
-    @Override
     public void clearInputs() {
         input.clear();
     }

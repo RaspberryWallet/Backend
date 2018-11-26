@@ -4,7 +4,7 @@ import io.raspberrywallet.contract.InternalModuleException;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
-import io.raspberrywallet.manager.modules.IModule;
+import io.raspberrywallet.manager.modules.Module;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +17,7 @@ class PinModuleTests {
 
     private final static String data = "secret data for encryption";
 
-    private IModule pinModule;
+    private Module pinModule;
 
     @BeforeEach
     public void initializeModule() throws IllegalAccessException, InstantiationException {
@@ -26,7 +26,7 @@ class PinModuleTests {
 
     @Test
     public void PinModuleConstructorDoesNotThrow() throws IllegalAccessException, InstantiationException {
-        IModule pinModule = new PinModule();
+        Module pinModule = new PinModule();
     }
 
 

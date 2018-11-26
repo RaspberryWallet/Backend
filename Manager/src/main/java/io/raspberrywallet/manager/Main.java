@@ -7,7 +7,7 @@ import io.raspberrywallet.manager.bitcoin.WalletCrypter;
 import io.raspberrywallet.manager.cli.Opts;
 import io.raspberrywallet.manager.database.Database;
 import io.raspberrywallet.manager.linux.TemperatureMonitor;
-import io.raspberrywallet.manager.modules.IModule;
+import io.raspberrywallet.manager.modules.Module;
 import io.raspberrywallet.manager.modules.ModuleClassLoader;
 import io.raspberrywallet.server.KtorServer;
 import org.apache.commons.cli.CommandLine;
@@ -31,12 +31,11 @@ public class Main {
         Configuration configuration = Configuration.fromYamlFile(yamlConfigFile);
         Bitcoin bitcoin = new Bitcoin(configuration, new WalletCrypter(), communicationChannel);
 
-        List<IModule> modules = ModuleClassLoader.getModules(configuration);
+        List<Module> modules = ModuleClassLoader.getModules(configuration);
 
         TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
 
         Database db = new Database(configuration);
-
 
         Manager manager = new Manager(
                 configuration,
