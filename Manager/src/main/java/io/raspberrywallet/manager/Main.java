@@ -37,7 +37,6 @@ public class Main {
 
         Database db = new Database(configuration);
 
-
         Manager manager = new Manager(
                 configuration,
                 db,

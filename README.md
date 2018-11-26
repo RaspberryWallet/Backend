@@ -181,7 +181,7 @@ implements `ModuleConfig` interface. You don't have to implement anything,
 #### Module configuration example
 
 Let the code explain how it works. We've got the following configuration for
-`PiModule`:
+`PinModule`:
 
 ```yaml
 modules:

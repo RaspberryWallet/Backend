@@ -5,9 +5,10 @@ import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.modules.Module;
+import org.jetbrains.annotations.NotNull;
 
 public class PushButtonModule extends Module<PushButtonConfig> {
-    public static String PRESSED = "pressed";
+    public static final String PRESSED = "pressed";
     private final static Pin BUTTON_GPIO_PINS = RaspiPin.GPIO_23;
 
     private final GpioController gpio;
@@ -58,7 +59,8 @@ public class PushButtonModule extends Module<PushButtonConfig> {
         if (!hasInput(PRESSED) || !Boolean.parseBoolean(getInput(PRESSED)))
             throw new RequiredInputNotFound(getId(), PRESSED);
     }
-    
+
+    @NotNull
     @Override
     public String getDescription() {
         return "Module for pushing physical button on the hardware wallet.";

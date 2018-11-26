@@ -328,6 +328,7 @@ public class Manager implements io.raspberrywallet.contract.Manager {
         return this.wpaConfiguration.getAsMap();
     }
 
+    @NotNull
     @Override
     public int setWifiConfig(Map<String, String> config) {
         return this.wpaConfiguration.setFromMap(config);

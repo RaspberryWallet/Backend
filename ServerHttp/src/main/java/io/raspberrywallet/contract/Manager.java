@@ -174,12 +174,28 @@ public interface Manager {
     @NotNull
     Map<String, String> getWifiConfig();
 
+    /**
+     * @param newConf new wifi configuration
+     * @return WPAConfiguration WPA result code
+     */
     @NotNull
     int setWifiConfig(Map<String, String> newConf);
 
+
+    /**
+     * @param moduleFile new module file, it will be placed in temp folder with random name
+     * @param moduleName module name
+     * @throws ModuleUploadException
+     */
+    void uploadNewModule(File moduleFile, String moduleName) throws ModuleUploadException;
+
+    /**
+     * @param listener blockchain synchronization progress listener
+     */
     void addBlockChainProgressListener(@NotNull DoubleConsumer listener);
 
-    void uploadNewModule(File inputFile, String fileName) throws ModuleUploadException;
-
+    /**
+     * @param listener remaining auto lock time listener
+     */
     void addAutoLockChannelListener(@NotNull IntConsumer listener);
 }

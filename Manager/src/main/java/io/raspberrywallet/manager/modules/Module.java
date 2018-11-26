@@ -8,6 +8,7 @@ import io.raspberrywallet.contract.RequiredInputNotFound;
 import io.raspberrywallet.manager.Configuration;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.DecryptionException;
 import io.raspberrywallet.manager.cryptography.crypto.exceptions.EncryptionException;
+import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,6 +21,7 @@ import java.util.Map;
  *
  * @param <Config> type of module specific configuration class implementing ModuleConfig base interface
  */
+@ToString
 public abstract class Module<Config extends ModuleConfig> {
     @NotNull
     private String statusString;
@@ -31,6 +33,7 @@ public abstract class Module<Config extends ModuleConfig> {
      * Configuration object available for every module
      * This object should hold every customizable module specific property
      */
+    @NotNull
     protected Config configuration;
 
     /**
@@ -92,18 +95,23 @@ public abstract class Module<Config extends ModuleConfig> {
      *
      * @return module identifier.
      */
+    @NotNull
     public String getId() {
         return this.getClass().getSimpleName();
     }
 
+    /**
+     * @return Server-side module representation
+     */
+    @NotNull
     public io.raspberrywallet.contract.module.Module asServerModule() {
         return new io.raspberrywallet.contract.module.Module(getId(), getId(), getDescription(), getHtmlUi()) {
         };
     }
 
-    public abstract String getDescription();
-
-    protected abstract void validateInputs() throws RequiredInputNotFound;
+    /*
+     * (De/En)cryption
+     */
 
     /**
      * this wrapper enforce module to validateInputs and throw exception if they are absent
@@ -111,9 +119,22 @@ public abstract class Module<Config extends ModuleConfig> {
      * @param keyPart - unencrypted key part
      * @return encrypted payload
      */
-    public byte[] encryptKeyPart(byte[] keyPart) throws EncryptionException, RequiredInputNotFound, InternalModuleException {
+    @NotNull
+    public byte[] encryptKeyPart(@NotNull byte[] keyPart) throws EncryptionException, RequiredInputNotFound, InternalModuleException {
         validateInputs();
         return encrypt(keyPart);
+    }
+
+    /**
+     * this wrapper enforce module to validateInputs and throw exception if they are absent
+     *
+     * @param payload - encrypted payload
+     * @return decrypted key part
+     */
+    @NotNull
+    public byte[] decryptKeyPart(@NotNull byte[] payload) throws DecryptionException, RequiredInputNotFound, InternalModuleException {
+        validateInputs();
+        return decrypt(payload);
     }
 
     /**
@@ -125,23 +146,26 @@ public abstract class Module<Config extends ModuleConfig> {
     protected abstract byte[] encrypt(byte[] keyPart) throws EncryptionException, InternalModuleException;
 
     /**
-     * this wrapper enforce module to validateInputs and throw exception if they are absent
-     *
-     * @param payload - encrypted payload
-     * @return decrypted key part
-     */
-    public byte[] decryptKeyPart(byte[] payload) throws DecryptionException, RequiredInputNotFound, InternalModuleException {
-        validateInputs();
-        return decrypt(payload);
-    }
-
-    /**
      * method to override by module, validation should not be called here, use validateInputs() instead
      *
      * @param payload - encrypted payload
      * @return decrypted key part
      */
     protected abstract byte[] decrypt(byte[] payload) throws DecryptionException, InternalModuleException;
+
+    protected abstract void validateInputs() throws RequiredInputNotFound;
+
+    /*
+     * View State
+     */
+
+    /**
+     * Returns general description what this module does
+     *
+     * @return message
+     */
+    @NotNull
+    public abstract String getDescription();
 
     /**
      * this function should return HTML UI form or null if not required
@@ -150,16 +174,17 @@ public abstract class Module<Config extends ModuleConfig> {
     public abstract String getHtmlUi();
 
     /**
-     * Returns status of the module to show to the user
+     * Returns current status of the module to show to the user
      *
      * @return message
      */
+    @NotNull
     public String getStatusString() {
         return statusString == null ? "null" : statusString;
     }
 
     /**
-     * Setting the status message for the user
+     * Setting current status message of the module
      *
      * @param status - new status
      */
@@ -167,21 +192,32 @@ public abstract class Module<Config extends ModuleConfig> {
         this.statusString = status;
     }
 
+    /*
+      Inputs CRUD
+     */
+
     /**
      * Sets input for this Module from user
      *
      * @param key   - key of the parameter
      * @param value - value of the parameter
      */
-    public void setInput(String key, String value) {
+    public void setInput(@NotNull String key, @NotNull String value) {
         input.put(key, value);
     }
 
     /**
      * Sets inputs for this Module from user
      */
-    public void setInputs(Map<String, String> inputs) {
+    public void setInputs(@NotNull Map<String, String> inputs) {
         input.putAll(inputs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean hasInput(@NotNull String key) {
+        return input.containsKey(key) && !input.get(key).isEmpty();
     }
 
     /**
@@ -189,16 +225,6 @@ public abstract class Module<Config extends ModuleConfig> {
      *
      * @param key - key of the parameter
      * @return - if key exists
-     */
-    public boolean hasInput(String key) {
-        return input.containsKey(key) && !input.get(key).isEmpty();
-    }
-
-    /**
-     * Gets the value which user has submitted
-     *
-     * @param key - parameter key
-     * @return - value of the parameter
      */
     @Nullable
     public String getInput(String key) {
@@ -211,14 +237,4 @@ public abstract class Module<Config extends ModuleConfig> {
     public void clearInputs() {
         input.clear();
     }
-
-
-    /**
-     * Module info formatted as JSON.
-     */
-    @Override
-    public String toString() {
-        return "{\"id\":\"" + getId() + "\", \"status\":\"" + getStatusString() + "\"}";
-    }
-
 }

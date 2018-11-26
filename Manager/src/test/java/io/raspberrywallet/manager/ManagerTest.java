@@ -59,7 +59,7 @@ class ManagerTest {
     }
 
     @BeforeEach
-    void setup() throws IllegalAccessException, InstantiationException, ModuleInitializationException {
+    void setup() throws IllegalAccessException, InstantiationException {
         bitcoin = mock(Bitcoin.class);
         temperatureMonitor = mock(TemperatureMonitor.class);
         database = mock(Database.class);
