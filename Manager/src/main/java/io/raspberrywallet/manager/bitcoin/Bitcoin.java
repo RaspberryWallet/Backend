@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.stasbar.Logger;
 import io.raspberrywallet.contract.CommunicationChannel;
 import io.raspberrywallet.contract.IncorrectPasswordException;
+import io.raspberrywallet.contract.TransactionView;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.Configuration;
 import lombok.Getter;
@@ -32,10 +33,14 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.function.DoubleConsumer;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Class representing Bitcoin network, IO, key management API,
@@ -199,6 +204,7 @@ public class Bitcoin {
                 try {
                     saveEncryptedWallet(password);
                     Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
+                    Logger.info("Wallet address" + wallet.currentReceiveAddress().toBase58());
                 } catch (IOException | WalletNotInitialized e) {
                     frontendChannel.error(e.getMessage());
                     e.printStackTrace();
@@ -316,6 +322,10 @@ public class Bitcoin {
         return getWallet().getBalance(Wallet.BalanceType.AVAILABLE).toFriendlyString();
     }
 
+    /**
+     * @param amount    in BTC unit
+     * @param recipient base58 address
+     */
     public void sendCoins(String amount, String recipient) throws WalletNotInitialized {
         Coin coinsAmount = Coin.parseCoin(amount);
         Address recipientAddress = Address.fromBase58(params, recipient);
@@ -326,6 +336,34 @@ public class Bitcoin {
             Logger.err(e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * @return list of transactions related with this wallet
+     */
+    public List<TransactionView> getAllTransactions() throws WalletNotInitialized {
+        final Wallet wallet = getWallet();
+        final ArrayList<Transaction> transactions = new ArrayList<>(wallet.getTransactions(false));
+
+        return transactions.stream().map(tx -> {
+                    TransactionView txView = new TransactionView();
+                    txView.setTxHash(tx.getHashAsString());
+                    txView.setCreationTimestamp(tx.getUpdateTime().getTime());
+
+                    final Address toAddress = tx.getOutput(0).getAddressFromP2PKHScript(TestNet3Params.get());
+                    if (toAddress != null) txView.setToAddress(toAddress.toString());
+
+                    txView.setAmountFromMe(tx.getValueSentFromMe(wallet).toFriendlyString());
+                    txView.setAmountToMe(tx.getValueSentToMe(wallet).toFriendlyString());
+
+                    long fee = (tx.getInputSum().getValue() > 0 ? tx.getInputSum().getValue() - tx.getOutputSum().getValue() : 0);
+                    txView.setFee(Coin.valueOf(fee).toFriendlyString());
+
+                    txView.setConfirmations(tx.getConfidence().getDepthInBlocks());
+                    return txView;
+                }
+        ).sorted(Comparator.comparing(TransactionView::getCreationTimestamp))
+                .collect(toList());
     }
 
     public boolean isFirstTime() {

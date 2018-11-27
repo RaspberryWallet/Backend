@@ -46,6 +46,7 @@ import io.raspberrywallet.server.Paths.Network.setWifi
 import io.raspberrywallet.server.Paths.Network.setupWiFi
 import io.raspberrywallet.server.Paths.Network.statusEndpoint
 import io.raspberrywallet.server.Paths.Network.wifiStatus
+import io.raspberrywallet.server.Paths.Utils.allTransactions
 import io.raspberrywallet.server.Paths.Utils.cpuTemp
 import io.raspberrywallet.server.Paths.Utils.ping
 import io.raspberrywallet.server.Paths.Utils.setDatabasePassword
@@ -294,6 +295,10 @@ class KtorServer(val manager: Manager,
             get(availableBalance) {
                 manager.tap()
                 call.respond(mapOf("availableBalance" to manager.availableBalance))
+            }
+            get(allTransactions) {
+                manager.tap()
+                call.respond(mapOf("allTransactions" to manager.allTransactions))
             }
 
             webSocket("/blockChainSyncProgress") {
