@@ -1,5 +1,6 @@
 package io.raspberrywallet.manager.bitcoin;
 
+import com.stasbar.Logger;
 import io.raspberrywallet.contract.CommunicationChannel;
 import io.raspberrywallet.contract.TransactionView;
 import io.raspberrywallet.contract.WalletNotInitialized;
@@ -116,7 +117,7 @@ public class BitcoinTest {
     }
 
     @Test
-    void printTransactions() throws WalletNotInitialized {
+    void printAllTransactionsForAddress() throws WalletNotInitialized {
         if (bitcoin.getWalletFile().length() > 0)
             bitcoin.setupWalletFromFile(privateKeyHash, true);
         else
@@ -126,8 +127,7 @@ public class BitcoinTest {
 
         int i = 1;
         for (TransactionView tx : transactions) {
-            System.out.println(i + "  ________________________");
-            println(tx.toString());
+            Logger.d(String.format("[%d] %s", i, tx.toString()));
             i++;
         }
     }
