@@ -3,9 +3,10 @@ package io.raspberrywallet.contract;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -14,10 +15,10 @@ public class TransactionView {
     private String txHash;
     @NonNull
     private long creationTimestamp;
-    @Nullable
-    private String fromAddress;
-    @Nullable
-    private String toAddress;
+    @NonNull
+    private List<String> inputAddresses = new ArrayList<>();
+    @NonNull
+    private List<String> outputAddresses = new ArrayList<>();
     @NonNull
     private String amountFromMe;
     @NonNull
@@ -30,8 +31,8 @@ public class TransactionView {
     public String toString() {
         return "txHash: " + txHash +
             "\ncreationDate: " + new Date(creationTimestamp).toString() +
-            "\nfromAddress: " + fromAddress +
-            "\ntoAddress: " + toAddress +
+            inputAddresses.stream().reduce("\ninputAddresses: ", (acc, address) -> acc + "\n\t" + address) +
+            outputAddresses.stream().reduce("\noutputAddresses: ", (acc, address) -> acc + "\n\t" + address) +
             "\namountFromMe: " + amountFromMe +
             "\namountToMe: " + amountToMe +
             "\nfee: " + fee +
