@@ -347,7 +347,7 @@ public class Bitcoin {
 
         return transactions.stream()
                 .map(tx -> mapTransactionToTransactionView(wallet, tx))
-                .sorted(Comparator.comparing(TransactionView::getCreationTimestamp))
+                .sorted(Comparator.comparing(transactionView -> -transactionView.getCreationTimestamp()))
                 .collect(toList());
     }
 
