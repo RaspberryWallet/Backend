@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class PushButtonModule extends Module<PushButtonConfig> {
     public static final String PRESSED = "pressed";
-    private final static Pin BUTTON_GPIO_PINS = RaspiPin.GPIO_23;
+    private final static Pin BUTTON_GPIO_PINS = RaspiPin.GPIO_04;
 
     private final GpioController gpio;
     private final GpioPinDigitalInput pushButton;
