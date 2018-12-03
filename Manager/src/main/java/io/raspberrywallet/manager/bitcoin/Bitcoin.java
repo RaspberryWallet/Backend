@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.stasbar.Logger;
 import io.raspberrywallet.contract.CommunicationChannel;
 import io.raspberrywallet.contract.IncorrectPasswordException;
+import io.raspberrywallet.contract.TransactionView;
 import io.raspberrywallet.contract.WalletNotInitialized;
 import io.raspberrywallet.manager.Configuration;
 import lombok.Getter;
@@ -32,10 +33,14 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.function.DoubleConsumer;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Class representing Bitcoin network, IO, key management API,
@@ -73,7 +78,7 @@ public class Bitcoin {
         this.frontendChannel = frontendChannel;
         this.bitcoinRootDirectory = Paths.get(configuration.getBasePathPrefix(), DIRECTORY_NAME).toFile();
         bitcoinRootDirectory.mkdirs();
-
+        new ECKey();
         this.walletFileName = "RaspberryWallet_" + params.getPaymentProtocolId();
 
         this.walletFile = Paths.get(bitcoinRootDirectory.getAbsolutePath(), walletFileName + ".wallet").toFile();
@@ -198,7 +203,8 @@ public class Bitcoin {
             if (password != null) {
                 try {
                     saveEncryptedWallet(password);
-                    Logger.info("Wallet balance" + wallet.getBalance().toFriendlyString());
+                    Logger.info("Wallet balance: " + wallet.getBalance().toFriendlyString());
+                    Logger.info("Wallet address: " + wallet.currentReceiveAddress().toBase58());
                 } catch (IOException | WalletNotInitialized e) {
                     frontendChannel.error(e.getMessage());
                     e.printStackTrace();
@@ -316,6 +322,10 @@ public class Bitcoin {
         return getWallet().getBalance(Wallet.BalanceType.AVAILABLE).toFriendlyString();
     }
 
+    /**
+     * @param amount    in BTC unit
+     * @param recipient base58 address
+     */
     public void sendCoins(String amount, String recipient) throws WalletNotInitialized {
         Coin coinsAmount = Coin.parseCoin(amount);
         Address recipientAddress = Address.fromBase58(params, recipient);
@@ -327,6 +337,79 @@ public class Bitcoin {
             e.printStackTrace();
         }
     }
+
+    /**
+     * @return list of transactions related with this wallet
+     */
+    public List<TransactionView> getAllTransactions() throws WalletNotInitialized {
+        final Wallet wallet = getWallet();
+        final List<Transaction> transactions = new ArrayList<>(wallet.getTransactions(false));
+
+        return transactions.stream()
+                .map(tx -> mapTransactionToTransactionView(wallet, tx))
+                .sorted(Comparator.comparing(transactionView -> -transactionView.getCreationTimestamp()))
+                .collect(toList());
+    }
+
+    /**
+     * @param wallet final wallet entity
+     * @param tx     BitcoinJ specific transaction entity
+     * @return our domain specific transaction entity
+     */
+    @NotNull
+    private TransactionView mapTransactionToTransactionView(@NotNull final Wallet wallet, @NotNull Transaction tx) {
+        TransactionView txView = new TransactionView();
+        // SHA256(Transaction) in hex encoding
+        txView.setTxHash(tx.getHashAsString());
+        // The earliest time at which the transaction was seen
+        txView.setCreationTimestamp(tx.getUpdateTime().getTime());
+
+        // There are different ways of revealing address depending on the script type
+        // 1. P2PKH (Pay to public key hash)
+        // 2. P2SH (Pay to script hash)
+        // 3. P2PK (Pay to public key)
+        // 4. Segregated witness outputs
+        // 5. m-of-n bare multisig
+
+        // Collect input addresses in user friendly Base58 form
+        final List<String> inputAddresses = tx.getInputs().stream()
+                .map(transactionInput -> {
+                    if (transactionInput.isCoinBase()) return "Coinbase";
+                    else try {
+                        return new Address(params,
+                                Utils.sha256hash160(transactionInput
+                                        .getScriptSig()
+                                        .getPubKey()))
+                                .toBase58();
+
+                    } catch (ScriptException e1) {
+                        return "N/A or SegWit";
+                    }
+                }).collect(toList());
+
+        txView.setInputAddresses(inputAddresses);
+
+        // Collect output addresses in user friendly Base58 form
+        final List<String> outputAddresses = tx.getOutputs().stream()
+                .map(transactionOutput ->
+                        transactionOutput
+                                .getScriptPubKey().getToAddress(params).toBase58()
+                ).collect(toList());
+
+        txView.setOutputAddresses(outputAddresses);
+
+        txView.setAmountFromMe(tx.getValueSentFromMe(wallet).toFriendlyString());
+        txView.setAmountToMe(tx.getValueSentToMe(wallet).toFriendlyString());
+
+        // Fee is the difference between outputs and inputs
+        long fee = Math.max(0, tx.getInputSum().getValue() - tx.getOutputSum().getValue());
+        txView.setFee(Coin.valueOf(fee).toFriendlyString());
+
+        // How many blocks have been placed on top of this transaction's block
+        txView.setConfirmations(tx.getConfidence().getDepthInBlocks());
+        return txView;
+    }
+
 
     public boolean isFirstTime() {
         return !walletFile.exists();

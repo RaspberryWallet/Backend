@@ -6,10 +6,7 @@ import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.SPVBlockStore;
-import org.bitcoinj.wallet.DeterministicSeed;
-import org.bitcoinj.wallet.KeyChainGroup;
-import org.bitcoinj.wallet.UnreadableWalletException;
-import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.wallet.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -86,5 +83,28 @@ public class BitcoinJTest {
 
         long total = System.currentTimeMillis() - start;
         Logger.info(String.format("Synchronization took %.2f secs", (double) total / 1000.0));
+    }
+
+    @Test
+    void send_funds() {
+        String destinationAddress = "mk7exmQTiXjqzAMaxzBSHYezjkNvJGNGHX";
+        String amount = "0.0001";
+        List<String> mnemonicCode = Arrays.asList(
+                "farm hospital shadow common raw neither pond access suggest army prefer expire".split(" "));
+
+        DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", 1539388800);
+
+        KeyChainGroup keyChainGroup = new KeyChainGroup(params, seed);
+
+        Wallet wallet = new Wallet(params, keyChainGroup);
+
+        Coin coinsAmount = Coin.parseCoin(amount);
+        Address recipientAddress = Address.fromBase58(params, destinationAddress);
+        try {
+            wallet.sendCoins(SendRequest.to(recipientAddress, coinsAmount));
+        } catch (InsufficientMoneyException e) {
+            Logger.err(e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

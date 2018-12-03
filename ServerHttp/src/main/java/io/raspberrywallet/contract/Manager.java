@@ -67,6 +67,7 @@ public interface Manager {
      * @param moduleToInputsMap map of moduleId => [inputName => inputValue]
      */
     void loadWalletFromDisk(@NotNull Map<String, Map<String, String>> moduleToInputsMap);
+
     /**
      * lock wallet remove key from bitcoinJ, fill zeros on modules decryptedValue props
      *
@@ -123,6 +124,12 @@ public interface Manager {
      * @param recipientAddress recipient address
      */
     void sendCoins(@NotNull String amount, @NotNull String recipientAddress) throws WalletNotInitialized;
+
+
+    /**
+     * @return all wallet related transactions
+     */
+    List<TransactionView> getAllTransactions() throws WalletNotInitialized;
 
     /*
      * Utilities
