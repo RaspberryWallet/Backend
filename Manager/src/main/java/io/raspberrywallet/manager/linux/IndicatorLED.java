@@ -1,8 +1,6 @@
 package io.raspberrywallet.manager.linux;
 
 import com.pi4j.io.gpio.*;
-import com.pi4j.wiringpi.Gpio;
-import lombok.Getter;
 import lombok.Setter;
 
 public class IndicatorLED {
@@ -18,11 +16,12 @@ public class IndicatorLED {
     private Thread blinkThread;
     private BlinkRunnable blinkRunnable;
 
+    @Setter
     private class BlinkRunnable implements Runnable {
 
-        @Setter private int offMs = 50;
-        @Setter private int onMs = 50;
-        @Setter private boolean work = true;
+        private int offMs = 50;
+        private int onMs = 50;
+        private boolean work = true;
 
         public BlinkRunnable(int offMs, int onMs) {
             setOffMs(offMs);
@@ -32,10 +31,13 @@ public class IndicatorLED {
 
         @Override
         public void run() {
-            while(work) {
+            while (work) {
 
                 ledOutput.blink(offMs, onMs);
-                try {Thread.sleep(offMs + onMs);} catch(Exception e) {}
+
+                try {
+                    Thread.sleep(offMs + onMs);
+                } catch (Exception ignored) { }
 
             }
         }
@@ -59,12 +61,13 @@ public class IndicatorLED {
 
     /**
      * Starts blinking until off()/on() is called.
+     *
      * @param offMs - how long should the led be dark in miliseconds
-     * @param onMs - how long should the led be bright in miliseconds
+     * @param onMs  - how long should the led be bright in miliseconds
      */
     public synchronized void blink(int offMs, int onMs) {
 
-        if(blinkThread != null) {
+        if (blinkThread != null) {
             stopLed();
         }
 
@@ -75,15 +78,17 @@ public class IndicatorLED {
     }
 
     private synchronized void stopLed() {
-        if(blinkThread != null) {
+
+        //Cancel blinking thread if it exists
+        if (blinkThread != null) {
+
             blinkRunnable.setWork(false);
             try {
                 blinkThread.join();
-            } catch (Exception e) {
-
-            }
+            } catch (Exception ignored) { }
             blinkThread = null;
         }
+
         ledOutput.low();
     }
 
