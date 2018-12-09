@@ -29,11 +29,11 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
     private final AuthorizationServerAPI serverAPI = new AuthorizationServerAPI(configuration);
 
     public AuthorizationServerModule() throws InstantiationException, IllegalAccessException {
-        super("Please enter username and password for external server.", AuthorizationServerConfig.class);
+        super("Please enter username and password", AuthorizationServerConfig.class);
     }
 
     public AuthorizationServerModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException {
-        super("Please enter username and password for external server.", modulesConfiguration, AuthorizationServerConfig.class);
+        super("Please enter username and password", modulesConfiguration, AuthorizationServerConfig.class);
     }
 
     @Override
@@ -103,7 +103,7 @@ public class AuthorizationServerModule extends Module<AuthorizationServerConfig>
     @NotNull
     @Override
     public String getDescription() {
-        return "This module is authenticating user with external authorization server.";
+        return "Module authenticates user with external authorization server.";
     }
 
     @Nullable
