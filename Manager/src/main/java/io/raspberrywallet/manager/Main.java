@@ -24,6 +24,11 @@ public class Main {
 
     public static void main(String... args) throws BlockStoreException, IOException {
         CommandLine cmd = parseArgs(args);
+
+        if (Opts.MOCK_MANAGER.isSet(cmd)) {
+            KtorServer.Companion.startMocking();
+            return;
+        }
         // create backend->frontend communication channel
         CommunicationChannel communicationChannel = new CommunicationChannel();
 
@@ -47,7 +52,6 @@ public class Main {
 
         KtorServer ktorServer = new KtorServer(
                 manager,
-                configuration.getBasePathPrefix(),
                 configuration.getServerConfig(),
                 communicationChannel);
 
@@ -61,7 +65,7 @@ public class Main {
             try {
                 Objects.requireNonNull(bitcoin.getPeerGroup()).stop();
             } catch (NullPointerException e) {
-                e.printStackTrace();
+                // Ignore
             }
             // Forcibly terminate the JVM because Orchid likes to spew non-daemon threads everywhere.
             Runtime.getRuntime().exit(0);

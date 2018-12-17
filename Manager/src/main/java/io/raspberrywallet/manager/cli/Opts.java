@@ -7,7 +7,8 @@ import java.nio.file.Paths;
 
 public enum Opts {
     CONFIG(new Option("config", true, "Config file path"),
-            Paths.get("config.yaml").toAbsolutePath().toString());
+            Paths.get("config.yaml").toAbsolutePath().toString()),
+    MOCK_MANAGER(new Option("mock", false, "Mock manager"));
 
     public final Option option;
     public final String def;

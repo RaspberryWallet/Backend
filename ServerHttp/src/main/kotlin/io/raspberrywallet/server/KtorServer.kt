@@ -25,6 +25,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
 import io.raspberrywallet.contract.*
+import io.raspberrywallet.mock.ManagerMock
 import io.raspberrywallet.server.Paths.Bitcoin.availableBalance
 import io.raspberrywallet.server.Paths.Bitcoin.currentAddress
 import io.raspberrywallet.server.Paths.Bitcoin.estimatedBalance
@@ -67,7 +68,6 @@ import java.time.Duration
 lateinit var globalManager: Manager
 
 class KtorServer(val manager: Manager,
-                 val basePath: String,
                  private val serverConfig: ServerConfig,
                  private val communicationChannel: CommunicationChannel) {
 
@@ -339,6 +339,16 @@ class KtorServer(val manager: Manager,
     data class RestoreFromBackup(val mnemonicWords: List<String>, val modules: Map<String, Map<String, String>>, val required: Int)
     data class SendCoinBody(val amount: String, val recipient: String)
     data class SetDatabasePassword(val password: String)
+
+    companion object {
+        fun startMocking() {
+            KtorServer(
+                ManagerMock(),
+                ServerConfig(),
+                CommunicationChannel()
+            ).startBlocking()
+        }
+    }
 }
 
 suspend fun InputStream.copyToSuspend(out: OutputStream) =
