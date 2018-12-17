@@ -11,7 +11,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.content.*
 import io.ktor.jackson.jackson
-import io.ktor.network.util.ioCoroutineDispatcher
 import io.ktor.request.receive
 import io.ktor.request.receiveMultipart
 import io.ktor.request.receiveParameters
@@ -50,7 +49,7 @@ import io.raspberrywallet.server.Paths.Utils.allTransactions
 import io.raspberrywallet.server.Paths.Utils.cpuTemp
 import io.raspberrywallet.server.Paths.Utils.ping
 import io.raspberrywallet.server.Paths.Utils.setDatabasePassword
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.filter
@@ -224,6 +223,7 @@ class KtorServer(val manager: Manager,
                         }
                     }
                 }
+
                 call.respondRedirect("/", false)
             }
 
@@ -341,14 +341,10 @@ class KtorServer(val manager: Manager,
     data class SetDatabasePassword(val password: String)
 }
 
-suspend fun InputStream.copyToSuspend(
-    out: OutputStream,
-    bufferSize: Int = DEFAULT_BUFFER_SIZE,
-    yieldSize: Int = 4 * 1024 * 1024,
-    dispatcher: CoroutineDispatcher = ioCoroutineDispatcher
-): Long {
-    return withContext(dispatcher) {
-        val buffer = ByteArray(bufferSize)
+suspend fun InputStream.copyToSuspend(out: OutputStream) =
+    withContext(Dispatchers.IO) {
+        val yieldSize: Int = 4 * 1024 * 1024
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
         var bytesCopied = 0L
         var bytesAfterYield = 0L
         while (true) {
@@ -363,4 +359,3 @@ suspend fun InputStream.copyToSuspend(
         }
         return@withContext bytesCopied
     }
-}

@@ -25,7 +25,7 @@ public class PinModule extends Module<PinConfig> {
     @NotNull
     @Override
     public String getDescription() {
-        return "Module that require enter a digit code to unlock.";
+        return "Module requires enter a digit code to unlock.";
     }
 
     @Override
