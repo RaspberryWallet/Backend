@@ -68,7 +68,7 @@ public class Main {
                 // Ignore
             }
             // Forcibly terminate the JVM because Orchid likes to spew non-daemon threads everywhere.
-            Runtime.getRuntime().exit(0);
+            System.exit(0);
         }));
     }
 }

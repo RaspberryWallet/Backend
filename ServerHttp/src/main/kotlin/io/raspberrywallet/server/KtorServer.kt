@@ -63,7 +63,6 @@ import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.security.KeyStore
-import java.time.Duration
 
 lateinit var globalManager: Manager
 
@@ -141,10 +140,7 @@ class KtorServer(val manager: Manager,
             }
         }
         install(WebSockets) {
-            pingPeriod = Duration.ofSeconds(60) // Disabled (null) by default
-            timeout = Duration.ofSeconds(15)
-            maxFrameSize = kotlin.Long.MAX_VALUE // Disabled (max value). The connection will be closed if surpassed this length.
-            masking = false
+
         }
 
         routing {
@@ -304,7 +300,6 @@ class KtorServer(val manager: Manager,
             webSocket("/blockChainSyncProgress") {
                 blockChainSyncProgressionChannel.consumeEach { progress ->
                     outgoing.send(Frame.Text("$progress"))
-                    if (Math.round(progress) == 100L) close()
                 }
             }
             webSocket("/autolock") {
