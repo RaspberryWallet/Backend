@@ -8,49 +8,13 @@ import io.raspberrywallet.contract.module.Module
 import io.raspberrywallet.contract.module.ModuleState
 import io.raspberrywallet.contract.step.SimpleStep
 import java.io.File
+import java.security.SecureRandom
 import java.util.function.DoubleConsumer
 import java.util.function.IntConsumer
 import java.util.stream.Collectors.toMap
 
 class ManagerMock : Manager {
-    override fun getAllTransactions(): MutableList<TransactionView> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun addBlockChainProgressListener(listener: DoubleConsumer) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun addAutoLockChannelListener(listener: IntConsumer) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun uploadNewModule(inputFile: File?, filename: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun loadWalletFromDisk(moduleToInputsMap: MutableMap<String, MutableMap<String, String>>) {
-        TODO("not implemented")
-    }
-
-    override fun setDatabasePassword(password: String) {
-        TODO("not implemented")
-    }
-
-    override fun getWalletStatus() = WalletStatus.ENCRYPTED
-
-    override fun tap() {
-        TODO("not implemented") 
-    }
-
-    override fun lockWallet(): Boolean {
-        TODO("not implemented") 
-    }
-
-    override fun sendCoins(amount: String, recipientAddress: String) {
-        TODO("not implemented") 
-    }
-
+    val random = SecureRandom()
 
     class SampleModule(name: String, description: String, val htmlUiForm: String? = null) : Module(name, description, null)
 
@@ -62,6 +26,58 @@ class ManagerMock : Manager {
         .stream().collect(toMap(SampleModule::getId) { it })!!
 
 
+    private var _walletStatus = WalletStatus.ENCRYPTED
+
+    override fun getWalletStatus(): WalletStatus {
+        return _walletStatus
+    }
+
+    override fun lockWallet(): Boolean {
+        _walletStatus = WalletStatus.ENCRYPTED
+        return true
+    }
+
+    override fun nextStep(moduleId: String, input: Map<String, String>): Response =
+        Response(SimpleStep("Do something"), Response.Status.OK)
+
+    override fun unlockWallet(moduleToInputsMap: MutableMap<String, out MutableMap<String, String>>) {
+        _walletStatus = WalletStatus.DECRYPTED
+    }
+
+    override fun restoreFromBackupPhrase(mnemonicWords: MutableList<String>, selectedModulesWithInputs: MutableMap<String, MutableMap<String, String>>, required: Int) {
+        val phrase = mnemonicWords.reduce { acc, s -> "$acc $s" }
+        println(phrase)
+        _walletStatus = WalletStatus.DECRYPTED
+    }
+
+
+    override fun getAllTransactions() = List(5) { newRandomTransaction() }
+
+    private fun newRandomTransaction() = TransactionView(
+        Base58.encode(random.generateSeed(32)),
+        random.nextLong(),
+        listOf(
+            Base58.newAddress(random),
+            Base58.newAddress(random)),
+        listOf(
+            Base58.newAddress(random),
+            Base58.newAddress(random)),
+        random.nextDouble().toString(),
+        random.nextDouble().toString(),
+        random.nextDouble().toString(),
+        random.nextInt(100))
+
+
+    override fun addBlockChainProgressListener(listener: DoubleConsumer) {
+        listener.accept(100.0)
+    }
+
+    override fun addAutoLockChannelListener(listener: IntConsumer) {}
+    override fun uploadNewModule(inputFile: File?, filename: String) {}
+    override fun loadWalletFromDisk(moduleToInputsMap: MutableMap<String, MutableMap<String, String>>) {}
+    override fun setDatabasePassword(password: String) {}
+    override fun tap() {}
+    override fun sendCoins(amount: String, recipientAddress: String) {}
     override fun ping() = "pong"
 
     override fun getServerModules() = _modules.values.toList()
@@ -72,31 +88,21 @@ class ManagerMock : Manager {
         return randomModuleState
     }
 
-    override fun nextStep(moduleId: String, input: Map<String, String>): Response =
-        Response(SimpleStep("Do something"), Response.Status.OK)
+    override fun getCurrentReceiveAddress() = Base58.newAddress(random)
 
-    override fun unlockWallet(moduleToInputsMap: MutableMap<String, out MutableMap<String, String>>) {}
+    override fun getFreshReceiveAddress() = Base58.newAddress(random)
 
-    override fun getCurrentReceiveAddress() = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
+    override fun getEstimatedBalance() = random.nextDouble().toString()
 
-    override fun getFreshReceiveAddress() = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
-
-    override fun getEstimatedBalance() = "0.0"
-
-    override fun getAvailableBalance() = "0.0"
-
-    override fun restoreFromBackupPhrase(mnemonicWords: MutableList<String>, selectedModulesWithInputs: MutableMap<String, MutableMap<String, String>>, required: Int) {
-        val phrase = mnemonicWords.reduce { acc, s -> acc + s }
-        println(phrase)
-    }
+    override fun getAvailableBalance() = random.nextDouble().toString()
 
     override fun getCpuTemperature() = "75 °C"
 
-    override fun getNetworkList(): Array<String> = arrayOf<String>("UPCwifi", "other wifi", "klocuch12")
+    override fun getNetworkList() = arrayOf("UPCwifi", "other wifi", "klocuch12")
 
-    override fun getWifiStatus(): MutableMap<String, String> = mutableMapOf("freq" to "21.37 GHz", "speed" to "21.37 Tb/s")
+    override fun getWifiStatus() = mutableMapOf("freq" to "21.37 GHz", "speed" to "21.37 Tb/s")
 
-    override fun getWifiConfig(): MutableMap<String, String> = mutableMapOf("ssid" to "fakenet")
+    override fun getWifiConfig() = mutableMapOf("ssid" to "fakenet")
 
-    override fun setWifiConfig(newConf: MutableMap<String, String>?): Int = 0
+    override fun setWifiConfig(newConf: MutableMap<String, String>?) = 0
 }

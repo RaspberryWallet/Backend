@@ -2,23 +2,20 @@ package io.raspberrywallet.contract;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @Getter
-@Setter
 public class TransactionView {
     @NonNull
     private String txHash;
     @NonNull
     private long creationTimestamp;
     @NonNull
-    private List<String> inputAddresses = new ArrayList<>();
+    private List<String> inputAddresses;
     @NonNull
-    private List<String> outputAddresses = new ArrayList<>();
+    private List<String> outputAddresses;
     @NonNull
     private String amountFromMe;
     @NonNull
@@ -26,6 +23,19 @@ public class TransactionView {
     @NonNull
     private String fee;
     private int confirmations;
+
+    public TransactionView(String txHash, long creationTimestamp, List<String> inputAddresses,
+                           List<String> outputAddresses, String amountFromMe, String amountToMe,
+                           String fee, int confirmations) {
+        this.txHash = txHash;
+        this.creationTimestamp = creationTimestamp;
+        this.inputAddresses = inputAddresses;
+        this.outputAddresses = outputAddresses;
+        this.amountFromMe = amountFromMe;
+        this.amountToMe = amountToMe;
+        this.fee = fee;
+        this.confirmations = confirmations;
+    }
 
     @Override
     public String toString() {
