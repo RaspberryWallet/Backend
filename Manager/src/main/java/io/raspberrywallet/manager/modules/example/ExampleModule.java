@@ -8,17 +8,17 @@ import org.jetbrains.annotations.NotNull;
 
 public class ExampleModule extends Module<ExampleConfig> {
     public ExampleModule() throws InstantiationException, IllegalAccessException {
-        super("Do something", ExampleConfig.class);
+        super("Ready", ExampleConfig.class);
     }
 
     public ExampleModule(Configuration.ModulesConfiguration modulesConfiguration) throws InstantiationException, IllegalAccessException {
-        super("Do something", modulesConfiguration, ExampleConfig.class);
+        super("Ready", modulesConfiguration, ExampleConfig.class);
     }
 
     @NotNull
     @Override
     public String getDescription() {
-        return "An example waiting and xoring module to show how things work.";
+        return "Module doesn't require any action";
     }
 
 
@@ -55,7 +55,7 @@ public class ExampleModule extends Module<ExampleConfig> {
 
         return r;
     }
-    
+
     @Override
     protected void validateInputs() {
     }

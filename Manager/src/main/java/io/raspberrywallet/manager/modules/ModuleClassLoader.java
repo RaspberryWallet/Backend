@@ -99,10 +99,10 @@ public class ModuleClassLoader {
                 return module;
             } catch (InstantiationException | IllegalAccessException | NoSuchMethodException e) {
                 e.printStackTrace();
+                Logger.err("Could not find constructor with ModulesConfiguration constructor parameter in class " + clazz.getName());
                 return null;
             } catch (InvocationTargetException e) {
-                e.printStackTrace();
-                Logger.err("Could not find constructor with ModulesConfiguration constructor parameter in class " + clazz.getName());
+                Logger.err("Failed instantiate module " + clazz.getName());
                 return null;
             }
         }).filter(Objects::nonNull).collect(Collectors.toList());

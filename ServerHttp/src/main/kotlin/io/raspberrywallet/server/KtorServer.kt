@@ -11,7 +11,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.content.*
 import io.ktor.jackson.jackson
-import io.ktor.network.util.ioCoroutineDispatcher
 import io.ktor.request.receive
 import io.ktor.request.receiveMultipart
 import io.ktor.request.receiveParameters
@@ -26,6 +25,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
 import io.raspberrywallet.contract.*
+import io.raspberrywallet.mock.ManagerMock
 import io.raspberrywallet.server.Paths.Bitcoin.availableBalance
 import io.raspberrywallet.server.Paths.Bitcoin.currentAddress
 import io.raspberrywallet.server.Paths.Bitcoin.estimatedBalance
@@ -50,7 +50,7 @@ import io.raspberrywallet.server.Paths.Utils.allTransactions
 import io.raspberrywallet.server.Paths.Utils.cpuTemp
 import io.raspberrywallet.server.Paths.Utils.ping
 import io.raspberrywallet.server.Paths.Utils.setDatabasePassword
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.filter
@@ -63,12 +63,10 @@ import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.security.KeyStore
-import java.time.Duration
 
 lateinit var globalManager: Manager
 
 class KtorServer(val manager: Manager,
-                 val basePath: String,
                  private val serverConfig: ServerConfig,
                  private val communicationChannel: CommunicationChannel) {
 
@@ -142,10 +140,7 @@ class KtorServer(val manager: Manager,
             }
         }
         install(WebSockets) {
-            pingPeriod = Duration.ofSeconds(60) // Disabled (null) by default
-            timeout = Duration.ofSeconds(15)
-            maxFrameSize = kotlin.Long.MAX_VALUE // Disabled (max value). The connection will be closed if surpassed this length.
-            masking = false
+
         }
 
         routing {
@@ -224,6 +219,7 @@ class KtorServer(val manager: Manager,
                         }
                     }
                 }
+
                 call.respondRedirect("/", false)
             }
 
@@ -304,7 +300,6 @@ class KtorServer(val manager: Manager,
             webSocket("/blockChainSyncProgress") {
                 blockChainSyncProgressionChannel.consumeEach { progress ->
                     outgoing.send(Frame.Text("$progress"))
-                    if (Math.round(progress) == 100L) close()
                 }
             }
             webSocket("/autolock") {
@@ -339,16 +334,22 @@ class KtorServer(val manager: Manager,
     data class RestoreFromBackup(val mnemonicWords: List<String>, val modules: Map<String, Map<String, String>>, val required: Int)
     data class SendCoinBody(val amount: String, val recipient: String)
     data class SetDatabasePassword(val password: String)
+
+    companion object {
+        fun startMocking() {
+            KtorServer(
+                ManagerMock(),
+                ServerConfig(),
+                CommunicationChannel()
+            ).startBlocking()
+        }
+    }
 }
 
-suspend fun InputStream.copyToSuspend(
-    out: OutputStream,
-    bufferSize: Int = DEFAULT_BUFFER_SIZE,
-    yieldSize: Int = 4 * 1024 * 1024,
-    dispatcher: CoroutineDispatcher = ioCoroutineDispatcher
-): Long {
-    return withContext(dispatcher) {
-        val buffer = ByteArray(bufferSize)
+suspend fun InputStream.copyToSuspend(out: OutputStream) =
+    withContext(Dispatchers.IO) {
+        val yieldSize: Int = 4 * 1024 * 1024
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
         var bytesCopied = 0L
         var bytesAfterYield = 0L
         while (true) {
@@ -363,4 +364,3 @@ suspend fun InputStream.copyToSuspend(
         }
         return@withContext bytesCopied
     }
-}
