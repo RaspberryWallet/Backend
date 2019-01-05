@@ -14,7 +14,7 @@
 
     <properties>
         <main.class>io.raspberrywallet.MainKt</main.class>
-        <ktor.version>1.0.0-beta-3</ktor.version>
+        <ktor.version>1.1.1</ktor.version>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
         <junit.version>5.2.0</junit.version>
