@@ -7,6 +7,8 @@ This module is responsible for main logic on the whole wallet. It contains HTTP 
 client, internal Manager logic, which locks and unlocks modules and also it contains built in Modules logic or
 interfaces that provide access to them.
 
+<img src="docs/communication.png"/>
+
 ![Demo](https://i.imgur.com/dS7OEjs.gif)
 
 ## Requirements

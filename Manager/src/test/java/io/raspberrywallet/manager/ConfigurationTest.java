@@ -15,6 +15,7 @@ class ConfigurationTest {
     void fromYamlFile() throws IOException {
         String version = "0.5.0";
         String basePrefixDir = "/opt/wallet";
+        String authorizationServerModuleHost = "89.89.89.89";
         String configYamlContent = "" +
                 "version: " + version + "\n" +
                 "base-path-prefix: " + basePrefixDir + "\n" +
@@ -24,7 +25,7 @@ class ConfigurationTest {
                 "  user-agent: RaspberryWallet\n" +
                 "\n" +
                 "  AuthorizationServerModule:\n" +
-                "    host: 89.89.89.89\n" +
+                "    host: " + authorizationServerModuleHost + "\n" +
                 "    port: 8080\n" +
                 "    endpoints:\n" +
                 "      set-secret: /authorization/secret/set\n" +
@@ -43,6 +44,10 @@ class ConfigurationTest {
             assertEquals(configuration.getVersion(), version);
             assertEquals(configuration.getBasePathPrefix(), basePrefixDir);
             assertEquals(configuration.getModulesConfig().size(), 4);
+
+            assertEquals(configuration.getModulesConfig().get("AuthorizationServerModule").get("host").asText(),
+                    authorizationServerModuleHost);
+
             assertNotNull(configuration.getBitcoinConfig());
         } finally {
             tmpConfig.delete();
@@ -55,5 +60,5 @@ class ConfigurationTest {
         Configuration configuration = new Configuration(basePathPrefix);
         assertEquals(basePathPrefix, configuration.getBasePathPrefix());
     }
-    
+
 }

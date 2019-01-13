@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class AuthorizationServerConfig implements ModuleConfig {
-    private String host = "https://localhost";
+    private String host = "https://authorization-server";
     private int port = 8443;
     private String address = host + ":" + port;
     private Endpoints endpoints = new Endpoints();
